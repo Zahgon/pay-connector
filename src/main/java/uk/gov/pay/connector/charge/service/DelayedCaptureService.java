@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.charge.service;
 
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.charge.dao.ChargeDao;
@@ -13,13 +13,15 @@ import uk.gov.pay.connector.queue.capture.CaptureQueue;
 import uk.gov.service.payments.commons.queue.exception.QueueException;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
+import org.springframework.stereotype.Service;
 
 import static java.lang.String.format;
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.AWAITING_CAPTURE_REQUEST;
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.CAPTURE_APPROVED;
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.fromString;
 
+@Service
 public class DelayedCaptureService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DelayedCaptureService.class);

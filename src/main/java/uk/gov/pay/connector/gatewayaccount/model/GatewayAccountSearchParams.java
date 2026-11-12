@@ -9,7 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
 
 import jakarta.validation.constraints.Pattern;
-import jakarta.ws.rs.QueryParam;
+import uk.gov.pay.connector.web.QueryParam;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

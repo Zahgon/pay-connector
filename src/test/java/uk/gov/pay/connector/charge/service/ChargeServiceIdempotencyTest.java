@@ -3,7 +3,7 @@ package uk.gov.pay.connector.charge.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.netmikey.logunit.api.LogCapturer;
-import jakarta.ws.rs.core.UriInfo;
+import uk.gov.pay.connector.web.BaseUri;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,7 +47,7 @@ import java.time.InstantSource;
 import java.util.Map;
 import java.util.Optional;
 
-import static jakarta.ws.rs.core.UriBuilder.fromUri;
+import static org.springframework.web.util.UriComponentsBuilder.fromUriString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -97,7 +97,7 @@ class ChargeServiceIdempotencyTest {
     private ConnectorConfiguration mockedConfig;
 
     @Mock
-    private UriInfo mockedUriInfo;
+    private BaseUri mockedBaseUri;
 
     @Mock
     private LinksConfig mockedLinksConfig;
@@ -179,7 +179,7 @@ class ChargeServiceIdempotencyTest {
         when(mockIdempotencyDao.findByGatewayAccountIdAndKey(GATEWAY_ACCOUNT_ID, idempotencyKey)).thenReturn(Optional.empty());
 
         assertFalse(chargeService.checkForChargeCreatedWithIdempotencyKey(chargeCreateRequest, GATEWAY_ACCOUNT_ID,
-                idempotencyKey, mockedUriInfo).isPresent());
+                idempotencyKey, mockedBaseUri).isPresent());
     }
 
     @Test
@@ -204,13 +204,13 @@ class ChargeServiceIdempotencyTest {
         IdempotencyEntity idempotencyEntity = new IdempotencyEntity(idempotencyKey, gatewayAccount,
                 existingChargeExternalId, requestBody, Instant.now());
 
-        doAnswer(_ -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(_ -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
         when(mockIdempotencyDao.findByGatewayAccountIdAndKey(GATEWAY_ACCOUNT_ID, idempotencyKey)).thenReturn(Optional.of(idempotencyEntity));
         when(mockedChargeDao.findByExternalId(existingChargeExternalId)).thenReturn(Optional.of(chargeEntity));
 
-        ChargeResponse response = chargeService.checkForChargeCreatedWithIdempotencyKey(chargeCreateRequest, GATEWAY_ACCOUNT_ID, idempotencyKey, mockedUriInfo).get();
+        ChargeResponse response = chargeService.checkForChargeCreatedWithIdempotencyKey(chargeCreateRequest, GATEWAY_ACCOUNT_ID, idempotencyKey, mockedBaseUri).get();
 
         assertThat(response.getChargeId(), is(existingChargeExternalId));
     }
@@ -243,7 +243,7 @@ class ChargeServiceIdempotencyTest {
 
         when(mockIdempotencyDao.findByGatewayAccountIdAndKey(GATEWAY_ACCOUNT_ID, idempotencyKey)).thenReturn(Optional.of(idempotencyEntity));
 
-        assertThrows(IdempotencyKeyUsedException.class, () -> chargeService.checkForChargeCreatedWithIdempotencyKey(newChargeCreateRequest, GATEWAY_ACCOUNT_ID, idempotencyKey, mockedUriInfo).get());
+        assertThrows(IdempotencyKeyUsedException.class, () -> chargeService.checkForChargeCreatedWithIdempotencyKey(newChargeCreateRequest, GATEWAY_ACCOUNT_ID, idempotencyKey, mockedBaseUri).get());
         logs.assertContains(
                 "Idempotency-Key [an-idempotency-key] was already used to create a charge with a " +
                         "different request body. Existing payment external id: existing-id");

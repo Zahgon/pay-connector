@@ -5,15 +5,14 @@ import uk.gov.pay.connector.gateway.model.GatewayError;
 
 import java.util.Optional;
 
-import jakarta.ws.rs.core.Response.Status.Family;
-
-import static jakarta.ws.rs.core.Response.Status.Family.CLIENT_ERROR;
-import static jakarta.ws.rs.core.Response.Status.Family.OTHER;
-import static jakarta.ws.rs.core.Response.Status.Family.SERVER_ERROR;
-import static jakarta.ws.rs.core.Response.Status.Family.familyOf;
-
-
 public abstract class GatewayException extends Exception {
+
+    /**
+     * The class of an HTTP status a gateway answered with.
+     */
+    public enum Family {
+        CLIENT_ERROR, SERVER_ERROR, OTHER
+    }
 
     private GatewayException(String message) {
         super(message);
@@ -73,9 +72,10 @@ public abstract class GatewayException extends Exception {
         }
         
         public Family getFamily() {
-            if (familyOf(status) == CLIENT_ERROR) return CLIENT_ERROR;
-            if (familyOf(status) == SERVER_ERROR) return SERVER_ERROR;
-            return OTHER;
+            int statusClass = status / 100;
+            if (statusClass == 4) return Family.CLIENT_ERROR;
+            if (statusClass == 5) return Family.SERVER_ERROR;
+            return Family.OTHER;
         }
     }
 }

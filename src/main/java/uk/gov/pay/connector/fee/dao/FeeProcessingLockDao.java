@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.fee.dao;
 
-import com.google.inject.Provider;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Provider;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -9,10 +9,12 @@ import uk.gov.pay.connector.charge.model.domain.FeeProcessingLockEntity;
 import uk.gov.pay.connector.common.dao.JpaDao;
 
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
 import static jakarta.persistence.LockModeType.PESSIMISTIC_WRITE;
 
 @Transactional
+@Repository
 public class FeeProcessingLockDao extends JpaDao<FeeProcessingLockEntity> {
 
     @Inject

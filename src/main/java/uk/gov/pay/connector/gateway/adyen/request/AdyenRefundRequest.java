@@ -9,7 +9,7 @@ import uk.gov.pay.connector.util.JsonObjectMapper;
 import java.net.URI;
 import java.util.Map;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.ADYEN;
 import static uk.gov.pay.connector.gateway.model.OrderRequestType.REFUND;
 
@@ -26,7 +26,7 @@ public record AdyenRefundRequest(URI url,
     @Override
     public GatewayOrder getGatewayOrder() {
         var requestPayload = jsonObjectMapper.objectToString(payload);
-        return new GatewayOrder(REFUND, requestPayload, APPLICATION_JSON_TYPE);
+        return new GatewayOrder(REFUND, requestPayload, APPLICATION_JSON);
     }
 
     @Override

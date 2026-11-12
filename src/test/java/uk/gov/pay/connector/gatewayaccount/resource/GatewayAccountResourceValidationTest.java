@@ -1,11 +1,11 @@
 package uk.gov.pay.connector.gatewayaccount.resource;
 
+import uk.gov.pay.connector.rules.ResourceTestExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import uk.gov.pay.connector.rules.ResourceTestResponse;
+import uk.gov.pay.connector.rules.ResourceTestEntity;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
-import io.dropwizard.testing.junit5.ResourceExtension;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,7 +15,6 @@ import uk.gov.pay.connector.common.model.api.ErrorResponse;
 import uk.gov.pay.connector.common.validator.RequestValidator;
 import uk.gov.pay.connector.gatewayaccount.model.CreateGatewayAccountResponse;
 import uk.gov.pay.connector.gatewayaccount.service.GatewayAccountService;
-import uk.gov.pay.connector.rules.ResourceTestRuleWithCustomExceptionMappersBuilder;
 import uk.gov.service.payments.commons.model.ErrorIdentifier;
 
 import java.util.HashMap;
@@ -29,17 +28,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(DropwizardExtensionsSupport.class)
 class GatewayAccountResourceValidationTest {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final GatewayAccountService gatewayAccountServiceStub = mock(GatewayAccountService.class);
-    private static final ResourceExtension resources = ResourceTestRuleWithCustomExceptionMappersBuilder
-            .getBuilder()
-            .addResource(new GatewayAccountResource(gatewayAccountServiceStub, null,
-                    new GatewayAccountRequestValidator(new RequestValidator()), null, null))
-            .build();
+    @RegisterExtension
+    private static final ResourceTestExtension resources = ResourceTestExtension.withResources(new GatewayAccountResource(gatewayAccountServiceStub, null,
+                    new GatewayAccountRequestValidator(new RequestValidator()), null, null));
 
     @BeforeAll
     static void setUpGatewayAccountServiceStub() {
@@ -49,10 +45,9 @@ class GatewayAccountResourceValidationTest {
 
     @Test
     void shouldReturn422_whenEverythingMissing() {
-        Response response = resources.client()
-                .target("/v1/api/accounts")
+        ResourceTestResponse response = resources.target("/v1/api/accounts")
                 .request()
-                .post(Entity.json(""));
+                .post(ResourceTestEntity.json(""));
 
         assertThat(response.getStatus(), is(422));
     }
@@ -61,10 +56,9 @@ class GatewayAccountResourceValidationTest {
     void shouldReturn422_whenServiceIdIsMissing() {
         Map<String, Object> payload = Map.of("provider", "sandbox", "type", "invalid");
 
-        Response response = resources.client()
-                .target("/v1/api/accounts")
+        ResourceTestResponse response = resources.target("/v1/api/accounts")
                 .request()
-                .post(Entity.json(payload));
+                .post(ResourceTestEntity.json(payload));
 
         assertThat(response.getStatus(), is(422));
 
@@ -77,10 +71,9 @@ class GatewayAccountResourceValidationTest {
 
         Map<String, Object> payload = Map.of("service_id", "a-valid-service-id", "provider", "sandbox", "type", "invalid");
 
-        Response response = resources.client()
-                .target("/v1/api/accounts")
+        ResourceTestResponse response = resources.target("/v1/api/accounts")
                 .request()
-                .post(Entity.json(payload));
+                .post(ResourceTestEntity.json(payload));
 
         assertThat(response.getStatus(), is(422));
 
@@ -94,10 +87,9 @@ class GatewayAccountResourceValidationTest {
                 "service_id", "a-valid-service-id",
                 "payment_provider", "blockchain");
 
-        var response = resources.client()
-                .target("/v1/api/accounts")
+        var response = resources.target("/v1/api/accounts")
                 .request()
-                .post(Entity.json(payload));
+                .post(ResourceTestEntity.json(payload));
 
         assertThat(response.getStatus(), is(422));
         var errorMessage = response.readEntity(JsonNode.class)
@@ -116,7 +108,7 @@ class GatewayAccountResourceValidationTest {
 
         var response = resources.target("/v1/api/accounts")
                 .request()
-                .post(Entity.json(payload));
+                .post(ResourceTestEntity.json(payload));
 
         assertThat(response.getStatus(), is(201));
     }
@@ -127,10 +119,9 @@ class GatewayAccountResourceValidationTest {
                 Map.of("op", "add",
                         "path", "corporate_debit_card_surcharge_amount",
                         "value", 250));
-        Response response = resources.client()
-                .target("/v1/api/accounts/12")
+        ResourceTestResponse response = resources.target("/v1/api/accounts/12")
                 .request()
-                .method("PATCH", Entity.json(jsonNode));
+                .method("PATCH", ResourceTestEntity.json(jsonNode));
         assertThat(response.getStatus(), is(400));
         JsonNode body = response.readEntity(JsonNode.class);
         assertErrorBodyMatches(body, "Operation [add] is not valid for path [corporate_debit_card_surcharge_amount]", ErrorIdentifier.GENERIC);
@@ -142,10 +133,9 @@ class GatewayAccountResourceValidationTest {
                 Map.of("op", "replace",
                         "path", "corporate_credit_card_surcharge_amount",
                         "value", -100));
-        Response response = resources.client()
-                .target("/v1/api/accounts/12")
+        ResourceTestResponse response = resources.target("/v1/api/accounts/12")
                 .request()
-                .method("PATCH", Entity.json(jsonNode));
+                .method("PATCH", ResourceTestEntity.json(jsonNode));
         assertThat(response.getStatus(), is(400));
         JsonNode body = response.readEntity(JsonNode.class);
         assertErrorBodyMatches(body, "Value [-100] is not valid for path [corporate_credit_card_surcharge_amount]",
@@ -158,10 +148,9 @@ class GatewayAccountResourceValidationTest {
                 Map.of("op", "replace",
                         "path", "corporate_debit_card_surcharge_amount",
                         "value", "not zero or a positive number that can be represented as a long"));
-        Response response = resources.client()
-                .target("/v1/api/accounts/12")
+        ResourceTestResponse response = resources.target("/v1/api/accounts/12")
                 .request()
-                .method("PATCH", Entity.json(jsonNode));
+                .method("PATCH", ResourceTestEntity.json(jsonNode));
         assertThat(response.getStatus(), is(400));
         JsonNode body = response.readEntity(JsonNode.class);
         assertErrorBodyMatches(body, "Value [not zero or a positive number that can be represented as a long] is not valid for path [corporate_debit_card_surcharge_amount]",
@@ -174,10 +163,9 @@ class GatewayAccountResourceValidationTest {
                 Map.of("op", "replace",
                         "path", "corporate_credit_card_surcharge_amount",
                         "value", ""));
-        Response response = resources.client()
-                .target("/v1/api/accounts/12")
+        ResourceTestResponse response = resources.target("/v1/api/accounts/12")
                 .request()
-                .method("PATCH", Entity.json(jsonNode));
+                .method("PATCH", ResourceTestEntity.json(jsonNode));
         assertThat(response.getStatus(), is(400));
         JsonNode body = response.readEntity(JsonNode.class);
         assertErrorBodyMatches(body, "Value [] is not valid for path [corporate_credit_card_surcharge_amount]",
@@ -191,10 +179,9 @@ class GatewayAccountResourceValidationTest {
         valueMap.put("path", "corporate_prepaid_debit_card_surcharge_amount");
         valueMap.put("value", null);
         JsonNode jsonNode = objectMapper.valueToTree(valueMap);
-        Response response = resources.client()
-                .target("/v1/api/accounts/12")
+        ResourceTestResponse response = resources.target("/v1/api/accounts/12")
                 .request()
-                .method("PATCH", Entity.json(jsonNode));
+                .method("PATCH", ResourceTestEntity.json(jsonNode));
         assertThat(response.getStatus(), is(400));
         JsonNode body = response.readEntity(JsonNode.class);
         assertErrorBodyMatches(body, "Field [value] is required", ErrorIdentifier.GENERIC);
@@ -207,10 +194,9 @@ class GatewayAccountResourceValidationTest {
         valueMap.put("path", "allow_zero_amount");
         valueMap.put("value", null);
         JsonNode jsonNode = objectMapper.valueToTree(valueMap);
-        Response response = resources.client()
-                .target("/v1/api/accounts/12")
+        ResourceTestResponse response = resources.target("/v1/api/accounts/12")
                 .request()
-                .method("PATCH", Entity.json(jsonNode));
+                .method("PATCH", ResourceTestEntity.json(jsonNode));
         assertThat(response.getStatus(), is(400));
         JsonNode body = response.readEntity(JsonNode.class);
         assertErrorBodyMatches(body, "Field [value] is required", ErrorIdentifier.GENERIC);
@@ -223,10 +209,9 @@ class GatewayAccountResourceValidationTest {
         valueMap.put("path", "allow_zero_amount");
         valueMap.put("value", "false");
         JsonNode jsonNode = objectMapper.valueToTree(valueMap);
-        Response response = resources.client()
-                .target("/v1/api/accounts/12")
+        ResourceTestResponse response = resources.target("/v1/api/accounts/12")
                 .request()
-                .method("PATCH", Entity.json(jsonNode));
+                .method("PATCH", ResourceTestEntity.json(jsonNode));
         assertThat(response.getStatus(), is(400));
         JsonNode body = response.readEntity(JsonNode.class);
         assertErrorBodyMatches(body, "Value [false] must be of type boolean for path [allow_zero_amount]",

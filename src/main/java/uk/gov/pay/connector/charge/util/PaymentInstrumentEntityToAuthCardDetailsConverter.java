@@ -4,7 +4,9 @@ import uk.gov.pay.connector.common.model.domain.Address;
 import uk.gov.pay.connector.gateway.model.AuthCardDetails;
 import uk.gov.pay.connector.gateway.model.PayersCardType;
 import uk.gov.pay.connector.paymentinstrument.model.PaymentInstrumentEntity;
+import org.springframework.stereotype.Component;
 
+@Component
 public class PaymentInstrumentEntityToAuthCardDetailsConverter {
 
     public AuthCardDetails convert(PaymentInstrumentEntity paymentInstrumentEntity) {

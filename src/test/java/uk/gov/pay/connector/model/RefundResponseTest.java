@@ -1,8 +1,8 @@
 package uk.gov.pay.connector.model;
 
 import com.jayway.jsonassert.JsonAssert;
-import jakarta.ws.rs.core.UriBuilder;
-import jakarta.ws.rs.core.UriInfo;
+import org.springframework.web.util.UriComponentsBuilder;
+import uk.gov.pay.connector.web.BaseUri;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -32,7 +32,7 @@ import static uk.gov.pay.connector.refund.model.domain.RefundStatus.REFUND_ERROR
 class RefundResponseTest {
 
     @Mock
-    private UriInfo mockUriInfo;
+    private BaseUri mockBaseUri;
 
     @Test
     void shouldSerializeARefundWithExpectedFieldsDefined() {
@@ -49,11 +49,11 @@ class RefundResponseTest {
         String expectedPaymentLink = "http://app.com/v1/api/accounts/1/charges/" + chargeId;
         String expectedSelfLink = expectedPaymentLink + "/refunds/" + refundId;
 
-        when(mockUriInfo.getBaseUriBuilder()).thenReturn(UriBuilder.fromUri("http://app.com"),
-                UriBuilder.fromUri("http://app.com"));
+        when(mockBaseUri.getBaseUriBuilder()).thenReturn(UriComponentsBuilder.fromUriString("http://app.com"),
+                UriComponentsBuilder.fromUriString("http://app.com"));
 
         // when
-        String serializedResponse = RefundResponse.valueOf(refund, chargeEntity.getGatewayAccount().getId(), mockUriInfo).serialize();
+        String serializedResponse = RefundResponse.valueOf(refund, chargeEntity.getGatewayAccount().getId(), mockBaseUri).serialize();
 
         // then
         JsonAssert.with(serializedResponse)
@@ -81,11 +81,11 @@ class RefundResponseTest {
         String expectedPaymentLink = "http://app.com/v1/api/accounts/1/charges/" + chargeId;
         String expectedSelfLink = expectedPaymentLink + "/refunds";
 
-        when(mockUriInfo.getBaseUriBuilder()).thenReturn(UriBuilder.fromUri("http://app.com"),
-                UriBuilder.fromUri("http://app.com"), UriBuilder.fromUri("http://app.com"), UriBuilder.fromUri("http://app.com"), UriBuilder.fromUri("http://app.com"), UriBuilder.fromUri("http://app.com"));
+        when(mockBaseUri.getBaseUriBuilder()).thenReturn(UriComponentsBuilder.fromUriString("http://app.com"),
+                UriComponentsBuilder.fromUriString("http://app.com"), UriComponentsBuilder.fromUriString("http://app.com"), UriComponentsBuilder.fromUriString("http://app.com"), UriComponentsBuilder.fromUriString("http://app.com"), UriComponentsBuilder.fromUriString("http://app.com"));
 
         // when
-        String serializedResponse = RefundsResponse.valueOf(chargeEntity, List.of(refund1, refund2), mockUriInfo).serialize();
+        String serializedResponse = RefundsResponse.valueOf(chargeEntity, List.of(refund1, refund2), mockBaseUri).serialize();
 
         // then
         JsonAssert.with(serializedResponse)
@@ -126,12 +126,12 @@ class RefundResponseTest {
 
         refund.getFees().add(feeEntity);
 
-        when(mockUriInfo.getBaseUriBuilder()).thenReturn(UriBuilder.fromUri("http://app.com"),
-                UriBuilder.fromUri("http://app.com"));
+        when(mockBaseUri.getBaseUriBuilder()).thenReturn(UriComponentsBuilder.fromUriString("http://app.com"),
+                UriComponentsBuilder.fromUriString("http://app.com"));
 
         // when
         String serializedResponse = RefundResponse.valueOf(refund, chargeEntity.getGatewayAccount().getId(), 
-                mockUriInfo).serialize();
+                mockBaseUri).serialize();
 
         // then
         JsonAssert.with(serializedResponse).assertThat("$.fee", is(2))
@@ -155,14 +155,14 @@ class RefundResponseTest {
 
         refund.getFees().add(feeEntity);
 
-        when(mockUriInfo.getBaseUriBuilder()).thenReturn(
-                UriBuilder.fromUri("http://app.com"),
-                UriBuilder.fromUri("http://app.com")
+        when(mockBaseUri.getBaseUriBuilder()).thenReturn(
+                UriComponentsBuilder.fromUriString("http://app.com"),
+                UriComponentsBuilder.fromUriString("http://app.com")
         );
 
         // when
         String serializedResponse = RefundResponse.valueOf(refund, "service-id", GatewayAccountType.TEST, 
-                mockUriInfo).serialize();
+                mockBaseUri).serialize();
 
         // then
         JsonAssert
@@ -183,12 +183,12 @@ class RefundResponseTest {
                 .withChargeExternalId(chargeEntity.getExternalId())
                 .build();
 
-        when(mockUriInfo.getBaseUriBuilder()).thenReturn(UriBuilder.fromUri("http://app.com"),
-                UriBuilder.fromUri("http://app.com"));
+        when(mockBaseUri.getBaseUriBuilder()).thenReturn(UriComponentsBuilder.fromUriString("http://app.com"),
+                UriComponentsBuilder.fromUriString("http://app.com"));
 
         // when
         String serializedResponse = RefundResponse.valueOf(refund, chargeEntity.getGatewayAccount().getId(), 
-                mockUriInfo).serialize();
+                mockBaseUri).serialize();
 
         // then
         JsonAssert.
@@ -214,14 +214,14 @@ class RefundResponseTest {
 
         refund.getFees().add(feeEntity);
 
-        when(mockUriInfo.getBaseUriBuilder()).thenReturn(
-                UriBuilder.fromUri("http://app.com"),
-                UriBuilder.fromUri("http://app.com")
+        when(mockBaseUri.getBaseUriBuilder()).thenReturn(
+                UriComponentsBuilder.fromUriString("http://app.com"),
+                UriComponentsBuilder.fromUriString("http://app.com")
         );
 
         // when
         String serializedResponse = RefundResponse.valueOf(refund, "service-id", GatewayAccountType.TEST,
-                mockUriInfo).serialize();
+                mockBaseUri).serialize();
 
         // then
         JsonAssert

@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.paymentprocessor.service;
 
-import io.dropwizard.core.setup.Environment;
+import com.codahale.metrics.MetricRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +25,7 @@ class AuthorisationServiceTest {
     @Mock
     CardExecutorService executorService;
     @Mock
-    Environment environment;
+    MetricRegistry environment;
     @Mock
     ConnectorConfiguration config;
 

@@ -1,14 +1,16 @@
 package uk.gov.pay.connector.idempotency.dao;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import uk.gov.pay.connector.common.dao.JpaDao;
 import uk.gov.pay.connector.idempotency.model.IdempotencyEntity;
 
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public class IdempotencyDao extends JpaDao<IdempotencyEntity> {
     @Inject
     public IdempotencyDao(Provider<EntityManager> entityManager) {

@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.queue.tasks.handlers.adyen;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Inject;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -22,6 +22,7 @@ import uk.gov.pay.connector.util.RandomIdGenerator;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import org.springframework.stereotype.Component;
 
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.ADYEN;
 import static uk.gov.pay.connector.gateway.adyen.AdyenRequestFactory.SHOPPER_REFERENCE_DELIMITER;
@@ -37,6 +38,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_INSTRUMENT_EXT
 import static uk.gov.service.payments.logging.LoggingKeys.PROVIDER;
 import static uk.gov.service.payments.logging.LoggingKeys.PROVIDER_EVENT_ID;
 
+@Component
 public class AdyenTokenWebhookNotificationHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AdyenTokenWebhookNotificationHandler.class);

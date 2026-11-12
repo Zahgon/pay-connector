@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.gateway.exception;
 
-import jakarta.ws.rs.WebApplicationException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 
 import static uk.gov.pay.connector.util.ResponseUtil.serviceErrorResponse;
 

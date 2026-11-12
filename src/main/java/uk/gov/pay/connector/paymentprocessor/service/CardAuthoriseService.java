@@ -1,8 +1,8 @@
 package uk.gov.pay.connector.paymentprocessor.service;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.inject.persist.Transactional;
-import io.dropwizard.core.setup.Environment;
+import org.springframework.transaction.annotation.Transactional;
+
 import io.prometheus.client.Counter;
 import jakarta.inject.Inject;
 import org.apache.commons.lang3.ArrayUtils;
@@ -48,6 +48,7 @@ import uk.gov.service.payments.commons.model.AuthorisationMode;
 
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.AUTHORISATION_REJECTED;
@@ -56,6 +57,7 @@ import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.AUTHORISATIO
 import static uk.gov.pay.connector.charge.util.CorporateCardSurchargeCalculator.getCorporateCardSurchargeFor;
 import static uk.gov.pay.connector.gateway.model.AuthorisationRequestSummary.Presence.PRESENT;
 
+@Service
 public class CardAuthoriseService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CardAuthoriseService.class);
@@ -92,7 +94,7 @@ public class CardAuthoriseService {
                                 AuthorisationLogger authorisationLogger,
                                 ChargeEligibleForCaptureService chargeEligibleForCaptureService,
                                 PaymentInstrumentEntityToAuthCardDetailsConverter paymentInstrumentEntityToAuthCardDetailsConverter,
-                                Environment environment) {
+                                MetricRegistry metricRegistry) {
         this.cardTypeDao = cardTypeDao;
         this.providers = providers;
         this.authorisationService = authorisationService;
@@ -101,7 +103,7 @@ public class CardAuthoriseService {
         this.authorisationLogger = authorisationLogger;
         this.chargeEligibleForCaptureService = chargeEligibleForCaptureService;
         this.paymentInstrumentEntityToAuthCardDetailsConverter = paymentInstrumentEntityToAuthCardDetailsConverter;
-        this.metricRegistry = environment.metrics();
+        this.metricRegistry = metricRegistry;
     }
 
     public AuthorisationResponse doAuthoriseWeb(String chargeId, AuthCardDetails authCardDetails) {

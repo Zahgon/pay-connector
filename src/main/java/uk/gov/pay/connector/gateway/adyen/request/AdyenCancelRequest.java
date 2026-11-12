@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.gateway.adyen.request;
 
-import jakarta.ws.rs.core.MediaType;
+import org.springframework.http.MediaType;
 import uk.gov.pay.connector.gateway.GatewayOrder;
 import uk.gov.pay.connector.gateway.PaymentGatewayName;
 import uk.gov.pay.connector.gateway.adyen.request.json.CancelRequestPayload;
@@ -27,7 +27,7 @@ public record AdyenCancelRequest(URI url,
     @Override
     public GatewayOrder getGatewayOrder() {
         var payload = objectMapper.objectToString(paymentCancelRequest);
-        return new GatewayOrder(OrderRequestType.CANCEL, payload, MediaType.APPLICATION_JSON_TYPE);
+        return new GatewayOrder(OrderRequestType.CANCEL, payload, MediaType.APPLICATION_JSON);
     }
 
     @Override

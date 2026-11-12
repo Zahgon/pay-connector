@@ -32,7 +32,7 @@ class DeleteStoredPaymentDetailsTaskHandlerIT {
 
     @BeforeEach
     void setUp() {
-        deleteStoredPaymentDetailsTaskHandler = app.getInstanceFromGuiceContainer(DeleteStoredPaymentDetailsTaskHandler.class);
+        deleteStoredPaymentDetailsTaskHandler = app.getBean(DeleteStoredPaymentDetailsTaskHandler.class);
     }
 
     @Test

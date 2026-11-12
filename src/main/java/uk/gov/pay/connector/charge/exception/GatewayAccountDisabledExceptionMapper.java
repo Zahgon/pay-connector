@@ -5,13 +5,16 @@ import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.common.model.api.ErrorResponse;
 import uk.gov.service.payments.commons.model.ErrorIdentifier;
 
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.ext.ExceptionMapper;
 import java.util.List;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import uk.gov.pay.connector.web.ExceptionMapper;
+import org.springframework.http.HttpStatus;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
-import static jakarta.ws.rs.core.Response.Status.FORBIDDEN;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 
+@Component
 public class GatewayAccountDisabledExceptionMapper implements ExceptionMapper<GatewayAccountDisabledException> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GatewayAccountDisabledExceptionMapper.class);
@@ -19,14 +22,13 @@ public class GatewayAccountDisabledExceptionMapper implements ExceptionMapper<Ga
     private static final String RESPONSE_ERROR_MESSAGE = "This gateway account is disabled";
 
     @Override
-    public Response toResponse(GatewayAccountDisabledException exception) {
+    public ResponseEntity<ErrorResponse> toResponse(GatewayAccountDisabledException exception) {
         LOGGER.info(exception.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(ErrorIdentifier.ACCOUNT_DISABLED, List.of(RESPONSE_ERROR_MESSAGE));
 
-        return Response.status(FORBIDDEN)
-                .entity(errorResponse)
-                .type(APPLICATION_JSON)
-                .build();
+        return ResponseEntity.status(FORBIDDEN)
+                .contentType(APPLICATION_JSON)
+                .body(errorResponse);
     }
 }

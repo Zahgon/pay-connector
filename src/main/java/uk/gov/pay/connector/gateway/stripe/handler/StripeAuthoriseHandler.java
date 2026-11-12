@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.gateway.stripe.handler;
 
-import com.google.inject.Inject;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.agreement.model.AgreementEntity;
@@ -35,8 +35,8 @@ import uk.gov.service.payments.commons.api.exception.ValidationException;
 
 import java.util.List;
 
-import static jakarta.ws.rs.core.Response.Status.Family.CLIENT_ERROR;
-import static jakarta.ws.rs.core.Response.Status.Family.SERVER_ERROR;
+import static uk.gov.pay.connector.gateway.GatewayException.Family.CLIENT_ERROR;
+import static uk.gov.pay.connector.gateway.GatewayException.Family.SERVER_ERROR;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static org.apache.hc.core5.http.HttpStatus.SC_UNAUTHORIZED;
 import static uk.gov.pay.connector.gateway.model.GatewayError.gatewayConnectionError;

@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.token.dao;
 
-import com.google.inject.Provider;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Provider;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
 import uk.gov.pay.connector.common.dao.JpaDao;
 import uk.gov.pay.connector.token.model.domain.TokenEntity;
@@ -9,8 +9,10 @@ import uk.gov.pay.connector.token.model.domain.TokenEntity;
 import jakarta.inject.Inject;
 import java.time.ZonedDateTime;
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
 @Transactional
+@Repository
 public class TokenDao extends JpaDao<TokenEntity> {
 
     @Inject

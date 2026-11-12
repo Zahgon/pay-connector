@@ -1,8 +1,7 @@
 package uk.gov.pay.connector.paymentprocessor.service;
 
-
 import com.codahale.metrics.MetricRegistry;
-import io.dropwizard.core.setup.Environment;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -22,12 +21,14 @@ import uk.gov.pay.connector.paymentprocessor.model.OperationType;
 import jakarta.inject.Inject;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.springframework.stereotype.Service;
 
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.AUTHORISATION_ERROR;
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.AUTHORISATION_TIMEOUT;
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.AUTHORISATION_UNEXPECTED_ERROR;
 import static uk.gov.pay.connector.paymentprocessor.service.CardExecutorService.ExecutionStatus;
 
+@Service
 public class AuthorisationService {
 
     private final CardExecutorService cardExecutorService;
@@ -36,9 +37,9 @@ public class AuthorisationService {
     private final AuthorisationConfig authorisationConfig;
 
     @Inject
-    public AuthorisationService(CardExecutorService cardExecutorService, Environment environment, ConnectorConfiguration configuration) {
+    public AuthorisationService(CardExecutorService cardExecutorService, MetricRegistry metricRegistry, ConnectorConfiguration configuration) {
         this.cardExecutorService = cardExecutorService;
-        this.metricRegistry = environment.metrics();
+        this.metricRegistry = metricRegistry;
         this.authorisationConfig = configuration.getAuthorisationConfig();
     }
 

@@ -1,7 +1,17 @@
 package uk.gov.pay.connector.gatewayaccount.service;
 
+import org.springframework.stereotype.Component;
 
-public interface GatewayAccountServicesFactory {
+@Component
+public class GatewayAccountServicesFactory {
 
-    GatewayAccountService getUpdateService();
+    private final GatewayAccountService gatewayAccountService;
+
+    public GatewayAccountServicesFactory(GatewayAccountService gatewayAccountService) {
+        this.gatewayAccountService = gatewayAccountService;
+    }
+
+    public GatewayAccountService getUpdateService() {
+        return gatewayAccountService;
+    }
 }

@@ -10,7 +10,7 @@ import uk.gov.pay.connector.gateway.model.request.GatewayClientPostRequest;
 import uk.gov.pay.connector.gateway.util.AuthUtil;
 import uk.gov.pay.connector.gatewayaccount.model.GatewayAccountType;
 
-import jakarta.ws.rs.core.MediaType;
+import org.springframework.http.MediaType;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
@@ -84,7 +84,7 @@ public class StripeSubmitTestDisputeEvidenceRequest implements GatewayClientPost
 
         String payload = WWWFormCodec.format(result, UTF_8);
 
-        GatewayOrder order = new GatewayOrder(orderRequestType(), payload, MediaType.APPLICATION_FORM_URLENCODED_TYPE);
+        GatewayOrder order = new GatewayOrder(orderRequestType(), payload, MediaType.APPLICATION_FORM_URLENCODED);
         return order;
     }
 }

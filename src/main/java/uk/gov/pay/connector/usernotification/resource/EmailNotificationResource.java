@@ -1,15 +1,11 @@
 package uk.gov.pay.connector.usernotification.resource;
 
-import com.google.inject.persist.Transactional;
-import io.dropwizard.jersey.PATCH;
+import org.springframework.transaction.annotation.Transactional;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.gatewayaccount.exception.GatewayAccountNotFoundException;
 import uk.gov.pay.connector.gatewayaccount.model.GatewayAccountEntity;
 import uk.gov.pay.connector.gatewayaccount.model.GatewayAccountType;
@@ -20,19 +16,21 @@ import uk.gov.pay.connector.usernotification.model.domain.EmailNotificationType;
 
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Response;
 import java.util.List;
 import java.util.Optional;
 
-import static java.lang.String.format;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
-import static uk.gov.pay.connector.util.ResponseUtil.notFoundResponse;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import uk.gov.pay.connector.web.MediaTypes;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
 
-@Path("/")
+import static java.lang.String.format;
+import static uk.gov.pay.connector.util.ResponseUtil.notFoundResponse;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
+@RestController
 public class EmailNotificationResource {
 
     public static final String EMAIL_NOTIFICATION_TEMPLATE_BODY = "template_body";
@@ -45,10 +43,8 @@ public class EmailNotificationResource {
         this.gatewayAccountService = gatewayAccountService;
     }
 
-    @PATCH
-    @Path("/v1/api/accounts/{accountId}/email-notification")
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
+    @PatchMapping("/v1/api/accounts/{accountId}/email-notification")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @Transactional
     @Operation(
             summary = "Enables/disables email notifications for gateway account",
@@ -58,7 +54,7 @@ public class EmailNotificationResource {
                     " - /payment_confirmed/template_body<br>" +
                     " - /refund_issued/template_body",
             tags = {"Gateway accounts"},
-            requestBody = @RequestBody(content = @Content(schema = @Schema(example = "{" +
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(schema = @Schema(example = "{" +
                     "    \"op\":\"replace\", \"path\":\"/payment_confirmed/enabled\", \"value\": false" +
                     "}"))),
             responses = {
@@ -67,9 +63,9 @@ public class EmailNotificationResource {
                     @ApiResponse(responseCode = "404", description = "Not found")
             }
     )
-    public Response enableEmailNotification(@Parameter(example = "1", description = "Gateway account ID")
-                                            @PathParam("accountId") Long gatewayAccountId,
-                                            @Valid EmailNotificationPatchRequest request) {
+    public ResponseEntity<?> enableEmailNotification(@Parameter(example = "1", description = "Gateway account ID")
+                                            @PathVariable("accountId") Long gatewayAccountId,
+                                            @Valid @RequestBody(required = false) EmailNotificationPatchRequest request) {
 
         return gatewayAccountService.getGatewayAccount(gatewayAccountId)
                 .map(gatewayAccount -> {
@@ -81,15 +77,13 @@ public class EmailNotificationResource {
                                 return newDisabledEmailNotificationEntityWithNoTemplate(gatewayAccount, type);
                             });
                     patch(notificationEntity, patchInfo);
-                    return Response.ok().build();
+                    return ResponseEntity.ok().build();
                 })
                 .orElseGet(() -> notFoundResponse(format("The gateway account id '%s' does not exist", gatewayAccountId)));
     }
 
-    @PATCH
-    @Path("/v1/api/service/{serviceId}/account/{accountType}/email-notification")
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
+    @PatchMapping("/v1/api/service/{serviceId}/account/{accountType}/email-notification")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @Transactional
     @Operation(
             summary = "Enables/disables email notifications for gateway account",
@@ -99,7 +93,7 @@ public class EmailNotificationResource {
                     " - /payment_confirmed/template_body<br>" +
                     " - /refund_issued/template_body",
             tags = {"Gateway accounts"},
-            requestBody = @RequestBody(content = @Content(schema = @Schema(example = "{" +
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(schema = @Schema(example = "{" +
                     "    \"op\":\"replace\", \"path\":\"/payment_confirmed/enabled\", \"value\": false" +
                     "}"))),
             responses = {
@@ -108,10 +102,10 @@ public class EmailNotificationResource {
                     @ApiResponse(responseCode = "404", description = "Not found")
             }
     )
-    public Response enableEmailNotificationByServiceIdAndAccountType(
-            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathParam("serviceId") String serviceId,
-            @Parameter(example = "test", description = "Account type") @PathParam("accountType") GatewayAccountType accountType,
-            @Valid EmailNotificationPatchRequest request) {
+    public ResponseEntity<?> enableEmailNotificationByServiceIdAndAccountType(
+            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathVariable("serviceId") String serviceId,
+            @Parameter(example = "test", description = "Account type") @PathVariable("accountType") GatewayAccountType accountType,
+            @Valid @RequestBody(required = false) EmailNotificationPatchRequest request) {
 
         return gatewayAccountService.getGatewayAccountByServiceIdAndAccountType(serviceId, accountType)
                 .map(gatewayAccount -> {
@@ -124,7 +118,7 @@ public class EmailNotificationResource {
                                 return newDisabledEmailNotificationEntityWithNoTemplate(gatewayAccount, notificationType);
                             });
                     patch(notificationEntity, patchInfo);
-                    return Response.ok().build();
+                    return ResponseEntity.ok().build();
                 })
                 .orElseThrow(() -> new GatewayAccountNotFoundException(serviceId, accountType));
     }

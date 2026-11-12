@@ -1,16 +1,16 @@
 package uk.gov.pay.connector.gateway.worldpay.exception;
 
-import jakarta.ws.rs.ProcessingException;
-import jakarta.ws.rs.WebApplicationException;
-import org.apache.hc.core5.http.HttpStatus;
+import org.springframework.http.HttpStatus;
+import uk.gov.pay.connector.client.HttpClientException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 
 public class ThreeDsFlexDdcServiceUnavailableException extends WebApplicationException {
 
-    public ThreeDsFlexDdcServiceUnavailableException(ProcessingException exception) {
-        super(exception, HttpStatus.SC_SERVICE_UNAVAILABLE);
+    public ThreeDsFlexDdcServiceUnavailableException(HttpClientException exception) {
+        super(null, exception, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
     public ThreeDsFlexDdcServiceUnavailableException() {
-        super(HttpStatus.SC_SERVICE_UNAVAILABLE);
+        super(HttpStatus.SERVICE_UNAVAILABLE);
     }
 }

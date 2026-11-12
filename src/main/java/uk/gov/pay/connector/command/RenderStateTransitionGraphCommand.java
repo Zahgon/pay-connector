@@ -1,9 +1,8 @@
 package uk.gov.pay.connector.command;
 
-import io.dropwizard.core.cli.Command;
-import io.dropwizard.core.setup.Bootstrap;
-import net.sourceforge.argparse4j.inf.Namespace;
-import net.sourceforge.argparse4j.inf.Subparser;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Configuration;
 import uk.gov.pay.connector.common.model.domain.PaymentGatewayStateTransitions;
 
 import java.io.IOException;
@@ -13,19 +12,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
-public class RenderStateTransitionGraphCommand extends Command {
-    public RenderStateTransitionGraphCommand() {
-        super("render-state-transition-graph",
-                "Outputs a representation of the connector state transitions as a graphviz 'dot' file");
-    }
-
-
-    @Override
-    public void configure(Subparser subparser) {
-    }
+/**
+ * The {@code render-state-transition-graph} command: outputs a representation of the connector state transitions as
+ * a graphviz 'dot' file.
+ */
+@Configuration(proxyBeanMethods = false)
+public class RenderStateTransitionGraphCommand implements ApplicationRunner {
 
     @Override
-    public void run(Bootstrap<?> bootstrap, Namespace namespace) throws Exception {
+    public void run(ApplicationArguments args) throws Exception {
         String data = new StateTransitionGraphVizRenderer(PaymentGatewayStateTransitions.getInstance()).toString();
 
         Path path = Paths.get("states.dot");

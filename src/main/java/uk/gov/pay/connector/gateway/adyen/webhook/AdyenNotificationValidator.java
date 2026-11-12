@@ -11,10 +11,12 @@ import uk.gov.pay.connector.gateway.exception.AdyenNotificationException;
 import uk.gov.pay.connector.util.IpDomainMatcher;
 
 import java.security.SignatureException;
+import org.springframework.stereotype.Component;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static uk.gov.pay.connector.gateway.adyen.utils.AdyenConfigUtil.getHmacKeyForWebhookType;
 
+@Component
 public class AdyenNotificationValidator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AdyenNotificationValidator.class);

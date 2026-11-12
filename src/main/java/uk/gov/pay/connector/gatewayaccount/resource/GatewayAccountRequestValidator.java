@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.gatewayaccount.resource;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.inject.Inject;
+import jakarta.inject.Inject;
 import uk.gov.pay.connector.common.validator.RequestValidator;
 import uk.gov.pay.connector.gatewayaccount.model.EmailCollectionMode;
 import uk.gov.service.payments.commons.api.exception.ValidationException;
@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import org.springframework.stereotype.Component;
 
 import static java.lang.String.format;
 import static uk.gov.pay.connector.gatewayaccount.model.GatewayAccount.FIELD_NOTIFY_API_TOKEN;
@@ -23,6 +24,7 @@ import static uk.gov.service.payments.commons.model.jsonpatch.JsonPatchOp.REMOVE
 import static uk.gov.service.payments.commons.model.jsonpatch.JsonPatchOp.REPLACE;
 
 
+@Component
 public class GatewayAccountRequestValidator {
 
     public static final String FIELD_ALLOW_APPLE_PAY = "allow_apple_pay";

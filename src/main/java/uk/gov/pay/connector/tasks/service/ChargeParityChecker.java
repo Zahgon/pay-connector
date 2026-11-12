@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.tasks.service;
 
-import com.google.inject.Inject;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import org.springframework.stereotype.Component;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -88,6 +89,7 @@ import static uk.gov.pay.connector.tasks.service.ParityCheckService.FIELD_NAME;
 import static uk.gov.service.payments.commons.model.CommonDateTimeFormatters.ISO_INSTANT_MILLISECOND_PRECISION;
 import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 
+@Component
 public class ChargeParityChecker {
     
     private static final Logger logger = LoggerFactory.getLogger(ChargeParityChecker.class);

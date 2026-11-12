@@ -54,8 +54,8 @@ public class GatewayAccountDaoIT {
 
     @BeforeEach
     void setUp() {
-        gatewayAccountDao = app.getInstanceFromGuiceContainer(GatewayAccountDao.class);
-        gatewayAccountCredentialsDao = app.getInstanceFromGuiceContainer(GatewayAccountCredentialsDao.class);
+        gatewayAccountDao = app.getBean(GatewayAccountDao.class);
+        gatewayAccountCredentialsDao = app.getBean(GatewayAccountCredentialsDao.class);
         databaseFixtures = app.getDatabaseFixtures();
         gatewayAccountId = secureRandomLong();
     }

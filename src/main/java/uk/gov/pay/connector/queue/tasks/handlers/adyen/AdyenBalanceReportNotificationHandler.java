@@ -3,8 +3,8 @@ package uk.gov.pay.connector.queue.tasks.handlers.adyen;
 import com.adyen.model.reportwebhooks.ReportNotificationData;
 import com.adyen.model.reportwebhooks.ReportNotificationRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
+import jakarta.inject.Inject;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -13,7 +13,9 @@ import uk.gov.pay.connector.gateway.exception.AdyenNotificationException;
 import uk.gov.pay.connector.queue.payout.AdyenPayoutReconciliationPayload;
 import uk.gov.pay.connector.queue.payout.PayoutReconcileQueue;
 import uk.gov.service.payments.commons.queue.exception.QueueException;
+import org.springframework.stereotype.Component;
 
+@Component
 public class AdyenBalanceReportNotificationHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AdyenBalanceReportNotificationHandler.class);

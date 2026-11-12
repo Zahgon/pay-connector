@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.gatewayaccount.service;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Inject;
+import org.springframework.transaction.annotation.Transactional;
 import uk.gov.pay.connector.gatewayaccount.dao.StripeAccountSetupDao;
 import uk.gov.pay.connector.gatewayaccount.model.GatewayAccountEntity;
 import uk.gov.pay.connector.gatewayaccount.model.StripeAccountSetup;
@@ -10,7 +10,9 @@ import uk.gov.pay.connector.gatewayaccount.model.StripeAccountSetupTaskEntity;
 import uk.gov.pay.connector.gatewayaccount.model.StripeAccountSetupUpdateRequest;
 
 import java.util.List;
+import org.springframework.stereotype.Service;
 
+@Service
 public class StripeAccountSetupService {
 
     private final StripeAccountSetupDao stripeAccountSetupDao;

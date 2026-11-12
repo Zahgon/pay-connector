@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.paymentinstrument.service;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Inject;
+import org.springframework.transaction.annotation.Transactional;
 import uk.gov.pay.connector.charge.exception.PaymentInstrumentNotFoundRuntimeException;
 import uk.gov.pay.connector.charge.model.domain.ChargeEntity;
 import uk.gov.pay.connector.client.ledger.service.LedgerService;
@@ -12,7 +12,9 @@ import uk.gov.pay.connector.paymentinstrument.model.PaymentInstrumentStatus;
 
 import java.time.InstantSource;
 import java.util.Map;
+import org.springframework.stereotype.Service;
 
+@Service
 public class PaymentInstrumentService {
 
     private final PaymentInstrumentDao paymentInstrumentDao;

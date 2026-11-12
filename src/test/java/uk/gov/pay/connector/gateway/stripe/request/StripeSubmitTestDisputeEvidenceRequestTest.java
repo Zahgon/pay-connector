@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.gateway.stripe.request;
 
-import jakarta.ws.rs.core.MediaType;
+import org.springframework.http.MediaType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,7 +52,7 @@ class StripeSubmitTestDisputeEvidenceRequestTest {
     void shouldCreateGatewayOrder() {
         GatewayOrder gatewayOrder = request.getGatewayOrder();
         assertThat(gatewayOrder.orderRequestType(), is(OrderRequestType.STRIPE_UPDATE_DISPUTE));
-        assertThat(gatewayOrder.mediaType().toString(), is(MediaType.APPLICATION_FORM_URLENCODED));
+        assertThat(gatewayOrder.mediaType().toString(), is(MediaType.APPLICATION_FORM_URLENCODED_VALUE));
         assertThat(gatewayOrder.payload(), is("evidence%5Buncategorized_text%5D=winning_evidence"));
     }
 

@@ -8,21 +8,21 @@ import org.slf4j.MDC;
 import uk.gov.pay.connector.expunge.service.ExpungeService;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.Response;
 import java.util.UUID;
 
-import static io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
-import static jakarta.ws.rs.core.Response.Status.OK;
-import static jakarta.ws.rs.core.Response.status;
-import static uk.gov.service.payments.logging.LoggingKeys.MDC_REQUEST_ID_KEY;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+import uk.gov.pay.connector.web.QueryParam;
+import uk.gov.pay.connector.web.MediaTypes;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 
-@Path("/")
+import static io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY;
+import static uk.gov.service.payments.logging.LoggingKeys.MDC_REQUEST_ID_KEY;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 @Tag(name = "Tasks")
+@RestController
 public class ExpungeResource {
 
     private ExpungeService expungeService;
@@ -32,9 +32,8 @@ public class ExpungeResource {
         this.expungeService = expungeService;
     }
 
-    @POST
-    @Path("/v1/tasks/expunge")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/tasks/expunge")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Expunge charges and refunds in terminal state",
             description = "Task to expunge charges and refunds on terminal or expungeable state from connector.<br>" +
@@ -44,7 +43,7 @@ public class ExpungeResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response expunge(
+    public ResponseEntity<?> expunge(
             @Parameter(in = QUERY, example = "100",
                     description = "Number of charges to expunge. Defaults to EXPUNGE_NO_OF_CHARGES_PER_TASK_RUN environment variable or configuration default")
             @QueryParam("number_of_charges_to_expunge") Integer noOfChargesToExpunge,
@@ -55,6 +54,6 @@ public class ExpungeResource {
         MDC.put(MDC_REQUEST_ID_KEY, correlationId);
         expungeService.expunge(noOfChargesToExpunge, noOfRefundsToExpunge);
         MDC.remove(MDC_REQUEST_ID_KEY);
-        return status(OK).build();
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 }

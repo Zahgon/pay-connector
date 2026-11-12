@@ -19,10 +19,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.matchingXPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static io.restassured.http.ContentType.JSON;
-import static jakarta.ws.rs.core.HttpHeaders.COOKIE;
-import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
-import static jakarta.ws.rs.core.Response.Status.OK;
-import static jakarta.ws.rs.core.Response.Status.PAYMENT_REQUIRED;
+import static org.springframework.http.HttpHeaders.COOKIE;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.PAYMENT_REQUIRED;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -70,7 +70,7 @@ public class WorldpayCardResourceIT {
                 .body(validAuthorisationDetails)
                 .post(ITestBaseExtension.authoriseChargeUrlFor(chargeId))
                 .then()
-                .statusCode(OK.getStatusCode());
+                .statusCode(OK.value());
 
         assertNotEquals(app.getDatabaseTestHelper().getChargeByExternalId(chargeId), gatewayTransactionId);
     }
@@ -205,7 +205,7 @@ public class WorldpayCardResourceIT {
                 .body(validApplePayAuthorisationDetails)
                 .post(ITestBaseExtension.authoriseChargeUrlForApplePay(chargeId))
                 .then()
-                .statusCode(BAD_REQUEST.getStatusCode())
+                .statusCode(BAD_REQUEST.value())
                 .contentType(JSON)
                 .body("message", contains("This transaction was declined."))
                 .body("error_identifier", is(ErrorIdentifier.AUTHORISATION_REJECTED.toString()));
@@ -311,7 +311,7 @@ public class WorldpayCardResourceIT {
                 .body(validAuthorisationDetails)
                 .post(ITestBaseExtension.authoriseChargeUrlFor(chargeId))
                 .then()
-                .statusCode(PAYMENT_REQUIRED.getStatusCode());
+                .statusCode(PAYMENT_REQUIRED.value());
 
         testBaseExtension.assertFrontendChargeStatusAndTransactionId(chargeId, AUTHORISATION_UNEXPECTED_ERROR.toString());
     }
@@ -354,7 +354,7 @@ public class WorldpayCardResourceIT {
                 .body(ITestBaseExtension.buildJsonWithPaResponse())
                 .post(ITestBaseExtension.authorise3dsChargeUrlFor(chargeId))
                 .then()
-                .statusCode(BAD_REQUEST.getStatusCode())
+                .statusCode(BAD_REQUEST.value())
                 .contentType(JSON)
                 .body("status", is(AUTHORISATION_REJECTED.toString()));
 
@@ -372,7 +372,7 @@ public class WorldpayCardResourceIT {
                 .body(ITestBaseExtension.buildJsonWithPaResponse())
                 .post(ITestBaseExtension.authorise3dsChargeUrlFor(chargeId))
                 .then()
-                .statusCode(PAYMENT_REQUIRED.getStatusCode())
+                .statusCode(PAYMENT_REQUIRED.value())
                 .contentType(JSON)
                 .body("message", contains(expectedErrorMessage))
                 .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
@@ -391,7 +391,7 @@ public class WorldpayCardResourceIT {
                 .body(ITestBaseExtension.buildJsonWithPaResponse())
                 .post(ITestBaseExtension.authorise3dsChargeUrlFor(chargeId))
                 .then()
-                .statusCode(PAYMENT_REQUIRED.getStatusCode())
+                .statusCode(PAYMENT_REQUIRED.value())
                 .contentType(JSON)
                 .body("message", contains(expectedErrorMessage))
                 .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));

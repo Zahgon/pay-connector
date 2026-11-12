@@ -30,15 +30,15 @@ public class StripeCardAuthoriseServiceIT {
                 STRIPE_RECURRING_AUTH_TOKEN_PAYMENT_METHOD_ID_KEY, "pm_abc123");
         ChargeUtils.ExternalChargeId userNotPresentChargeId = testBaseExtension.addChargeWithAuthorisationModeAgreement(recurringAuthToken);
 
-        var successCharge = app.getInstanceFromGuiceContainer(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
+        var successCharge = app.getBean(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
 
         app.getStripeMockClient().mockCreatePaymentIntent();
 
-        var successResponse = app.getInstanceFromGuiceContainer(CardAuthoriseService.class).doAuthoriseUserNotPresent(successCharge);
+        var successResponse = app.getBean(CardAuthoriseService.class).doAuthoriseUserNotPresent(successCharge);
         assertThat(successResponse.getGatewayError(), is(Optional.empty()));
         assertThat(successResponse.getAuthoriseStatus(), is(Optional.of(BaseAuthoriseResponse.AuthoriseStatus.AUTHORISED)));
 
-        var mergedCharge = app.getInstanceFromGuiceContainer(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
+        var mergedCharge = app.getBean(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
         assertThat(mergedCharge.getRequires3ds(), is(false));
     }
 
@@ -49,11 +49,11 @@ public class StripeCardAuthoriseServiceIT {
                 STRIPE_RECURRING_AUTH_TOKEN_PAYMENT_METHOD_ID_KEY, "pm_abc123");
         ChargeUtils.ExternalChargeId userNotPresentChargeId = testBaseExtension.addChargeWithAuthorisationModeAgreement(recurringAuthToken);
 
-        var chargeEntity = app.getInstanceFromGuiceContainer(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
+        var chargeEntity = app.getBean(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
 
         app.getStripeMockClient().mockAuthorisationFailedPaymentIntentAndRetriableForUserNotPresentPayment();
 
-        var authorisationResponse = app.getInstanceFromGuiceContainer(CardAuthoriseService.class).doAuthoriseUserNotPresent(chargeEntity);
+        var authorisationResponse = app.getBean(CardAuthoriseService.class).doAuthoriseUserNotPresent(chargeEntity);
         assertThat(authorisationResponse.getGatewayError(), is(Optional.empty()));
         assertThat(authorisationResponse.getAuthoriseStatus(), is(Optional.of(BaseAuthoriseResponse.AuthoriseStatus.REJECTED)));
 
@@ -61,7 +61,7 @@ public class StripeCardAuthoriseServiceIT {
 
         assertThat(chargeUpdated.get("can_retry"), is(true));
 
-        var mergedCharge = app.getInstanceFromGuiceContainer(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
+        var mergedCharge = app.getBean(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
         assertThat(mergedCharge.getRequires3ds(), is(false));
     }
 
@@ -72,11 +72,11 @@ public class StripeCardAuthoriseServiceIT {
                 STRIPE_RECURRING_AUTH_TOKEN_PAYMENT_METHOD_ID_KEY, "pm_abc123");
         ChargeUtils.ExternalChargeId userNotPresentChargeId = testBaseExtension.addChargeWithAuthorisationModeAgreement(recurringAuthToken);
 
-        var chargeEntity = app.getInstanceFromGuiceContainer(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
+        var chargeEntity = app.getBean(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
 
         app.getStripeMockClient().mockAuthorisationFailedPaymentIntentAndNonRetriableForUserNotPresentPayment();
 
-        var authorisationResponse = app.getInstanceFromGuiceContainer(CardAuthoriseService.class).doAuthoriseUserNotPresent(chargeEntity);
+        var authorisationResponse = app.getBean(CardAuthoriseService.class).doAuthoriseUserNotPresent(chargeEntity);
         assertThat(authorisationResponse.getGatewayError(), is(Optional.empty()));
         assertThat(authorisationResponse.getAuthoriseStatus(), is(Optional.of(BaseAuthoriseResponse.AuthoriseStatus.REJECTED)));
 
@@ -87,7 +87,7 @@ public class StripeCardAuthoriseServiceIT {
         Map<String, Object> paymentInstrument = app.getDatabaseTestHelper().getPaymentInstrumentByChargeExternalId(chargeEntity.getExternalId());
         assertThat(paymentInstrument.get("status"), is("INACTIVE"));
 
-        var mergedCharge = app.getInstanceFromGuiceContainer(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
+        var mergedCharge = app.getBean(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
         assertThat(mergedCharge.getRequires3ds(), is(false));
     }
 
@@ -98,11 +98,11 @@ public class StripeCardAuthoriseServiceIT {
                 STRIPE_RECURRING_AUTH_TOKEN_PAYMENT_METHOD_ID_KEY, "pm_abc123");
         ChargeUtils.ExternalChargeId userNotPresentChargeId = testBaseExtension.addChargeWithAuthorisationModeAgreement(recurringAuthToken);
 
-        var chargeEntity = app.getInstanceFromGuiceContainer(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
+        var chargeEntity = app.getBean(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
 
         app.getStripeMockClient().mockAuthorisationErrorForUserNotPresentPayment();
 
-        var authorisationResponse = app.getInstanceFromGuiceContainer(CardAuthoriseService.class).doAuthoriseUserNotPresent(chargeEntity);
+        var authorisationResponse = app.getBean(CardAuthoriseService.class).doAuthoriseUserNotPresent(chargeEntity);
         assertThat(authorisationResponse.getGatewayError().get().getMessage(), is("There was an internal server error authorising charge"));
         assertThat(authorisationResponse.getAuthoriseStatus(), is(Optional.empty()));
 
@@ -110,7 +110,7 @@ public class StripeCardAuthoriseServiceIT {
 
         assertThat(chargeUpdated.get("can_retry"), is(nullValue()));
 
-        var mergedCharge = app.getInstanceFromGuiceContainer(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
+        var mergedCharge = app.getBean(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
         assertThat(mergedCharge.getRequires3ds(), is(nullValue()));
     }
 }

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
-import static io.dropwizard.jackson.Jackson.newObjectMapper;
+import static uk.gov.pay.connector.util.ObjectMapperFactory.newObjectMapper;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static uk.gov.pay.connector.gatewayaccount.model.AdyenCredentialsFixture.anAdyenCredentials;

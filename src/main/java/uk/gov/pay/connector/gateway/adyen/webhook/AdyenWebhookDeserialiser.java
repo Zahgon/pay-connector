@@ -6,13 +6,16 @@ import com.adyen.model.notification.NotificationRequestItem;
 import com.adyen.model.reportwebhooks.ReportNotificationRequest;
 import com.adyen.notification.WebhookHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
+import jakarta.inject.Inject;
+import org.springframework.http.HttpStatus;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.gateway.exception.AdyenNotificationException;
 import uk.gov.pay.connector.util.JsonObjectMapper;
+import org.springframework.stereotype.Component;
 
+@Component
 public class AdyenWebhookDeserialiser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AdyenWebhookDeserialiser.class);
@@ -34,7 +37,7 @@ public class AdyenWebhookDeserialiser {
             return extractNotificationItem(notificationRequest);
         } catch (Exception e) {
             LOGGER.info("Error deserialising Adyen notification payload", e);
-            throw new WebApplicationException("Error deserialising notification payload", e);
+            throw new WebApplicationException("Error deserialising notification payload", e, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -47,7 +50,7 @@ public class AdyenWebhookDeserialiser {
             return jsonObjectMapper.getObject(payload, targetClass);
         } catch (Exception e) {
             LOGGER.info("Error deserialising notification payload to class {}", targetClass.getSimpleName(), e);
-            throw new WebApplicationException("Error deserialising notification payload", e);
+            throw new WebApplicationException("Error deserialising notification payload", e, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -58,7 +61,7 @@ public class AdyenWebhookDeserialiser {
             LOGGER.atError()
                     .setMessage("Error deserialising balance report notification")
                     .log();
-            throw new WebApplicationException("Error deserialising balance report notification", e);
+            throw new WebApplicationException("Error deserialising balance report notification", e, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -85,7 +88,7 @@ public class AdyenWebhookDeserialiser {
             LOGGER.atError()
                     .setMessage("Error deserialising account holder notification")
                     .log();
-            throw new WebApplicationException("Error deserialising account holder notification", e);
+            throw new WebApplicationException("Error deserialising account holder notification", e, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

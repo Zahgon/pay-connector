@@ -10,9 +10,11 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Locale;
+import org.springframework.stereotype.Component;
 
 import static freemarker.template.Configuration.VERSION_2_3_34;
 
+@Component
 public class WorldpayRequestTemplateBuilder {
     private final Configuration cfg;
 

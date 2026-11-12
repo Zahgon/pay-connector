@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.queue.tasks.handlers;
 
-import com.google.inject.Inject;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.app.ConnectorConfiguration;
@@ -18,12 +18,14 @@ import uk.gov.pay.connector.refund.service.RefundService;
 import uk.gov.pay.connector.usernotification.service.UserNotificationService;
 
 import java.time.InstantSource;
+import org.springframework.stereotype.Component;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static uk.gov.pay.connector.usernotification.model.domain.EmailNotificationType.PAYMENT_CONFIRMED;
 import static uk.gov.pay.connector.usernotification.model.domain.EmailNotificationType.REFUND_ISSUED;
 import static uk.gov.service.payments.logging.LoggingKeys.RESOURCE_EXTERNAL_ID;
 
+@Component
 public class RetryPaymentOrRefundEmailTaskHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RetryPaymentOrRefundEmailTaskHandler.class);

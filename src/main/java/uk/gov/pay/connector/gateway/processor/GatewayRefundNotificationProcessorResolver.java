@@ -2,7 +2,9 @@ package uk.gov.pay.connector.gateway.processor;
 
 import jakarta.inject.Inject;
 import uk.gov.pay.connector.gateway.PaymentGatewayName;
+import org.springframework.stereotype.Component;
 
+@Component
 public class GatewayRefundNotificationProcessorResolver {
 
     private final WorldpayGatewayRefundNotificationProcessor worldpayGatewayRefundNotificationProcessor;

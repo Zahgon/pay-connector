@@ -1,8 +1,7 @@
 package uk.gov.pay.connector.app;
 
-import io.dropwizard.core.Configuration;
 
-public class ExecutorServiceConfig extends Configuration {
+public class ExecutorServiceConfig {
 
     private int threadsPerCpu;
 

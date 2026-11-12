@@ -20,7 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static jakarta.ws.rs.core.Response.Status.OK;
+import static org.springframework.http.HttpStatus.OK;
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -73,12 +73,12 @@ public class GatewayAccountCredentialsResourceIT {
                         .body(toJson(Map.of("payment_provider", "stripe", "credentials", credentials)))
                         .post("/v1/api/accounts/" + accountId + "/credentials")
                         .then()
-                        .statusCode(OK.getStatusCode());
+                        .statusCode(OK.value());
 
                 app.givenSetup()
                         .get("/v1/api/accounts/" + accountId)
                         .then()
-                        .statusCode(OK.getStatusCode())
+                        .statusCode(OK.value())
                         .body("gateway_account_credentials.size()", is(2))
                         .body("gateway_account_credentials[1].payment_provider", is("stripe"))
                         .body("gateway_account_credentials[1].credentials.stripe_account_id", is("some-account-id"))
@@ -106,12 +106,12 @@ public class GatewayAccountCredentialsResourceIT {
                         .body(toJson(Map.of("payment_provider", "adyen", "credentials", emptyMap())))
                         .post("/v1/api/accounts/" + liveAccountId + "/credentials")
                         .then()
-                        .statusCode(OK.getStatusCode());
+                        .statusCode(OK.value());
                 
                 app.givenSetup()
                         .get("/v1/api/accounts/" + liveAccountId)
                         .then()
-                        .statusCode(OK.getStatusCode())
+                        .statusCode(OK.value())
                         .body("gateway_account_credentials.size()", is(2))
                         .body("gateway_account_credentials[1].payment_provider", is("adyen"))
                         .body("gateway_account_credentials[1].state", is(CREATED.toString()))
@@ -317,13 +317,13 @@ public class GatewayAccountCredentialsResourceIT {
                         .body(toJson(Map.of("payment_provider", "stripe", "credentials", validStripeCredentials)))
                         .post(format("/v1/api/service/%s/account/%s/credentials", VALID_SERVICE_ID, TEST))
                         .then()
-                        .statusCode(OK.getStatusCode())
+                        .statusCode(OK.value())
                         .body(not(hasKey("gateway_account_credential_id")));
 
                 app.givenSetup()
                         .get("/v1/api/accounts/" + gatewayAccountId)
                         .then()
-                        .statusCode(OK.getStatusCode())
+                        .statusCode(OK.value())
                         .body("gateway_account_credentials.size()", is(2))
                         .body("gateway_account_credentials[1].payment_provider", is("stripe"))
                         .body("gateway_account_credentials[1].credentials.stripe_account_id", is("some-account-id"))
@@ -346,13 +346,13 @@ public class GatewayAccountCredentialsResourceIT {
                         .body(toJson(Map.of("payment_provider", "adyen", "credentials", emptyMap())))
                         .post(format("/v1/api/service/%s/account/%s/credentials", VALID_SERVICE_ID, LIVE))
                         .then()
-                        .statusCode(OK.getStatusCode())
+                        .statusCode(OK.value())
                         .body(not(hasKey("gateway_account_credential_id")));
 
                 app.givenSetup()
                         .get("/v1/api/accounts/" + gatewayAccountId)
                         .then()
-                        .statusCode(OK.getStatusCode())
+                        .statusCode(OK.value())
                         .body("gateway_account_credentials.size()", is(2))
                         .body("gateway_account_credentials[1].payment_provider", is("adyen"))
                         .body("gateway_account_credentials[1].state", is(CREATED.toString()))
@@ -417,7 +417,7 @@ public class GatewayAccountCredentialsResourceIT {
                         .body(toJson(Map.of("payment_provider", "stripe", "credentials", validStripeCredentials)))
                         .post(format("/v1/api/service/%s/account/%s/credentials", VALID_SERVICE_ID, TEST))
                         .then()
-                        .statusCode(OK.getStatusCode())
+                        .statusCode(OK.value())
                         .extract().path("external_id");
 
                 Map<String, String> newCredentials = Map.of("stripe_account_id", "new-account-id");
@@ -447,7 +447,7 @@ public class GatewayAccountCredentialsResourceIT {
                 app.givenSetup()
                         .get(format("/v1/api/service/%s/account/%s", VALID_SERVICE_ID, TEST))
                         .then()
-                        .statusCode(OK.getStatusCode())
+                        .statusCode(OK.value())
                         .body("gateway_account_credentials[1].last_updated_by_user_external_id", is("a-new-user-external-id"))
                         .body("gateway_account_credentials[1].state", is("VERIFIED_WITH_LIVE_PAYMENT"))
                         .body("gateway_account_credentials[1].credentials.stripe_account_id", is("new-account-id"));
@@ -468,7 +468,7 @@ public class GatewayAccountCredentialsResourceIT {
                         .body(toJson(Map.of("payment_provider", "stripe", "credentials", validStripeCredentials)))
                         .post(format("/v1/api/service/%s/account/%s/credentials", VALID_SERVICE_ID, TEST))
                         .then()
-                        .statusCode(OK.getStatusCode())
+                        .statusCode(OK.value())
                         .extract().path("external_id");
 
                 app.givenSetup()
@@ -541,7 +541,7 @@ public class GatewayAccountCredentialsResourceIT {
                 app.givenSetup()
                         .get(format("/v1/api/service/%s/account/%s", VALID_SERVICE_ID, TEST))
                         .then()
-                        .statusCode(OK.getStatusCode())
+                        .statusCode(OK.value())
                         .body("gateway_account_credentials[0].external_id", is(credentialsId))
                         .body("gateway_account_credentials[0].credentials.gateway_merchant_id", is("abcdef123abcdef"));
             }
@@ -561,7 +561,7 @@ public class GatewayAccountCredentialsResourceIT {
                         .body(toJson(Map.of("payment_provider", "stripe", "credentials", validStripeCredentials)))
                         .post(format("/v1/api/service/%s/account/%s/credentials", VALID_SERVICE_ID, TEST))
                         .then()
-                        .statusCode(OK.getStatusCode())
+                        .statusCode(OK.value())
                         .extract().path("external_id");
 
                 app.givenSetup()

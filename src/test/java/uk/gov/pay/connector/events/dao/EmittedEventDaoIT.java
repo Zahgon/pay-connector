@@ -30,7 +30,7 @@ public class EmittedEventDaoIT {
 
     @BeforeEach
     void setUp() {
-        emittedEventDao = app.getInstanceFromGuiceContainer(EmittedEventDao.class);
+        emittedEventDao = app.getBean(EmittedEventDao.class);
     }
 
     @Test

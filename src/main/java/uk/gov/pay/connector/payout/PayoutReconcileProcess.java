@@ -12,7 +12,9 @@ import uk.gov.pay.connector.queue.payout.StripePayoutReconciliationPayload;
 import uk.gov.service.payments.commons.queue.exception.QueueException;
 
 import java.util.List;
+import org.springframework.stereotype.Component;
 
+@Component
 public class PayoutReconcileProcess {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PayoutReconcileProcess.class);

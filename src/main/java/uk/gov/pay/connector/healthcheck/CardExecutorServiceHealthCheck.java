@@ -7,7 +7,9 @@ import uk.gov.pay.connector.paymentprocessor.service.CardExecutorService;
 
 import jakarta.inject.Inject;
 import java.util.concurrent.ThreadPoolExecutor;
+import org.springframework.stereotype.Component;
 
+@Component
 public class CardExecutorServiceHealthCheck extends HealthCheck {
 
     private ThreadPoolExecutor threadPoolExecutor;

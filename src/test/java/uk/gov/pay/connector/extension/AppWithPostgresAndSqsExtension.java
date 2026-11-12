@@ -2,10 +2,6 @@ package uk.gov.pay.connector.extension;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.google.inject.Injector;
-import com.google.inject.persist.jpa.JpaPersistModule;
-import io.dropwizard.testing.ConfigOverride;
-import io.dropwizard.testing.junit5.DropwizardAppExtension;
 import io.restassured.specification.RequestSpecification;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
@@ -18,9 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest;
-import uk.gov.pay.connector.app.ConnectorApp;
+import uk.gov.pay.connector.app.ConfigOverride;
 import uk.gov.pay.connector.app.ConnectorConfiguration;
-import uk.gov.pay.connector.app.InjectorLookup;
+import uk.gov.pay.connector.app.ConnectorTestApplication;
 import uk.gov.pay.connector.app.config.AuthorisationConfig;
 import uk.gov.pay.connector.it.dao.DatabaseFixtures;
 import uk.gov.pay.connector.rules.AdyenBalancePlatformMockClient;
@@ -36,12 +32,10 @@ import uk.gov.pay.connector.rules.WorldpayMockClient;
 import uk.gov.pay.connector.util.DatabaseTestHelper;
 
 import java.util.List;
-import java.util.Properties;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.google.common.collect.Lists.newArrayList;
-import static io.dropwizard.testing.ConfigOverride.config;
-import static io.dropwizard.testing.ResourceHelpers.resourceFilePath;
+import static uk.gov.pay.connector.app.ConfigOverride.config;
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static uk.gov.pay.connector.rules.PostgresTestDocker.getConnectionUrl;
@@ -52,12 +46,10 @@ import static uk.gov.pay.connector.util.RandomTestDataGeneratorUtils.secureRando
 
 public class AppWithPostgresAndSqsExtension implements BeforeEachCallback, BeforeAllCallback, AfterEachCallback, AfterAllCallback {
     private static final Logger logger = LoggerFactory.getLogger(AppWithPostgresAndSqsExtension.class);
-    private static final String JPA_UNIT = "ConnectorUnit";
-    private static final String CONFIG_PATH = resourceFilePath("config/test-it-config.yaml");
+    private static final String CONFIG_PATH = "config/test-it-config.yaml";
     private final Jdbi jdbi;
     private final SqsClient sqsClient;
-    private final DropwizardAppExtension<ConnectorConfiguration> dropwizardAppExtension;
-    private final Injector injector;
+    private final ConnectorTestApplication application;
     private final int wireMockPort;
     private final int worldpayWireMockPort;
     private final int ledgerWireMockPort;
@@ -88,18 +80,25 @@ public class AppWithPostgresAndSqsExtension implements BeforeEachCallback, Befor
     private static boolean migratedDatabase = false;
 
     public AppWithPostgresAndSqsExtension() {
-        this(ConnectorApp.class, new ConfigOverride[0]);
+        this(new Class<?>[0], new ConfigOverride[0]);
     }
 
-    public AppWithPostgresAndSqsExtension(Class CustomConnectorClass) {
-        this(CustomConnectorClass, new ConfigOverride[0]);
+    /**
+     * @param overridingConfiguration a configuration class whose {@code @Primary} beans replace the service's own
+     */
+    public AppWithPostgresAndSqsExtension(Class<?> overridingConfiguration) {
+        this(new Class<?>[]{overridingConfiguration}, new ConfigOverride[0]);
     }
 
     public AppWithPostgresAndSqsExtension(ConfigOverride... configOverrides) {
-        this(ConnectorApp.class, configOverrides);
+        this(new Class<?>[0], configOverrides);
     }
 
-    public AppWithPostgresAndSqsExtension(Class CustomConnectorClass, ConfigOverride... configOverrides) {
+    public AppWithPostgresAndSqsExtension(Class<?> overridingConfiguration, ConfigOverride... configOverrides) {
+        this(new Class<?>[]{overridingConfiguration}, configOverrides);
+    }
+
+    private AppWithPostgresAndSqsExtension(Class<?>[] overridingConfigurations, ConfigOverride... configOverrides) {
         getOrCreate();
 
         wireMockServer = new WireMockServer(wireMockConfig().dynamicPort().bindAddress("localhost"));
@@ -129,16 +128,17 @@ public class AppWithPostgresAndSqsExtension implements BeforeEachCallback, Befor
         newConfigOverrides = overrideEndpointConfig(newConfigOverrides);
         newConfigOverrides = overrideSqsConfig(newConfigOverrides);
 
-        dropwizardAppExtension = new DropwizardAppExtension<>(CustomConnectorClass,
-                CONFIG_PATH, newConfigOverrides);
-
+        List<ConfigOverride> overrides = List.of(newConfigOverrides);
+        if (!migratedDatabase) {
+            // Only run DB migrations once for the entire test JVM, before the first application starts
+            ConnectorTestApplication.migrateDatabase(ConnectorTestApplication.loadConfiguration(CONFIG_PATH, overrides));
+            migratedDatabase = true;
+        }
         try {
-            // starts dropwizard application. This is required as we don't use DropwizardExtensionsSupport (which starts application)
-            // due to config overrides we need at runtime for database, sqs and any custom configuration needed for tests
-            dropwizardAppExtension.before();
-        } catch (Exception e) {
+            application = ConnectorTestApplication.start(CONFIG_PATH, overrides, overridingConfigurations);
+        } catch (RuntimeException e) {
             logger.error("Exception starting application - {}", e.getMessage());
-            throw new RuntimeException(e);
+            throw e;
         }
 
         jdbi = Jdbi.create(getConnectionUrl(), getDbUsername(), getDbPassword());
@@ -159,8 +159,6 @@ public class AppWithPostgresAndSqsExtension implements BeforeEachCallback, Befor
 
         databaseFixtures = DatabaseFixtures.withDatabaseTestHelper(databaseTestHelper);
         mapper = new ObjectMapper();
-
-        injector = InjectorLookup.getInjector(dropwizardAppExtension.getApplication()).get();
     }
 
     private void resetIfRunning(WireMockServer server) {
@@ -184,14 +182,8 @@ public class AppWithPostgresAndSqsExtension implements BeforeEachCallback, Befor
     }
 
     @Override
-    public void beforeAll(ExtensionContext context) throws Exception {
-        if (!migratedDatabase && context.getRequiredTestClass().getEnclosingClass() == null) {
-            // Only run DB migrations once for the entire test JVM
-            // Only runs if there is no enclosing class, i.e. not in a @Nested block
-            dropwizardAppExtension.getApplication().run("db", "migrate", CONFIG_PATH);
-            migratedDatabase = true;
-
-        }
+    public void beforeAll(ExtensionContext context) {
+        // the database is migrated before the first application starts
     }
 
     @Override
@@ -214,12 +206,12 @@ public class AppWithPostgresAndSqsExtension implements BeforeEachCallback, Befor
             stripeWireMockServer.stop();
             ledgerWireMockServer.stop();
             notifyWireMockServer.stop();
-            dropwizardAppExtension.after();
+            application.close();
         }
     }
 
     public RequestSpecification givenSetup() {
-        return given().port(getAppRule().getLocalPort())
+        return given().port(getLocalPort())
                 .contentType(JSON);
     }
 
@@ -248,18 +240,6 @@ public class AppWithPostgresAndSqsExtension implements BeforeEachCallback, Befor
         return newConfigOverride.toArray(new ConfigOverride[0]);
     }
 
-    private JpaPersistModule createJpaModule() {
-        final Properties properties = new Properties();
-        properties.put("jakarta.persistence.jdbc.url", getConnectionUrl());
-        properties.put("jakarta.persistence.jdbc.user", getDbUsername());
-        properties.put("jakarta.persistence.jdbc.password", getDbPassword());
-
-        final JpaPersistModule jpaModule = new JpaPersistModule(JPA_UNIT);
-        jpaModule.properties(properties);
-
-        return jpaModule;
-    }
-
     private ConfigOverride[] overrideSqsConfig(ConfigOverride[] configOverrides) {
         List<ConfigOverride> newConfigOverride = newArrayList(configOverrides);
         newConfigOverride.add(config("sqsConfig.eventQueueUrl", SqsTestDocker.getQueueUrl("event-queue")));
@@ -270,20 +250,28 @@ public class AppWithPostgresAndSqsExtension implements BeforeEachCallback, Befor
         return newConfigOverride.toArray(new ConfigOverride[0]);
     }
 
-    public <T> T getInstanceFromGuiceContainer(Class<T> klazz) {
-        return injector.getInstance(klazz);
+    public <T> T getBean(Class<T> klazz) {
+        return application.getBean(klazz);
     }
 
     public AuthorisationConfig getAuthorisationConfig() {
-        return dropwizardAppExtension.getConfiguration().getAuthorisationConfig();
+        return application.getConfiguration().getAuthorisationConfig();
     }
 
-    public DropwizardAppExtension<ConnectorConfiguration> getAppRule() {
-        return dropwizardAppExtension;
+    public ConnectorTestApplication getAppRule() {
+        return application;
+    }
+
+    public ConnectorConfiguration getConfiguration() {
+        return application.getConfiguration();
     }
 
     public int getLocalPort() {
-        return dropwizardAppExtension.getLocalPort();
+        return application.getLocalPort();
+    }
+
+    public int getAdminPort() {
+        return application.getAdminPort();
     }
 
     public Jdbi getJdbi() {
@@ -363,7 +351,7 @@ public class AppWithPostgresAndSqsExtension implements BeforeEachCallback, Befor
     }
 
     public void purgeEventQueue() {
-        SqsClient sqsClient = getInstanceFromGuiceContainer(SqsClient.class);
+        SqsClient sqsClient = getBean(SqsClient.class);
         sqsClient.purgeQueue(
                 PurgeQueueRequest.builder()
                         .queueUrl(getEventQueueUrl())

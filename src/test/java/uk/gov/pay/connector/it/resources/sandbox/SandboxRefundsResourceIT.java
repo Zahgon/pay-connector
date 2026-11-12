@@ -27,10 +27,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static jakarta.ws.rs.core.Response.Status.ACCEPTED;
-import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
-import static jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static jakarta.ws.rs.core.Response.Status.PRECONDITION_FAILED;
+import static org.springframework.http.HttpStatus.ACCEPTED;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.PRECONDITION_FAILED;
 import static java.lang.String.format;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.eclipse.jetty.http.HttpStatus.FORBIDDEN_403;
@@ -118,7 +118,7 @@ public class SandboxRefundsResourceIT {
                 Long refundAmount = 50L;
                 ValidatableResponse validatableResponse = postRefundFor(defaultTestCharge.getExternalChargeId(), refundAmount, defaultTestCharge.getAmount());
 
-                String refundId = assertRefundResponseWith(refundAmount, validatableResponse, ACCEPTED.getStatusCode());
+                String refundId = assertRefundResponseWith(refundAmount, validatableResponse, ACCEPTED.value());
 
                 List<Map<String, Object>> refundsFoundByChargeExternalId = app.getDatabaseTestHelper().getRefundsByChargeExternalId(defaultTestCharge.getExternalChargeId());
                 assertThat(refundsFoundByChargeExternalId.size(), is(1));
@@ -132,11 +132,11 @@ public class SandboxRefundsResourceIT {
                 Long refundAmount = 50L;
                 //first refund request
                 ValidatableResponse validatableResponse = postRefundFor(defaultTestCharge.getExternalChargeId(), refundAmount, defaultTestCharge.getAmount());
-                String refundId = assertRefundResponseWith(refundAmount, validatableResponse, ACCEPTED.getStatusCode());
+                String refundId = assertRefundResponseWith(refundAmount, validatableResponse, ACCEPTED.value());
 
                 //second refund request with updated refundAmountAvailable
                 validatableResponse = postRefundFor(defaultTestCharge.getExternalChargeId(), refundAmount, defaultTestCharge.getAmount() - refundAmount);
-                String refundId_2 = assertRefundResponseWith(refundAmount, validatableResponse, ACCEPTED.getStatusCode());
+                String refundId_2 = assertRefundResponseWith(refundAmount, validatableResponse, ACCEPTED.value());
 
                 List<Map<String, Object>> refundsFoundByChargeExternalId = app.getDatabaseTestHelper().getRefundsByChargeExternalId(defaultTestCharge.getExternalChargeId());
                 assertThat(refundsFoundByChargeExternalId.size(), is(2));
@@ -151,11 +151,11 @@ public class SandboxRefundsResourceIT {
                 Long refundAmount = 50L;
                 //first refund request
                 ValidatableResponse validatableResponse = postRefundFor(defaultTestCharge.getExternalChargeId(), refundAmount, defaultTestCharge.getAmount());
-                String refundId = assertRefundResponseWith(refundAmount, validatableResponse, ACCEPTED.getStatusCode());
+                String refundId = assertRefundResponseWith(refundAmount, validatableResponse, ACCEPTED.value());
 
                 //second refund request with wrong refundAmountAvailable
                 postRefundFor(defaultTestCharge.getExternalChargeId(), refundAmount, defaultTestCharge.getAmount())
-                        .statusCode(PRECONDITION_FAILED.getStatusCode())
+                        .statusCode(PRECONDITION_FAILED.value())
                         .body("message", contains("Refund Amount Available Mismatch"))
                         .body("error_identifier", is(ErrorIdentifier.REFUND_AMOUNT_AVAILABLE_MISMATCH.toString()));
 
@@ -173,7 +173,7 @@ public class SandboxRefundsResourceIT {
 
                 ValidatableResponse validatableResponse = postRefundFor(defaultTestCharge.getExternalChargeId(), refundAmount, defaultTestCharge.getAmount(),
                         userExternalId, userEmail);
-                String refundId = assertRefundResponseWith(refundAmount, validatableResponse, ACCEPTED.getStatusCode());
+                String refundId = assertRefundResponseWith(refundAmount, validatableResponse, ACCEPTED.value());
 
                 List<Map<String, Object>> refundsFoundByChargeExternalId = app.getDatabaseTestHelper().getRefundsByChargeExternalId(defaultTestCharge.getExternalChargeId());
                 assertThat(refundsFoundByChargeExternalId.size(), is(1));
@@ -192,10 +192,10 @@ public class SandboxRefundsResourceIT {
                 String externalChargeId = defaultTestCharge.getExternalChargeId();
 
                 ValidatableResponse firstValidatableResponse = postRefundFor(externalChargeId, firstRefundAmount, defaultTestCharge.getAmount());
-                String firstRefundId = assertRefundResponseWith(firstRefundAmount, firstValidatableResponse, ACCEPTED.getStatusCode());
+                String firstRefundId = assertRefundResponseWith(firstRefundAmount, firstValidatableResponse, ACCEPTED.value());
 
                 ValidatableResponse secondValidatableResponse = postRefundFor(externalChargeId, secondRefundAmount, defaultTestCharge.getAmount() - firstRefundAmount);
-                String secondRefundId = assertRefundResponseWith(secondRefundAmount, secondValidatableResponse, ACCEPTED.getStatusCode());
+                String secondRefundId = assertRefundResponseWith(secondRefundAmount, secondValidatableResponse, ACCEPTED.value());
 
                 List<Map<String, Object>> refundsFoundByChargeExternalId = app.getDatabaseTestHelper().getRefundsByChargeExternalId(externalChargeId);
                 assertThat(refundsFoundByChargeExternalId.size(), is(2));
@@ -229,7 +229,7 @@ public class SandboxRefundsResourceIT {
                 Long refundAmount = 20L;
 
                 postRefundFor(testCharge.getExternalChargeId(), refundAmount, defaultTestCharge.getAmount())
-                        .statusCode(BAD_REQUEST.getStatusCode())
+                        .statusCode(BAD_REQUEST.value())
                         .body("reason", is("pending"))
                         .body("message", contains(format("Charge with id [%s] not available for refund.", testCharge.getExternalChargeId())))
                         .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -245,13 +245,13 @@ public class SandboxRefundsResourceIT {
                 String externalChargeId = defaultTestCharge.getExternalChargeId();
 
                 postRefundFor(externalChargeId, refundAmount, defaultTestCharge.getAmount())
-                        .statusCode(ACCEPTED.getStatusCode());
+                        .statusCode(ACCEPTED.value());
 
                 List<Map<String, Object>> refundsFoundByChargeExternalId = app.getDatabaseTestHelper().getRefundsByChargeExternalId(externalChargeId);
                 assertThat(refundsFoundByChargeExternalId.size(), is(1));
 
                 postRefundFor(externalChargeId, 1L, defaultTestCharge.getAmount() - refundAmount)
-                        .statusCode(BAD_REQUEST.getStatusCode())
+                        .statusCode(BAD_REQUEST.value())
                         .body("reason", is("full"))
                         .body("message", contains(format("Charge with id [%s] not available for refund.", externalChargeId)))
                         .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -262,7 +262,7 @@ public class SandboxRefundsResourceIT {
                 Long refundAmount = defaultTestCharge.getAmount() + 20;
 
                 postRefundFor(defaultTestCharge.getExternalChargeId(), refundAmount, defaultTestCharge.getAmount())
-                        .statusCode(BAD_REQUEST.getStatusCode())
+                        .statusCode(BAD_REQUEST.value())
                         .body("reason", is("amount_not_available"))
                         .body("message", contains("Not sufficient amount available for refund"))
                         .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -280,7 +280,7 @@ public class SandboxRefundsResourceIT {
                 Long refundAmount = 10000001L;
 
                 postRefundFor(defaultTestCharge.getExternalChargeId(), refundAmount, defaultTestCharge.getAmount())
-                        .statusCode(BAD_REQUEST.getStatusCode())
+                        .statusCode(BAD_REQUEST.value())
                         .body("reason", is("amount_not_available"))
                         .body("message", contains("Not sufficient amount available for refund"))
                         .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -298,7 +298,7 @@ public class SandboxRefundsResourceIT {
                 Long refundAmount = 0L;
 
                 postRefundFor(defaultTestCharge.getExternalChargeId(), refundAmount, defaultTestCharge.getAmount())
-                        .statusCode(BAD_REQUEST.getStatusCode())
+                        .statusCode(BAD_REQUEST.value())
                         .body("reason", is("amount_min_validation"))
                         .body("message", contains("Validation error for amount. Minimum amount for a refund is 1"))
                         .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -316,7 +316,7 @@ public class SandboxRefundsResourceIT {
                 Long secondRefundAmount = 30L; // 10 more than available
 
                 ValidatableResponse validatableResponse = postRefundFor(defaultTestCharge.getExternalChargeId(), firstRefundAmount, defaultTestCharge.getAmount());
-                String firstRefundId = assertRefundResponseWith(firstRefundAmount, validatableResponse, ACCEPTED.getStatusCode());
+                String firstRefundId = assertRefundResponseWith(firstRefundAmount, validatableResponse, ACCEPTED.value());
 
                 List<Map<String, Object>> refundsFoundByChargeExternalId = app.getDatabaseTestHelper().getRefundsByChargeExternalId(defaultTestCharge.getExternalChargeId());
                 assertThat(refundsFoundByChargeExternalId.size(), is(1));
@@ -366,7 +366,7 @@ public class SandboxRefundsResourceIT {
 
                 Long refundAmount = 201L;
                 postRefundFor(chargeExternalId, refundAmount, 200L)
-                        .statusCode(BAD_REQUEST.getStatusCode())
+                        .statusCode(BAD_REQUEST.value())
                         .body("reason", is("amount_not_available"))
                         .body("message", contains("Not sufficient amount available for refund"))
                         .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -403,7 +403,7 @@ public class SandboxRefundsResourceIT {
 
                 Long refundAmount = 200L;
                 postRefundFor(chargeExternalId, refundAmount, 200L)
-                        .statusCode(ACCEPTED.getStatusCode());
+                        .statusCode(ACCEPTED.value());
             }
 
             @Test
@@ -423,7 +423,7 @@ public class SandboxRefundsResourceIT {
                 app.getLedgerStub().returnErrorForFindRefundsForPayment(chargeExternalId);
 
                 postRefundFor(chargeExternalId, 200L, 200L)
-                        .statusCode(INTERNAL_SERVER_ERROR.getStatusCode());
+                        .statusCode(INTERNAL_SERVER_ERROR.value());
 
                 List<Map<String, Object>> refunds = app.getDatabaseTestHelper().getRefundsByChargeExternalId(chargeExternalId);
                 assertThat(refunds, hasSize(0));
@@ -468,7 +468,7 @@ public class SandboxRefundsResourceIT {
                         )))
                         .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
                         .then()
-                        .statusCode(ACCEPTED.getStatusCode())
+                        .statusCode(ACCEPTED.value())
                         .body("refund_id", is(notNullValue()))
                         .body("amount", is(refundAmount))
                         .body("status", is("success"))
@@ -509,7 +509,7 @@ public class SandboxRefundsResourceIT {
                         )))
                         .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
                         .then()
-                        .statusCode(ACCEPTED.getStatusCode())
+                        .statusCode(ACCEPTED.value())
                         .body("refund_id", is(notNullValue()))
                         .body("amount", is(refundAmount))
                         .body("status", is("success"))
@@ -551,7 +551,7 @@ public class SandboxRefundsResourceIT {
                         )))
                         .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
                         .then()
-                        .statusCode(ACCEPTED.getStatusCode())
+                        .statusCode(ACCEPTED.value())
                         .extract().path("refund_id");
 
                 // Attempt to submit second request
@@ -563,7 +563,7 @@ public class SandboxRefundsResourceIT {
                         )))
                         .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
                         .then()
-                        .statusCode(ACCEPTED.getStatusCode())
+                        .statusCode(ACCEPTED.value())
                         .extract().path("refund_id");
 
                 List<Map<String, Object>> refundsFoundByChargeExternalId = app.getDatabaseTestHelper().getRefundsByChargeExternalId(defaultTestCharge.getExternalChargeId());
@@ -598,7 +598,7 @@ public class SandboxRefundsResourceIT {
 
                         )))
                         .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
-                        .then().statusCode(ACCEPTED.getStatusCode());
+                        .then().statusCode(ACCEPTED.value());
 
                 // Attempt to submit second refund
                 app.givenSetup()
@@ -608,7 +608,7 @@ public class SandboxRefundsResourceIT {
 
                         )))
                         .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
-                        .then().statusCode(ACCEPTED.getStatusCode());
+                        .then().statusCode(ACCEPTED.value());
 
                 // Verify refund summary on charge
                 app.givenSetup()
@@ -642,7 +642,7 @@ public class SandboxRefundsResourceIT {
 
                         )))
                         .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, testCharge.getExternalChargeId()))
-                        .then().statusCode(BAD_REQUEST.getStatusCode())
+                        .then().statusCode(BAD_REQUEST.value())
                         .body("message", contains(format("Charge with id [%s] not available for refund.", testCharge.getExternalChargeId())))
                         .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
 
@@ -671,7 +671,7 @@ public class SandboxRefundsResourceIT {
 
                         )))
                         .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
-                        .then().statusCode(ACCEPTED.getStatusCode());
+                        .then().statusCode(ACCEPTED.value());
 
                 // Verify refund exists in database
                 List<Map<String, Object>> firstRefundsFoundByChargeExternalId = app.getDatabaseTestHelper().getRefundsByChargeExternalId(externalChargeId);
@@ -685,7 +685,7 @@ public class SandboxRefundsResourceIT {
 
                         )))
                         .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
-                        .then().statusCode(BAD_REQUEST.getStatusCode())
+                        .then().statusCode(BAD_REQUEST.value())
                         .body("reason", is("full"))
                         .body("message", contains(format("Charge with id [%s] not available for refund.", externalChargeId)))
                         .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -708,7 +708,7 @@ public class SandboxRefundsResourceIT {
 
                         )))
                         .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
-                        .then().statusCode(BAD_REQUEST.getStatusCode())
+                        .then().statusCode(BAD_REQUEST.value())
                         .body("reason", is("amount_not_available"))
                         .body("message", contains("Not sufficient amount available for refund"))
                         .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -733,7 +733,7 @@ public class SandboxRefundsResourceIT {
 
                         )))
                         .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
-                        .then().statusCode(BAD_REQUEST.getStatusCode())
+                        .then().statusCode(BAD_REQUEST.value())
                         .body("reason", is("amount_not_available"))
                         .body("message", contains("Not sufficient amount available for refund"))
                         .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -758,7 +758,7 @@ public class SandboxRefundsResourceIT {
 
                         )))
                         .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
-                        .then().statusCode(BAD_REQUEST.getStatusCode())
+                        .then().statusCode(BAD_REQUEST.value())
                         .body("reason", is("amount_min_validation"))
                         .body("message", contains("Validation error for amount. Minimum amount for a refund is 1"))
                         .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -785,7 +785,7 @@ public class SandboxRefundsResourceIT {
 
                         )))
                         .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
-                        .then().statusCode(ACCEPTED.getStatusCode());
+                        .then().statusCode(ACCEPTED.value());
 
                 // Verify partial refund exists in DB
                 List<Map<String, Object>> refundsFoundByChargeExternalId = app.getDatabaseTestHelper().getRefundsByChargeExternalId(defaultTestCharge.getExternalChargeId());
@@ -799,7 +799,7 @@ public class SandboxRefundsResourceIT {
 
                         )))
                         .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
-                        .then().statusCode(BAD_REQUEST.getStatusCode())
+                        .then().statusCode(BAD_REQUEST.value())
                         .body("reason", is("amount_not_available"))
                         .body("message", contains("Not sufficient amount available for refund"))
                         .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -854,7 +854,7 @@ public class SandboxRefundsResourceIT {
                             ))
                             .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, chargeExternalId))
                             .then()
-                            .statusCode(ACCEPTED.getStatusCode())
+                            .statusCode(ACCEPTED.value())
                             .extract().path("refund_id");
 
 //                  Verify refund entity created in database
@@ -912,7 +912,7 @@ public class SandboxRefundsResourceIT {
 
                             )))
                             .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, chargeExternalId))
-                            .then().statusCode(BAD_REQUEST.getStatusCode())
+                            .then().statusCode(BAD_REQUEST.value())
                             .body("reason", is("amount_not_available"))
                             .body("message", contains("Not sufficient amount available for refund"))
                             .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -943,7 +943,7 @@ public class SandboxRefundsResourceIT {
 
                             )))
                             .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, chargeExternalId))
-                            .then().statusCode(INTERNAL_SERVER_ERROR.getStatusCode());
+                            .then().statusCode(INTERNAL_SERVER_ERROR.value());
 
                     // Verify no refunds created in database
                     List<Map<String, Object>> refunds = app.getDatabaseTestHelper().getRefundsByChargeExternalId(chargeExternalId);

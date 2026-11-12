@@ -210,7 +210,7 @@ public class StripeAuthoriseHandlerTest {
 
             when(gatewayClient.postRequestFor(any(StripePaymentMethodRequest.class))).thenReturn(paymentMethodResponse);
             when(gatewayClient.postRequestFor(any(StripePaymentIntentRequest.class)))
-                    .thenThrow(new GatewayConnectionTimeoutException("jakarta.ws.rs.ProcessingException: java.io.IOException"));
+                    .thenThrow(new GatewayConnectionTimeoutException("java.io.IOException: Connection reset"));
             when(paymentMethodResponse.getEntity()).thenReturn(successCreatePaymentMethodResponse());
 
             ChargeEntity charge = buildTestCharge();
@@ -218,7 +218,7 @@ public class StripeAuthoriseHandlerTest {
 
             assertThat(authoriseResponse.getGatewayError().isPresent(), is(true));
             assertThat(authoriseResponse.getGatewayError().isPresent(), is(true));
-            assertEquals("jakarta.ws.rs.ProcessingException: java.io.IOException",
+            assertEquals("java.io.IOException: Connection reset",
                     authoriseResponse.getGatewayError().get().getMessage());
             assertEquals(GATEWAY_CONNECTION_TIMEOUT_ERROR, authoriseResponse.getGatewayError().get().getErrorType());
         }
@@ -427,7 +427,7 @@ public class StripeAuthoriseHandlerTest {
         @Test
         void shouldNotAuthorise_forUserNotPresentPayment_whenProcessingExceptionIsThrown() throws Exception {
             when(gatewayClient.postRequestFor(any(StripePaymentIntentRequest.class)))
-                    .thenThrow(new GatewayConnectionTimeoutException("jakarta.ws.rs.ProcessingException: java.io.IOException"));
+                    .thenThrow(new GatewayConnectionTimeoutException("java.io.IOException: Connection reset"));
 
             ChargeEntity charge = buildTestAuthorisationModeAgreementCharge();
             RecurringPaymentAuthorisationGatewayRequest authRequest = RecurringPaymentAuthorisationGatewayRequest.valueOf(charge);
@@ -435,7 +435,7 @@ public class StripeAuthoriseHandlerTest {
 
             assertThat(authoriseResponse.getGatewayError().isPresent(), is(true));
             assertThat(authoriseResponse.getGatewayError().isPresent(), is(true));
-            assertEquals("jakarta.ws.rs.ProcessingException: java.io.IOException",
+            assertEquals("java.io.IOException: Connection reset",
                     authoriseResponse.getGatewayError().get().getMessage());
             assertEquals(GATEWAY_CONNECTION_TIMEOUT_ERROR, authoriseResponse.getGatewayError().get().getErrorType());
         }

@@ -4,7 +4,9 @@ import uk.gov.pay.connector.gatewayaccount.service.GatewayAccountService;
 import uk.gov.pay.connector.queue.tasks.model.ServiceArchivedTaskData;
 
 import jakarta.inject.Inject;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ServiceArchivedTaskHandler {
     private final GatewayAccountService gatewayAccountService;
 

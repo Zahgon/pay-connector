@@ -1,7 +1,6 @@
 package uk.gov.pay.connector.common.exception;
 
 
-import jakarta.ws.rs.WebApplicationException;
 
 import static java.lang.String.format;
 import static uk.gov.pay.connector.util.ResponseUtil.conflictErrorResponse;

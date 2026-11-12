@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.charge.resource;
 
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -33,30 +33,33 @@ import uk.gov.service.payments.commons.model.AuthorisationMode;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.HeaderParam;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.UriInfo;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
-import static jakarta.ws.rs.core.Response.created;
-import static jakarta.ws.rs.core.Response.ok;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
+import uk.gov.pay.connector.web.MediaTypes;
+import uk.gov.pay.connector.web.BaseUri;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
+
 import static uk.gov.pay.connector.util.ResponseUtil.buildErrorResponse;
 import static uk.gov.pay.connector.util.ResponseUtil.noContentResponse;
 import static uk.gov.pay.connector.util.ResponseUtil.notFoundResponse;
 import static uk.gov.pay.connector.util.ResponseUtil.responseWithChargeNotFound;
 import static uk.gov.pay.connector.util.ResponseUtil.responseWithGatewayTransactionNotFound;
 import static uk.gov.pay.connector.util.ResponseUtil.successResponseWithEntity;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-@Path("/")
+@RestController
+@Validated
 public class ChargesApiResource {
     public static final String EMAIL_KEY = "email";
     public static final String AMOUNT_KEY = "amount";
@@ -91,9 +94,8 @@ public class ChargesApiResource {
         this.userNotificationService = userNotificationService;
     }
 
-    @GET
-    @Path("/v1/api/accounts/{accountId}/charges/{chargeId}")
-    @Produces(APPLICATION_JSON)
+    @GetMapping("/v1/api/accounts/{accountId}/charges/{chargeId}")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Get charge by account ID and charge external ID",
             tags = {"Charges"},
@@ -103,17 +105,16 @@ public class ChargesApiResource {
                     @ApiResponse(responseCode = "404", description = "Not found")
             }
     )
-    public Response getChargeByGatewayAccountId(@Parameter(example = "1", description = "Gateway account ID") @PathParam(ACCOUNT_ID) Long accountId,
-                              @Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID") @PathParam("chargeId") String chargeId,
-                              @Context UriInfo uriInfo) {
-        return chargeService.findChargeForAccount(chargeId, accountId, uriInfo)
-                .map(chargeResponse -> ok(chargeResponse).build())
+    public ResponseEntity<?> getChargeByGatewayAccountId(@Parameter(example = "1", description = "Gateway account ID") @PathVariable(ACCOUNT_ID) Long accountId,
+                              @Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID") @PathVariable("chargeId") String chargeId,
+                              HttpServletRequest request) {
+        return chargeService.findChargeForAccount(chargeId, accountId, BaseUri.from(request))
+                .<ResponseEntity<?>>map(chargeResponse -> ResponseEntity.ok(chargeResponse))
                 .orElseGet(() -> responseWithChargeNotFound(chargeId));
     }
 
-    @GET
-    @Path("/v1/api/service/{serviceId}/account/{accountType}/charges/{chargeId}")
-    @Produces(APPLICATION_JSON)
+    @GetMapping("/v1/api/service/{serviceId}/account/{accountType}/charges/{chargeId}")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Get charge by service ID, account type and charge external ID",
             tags = {"Charges"},
@@ -123,19 +124,18 @@ public class ChargesApiResource {
                     @ApiResponse(responseCode = "404", description = "Not found")
             }
     )
-    public Response getChargeByServiceIdAndAccountType(
-            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathParam("serviceId") String serviceId, // pragma: allowlist secret
-            @Parameter(example = "test", description = "Account type") @PathParam("accountType") GatewayAccountType accountType,
-            @Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID") @PathParam("chargeId") String chargeId,
-            @Context UriInfo uriInfo) {
-        return chargeService.findChargeForServiceIdAndAccountType(chargeId, serviceId, accountType, uriInfo)
-                .map(chargeResponse -> ok(chargeResponse).build())
+    public ResponseEntity<?> getChargeByServiceIdAndAccountType(
+            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathVariable("serviceId") String serviceId, // pragma: allowlist secret
+            @Parameter(example = "test", description = "Account type") @PathVariable("accountType") GatewayAccountType accountType,
+            @Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID") @PathVariable("chargeId") String chargeId,
+            HttpServletRequest request) {
+        return chargeService.findChargeForServiceIdAndAccountType(chargeId, serviceId, accountType, BaseUri.from(request))
+                .<ResponseEntity<?>>map(chargeResponse -> ResponseEntity.ok(chargeResponse))
                 .orElseGet(() -> responseWithChargeNotFound(chargeId));
     }
 
-    @POST
-    @Path("/v1/api/accounts/{accountId}/charges")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/accounts/{accountId}/charges")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Create new charge for gateway account",
             tags = {"Charges"},
@@ -149,11 +149,11 @@ public class ChargesApiResource {
             }
     )
     @Transactional
-    public Response createNewCharge(
-            @Parameter(example = "1", description = "Gateway account ID") @PathParam(ACCOUNT_ID) Long accountId,
-            @NotNull @Valid ChargeCreateRequest chargeRequest,
-            @Context UriInfo uriInfo,
-            @Nullable @Length(min = 1, max = 255, message = "Header [Idempotency-Key] can have a size between 1 and 255") @HeaderParam("Idempotency-Key") String idempotencyKey) {
+    public ResponseEntity<?> createNewCharge(
+            @Parameter(example = "1", description = "Gateway account ID") @PathVariable(ACCOUNT_ID) Long accountId,
+            @NotNull @Valid @RequestBody(required = false) ChargeCreateRequest chargeRequest,
+            HttpServletRequest request,
+            @Nullable @Length(min = 1, max = 255, message = "Header [Idempotency-Key] can have a size between 1 and 255") @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
         logger.info("Creating new charge - {}", chargeRequest.toStringWithoutPersonalIdentifiableInformation());
 
         AuthorisationMode authorisationMode = chargeRequest.getAuthorisationMode();
@@ -173,26 +173,25 @@ public class ChargesApiResource {
 
         if (idempotencyKey != null && chargeRequest.getAuthorisationMode() == AuthorisationMode.AGREEMENT) {
             Optional<ChargeResponse> maybeExistingChargeResponse = chargeService.checkForChargeCreatedWithIdempotencyKey(
-                    chargeRequest, accountId, idempotencyKey, uriInfo);
+                    chargeRequest, accountId, idempotencyKey, BaseUri.from(request));
             if (maybeExistingChargeResponse.isPresent()) {
                 ChargeResponse existingChargeResponse = maybeExistingChargeResponse.get();
-                return ok(existingChargeResponse.getLink("self")).entity(existingChargeResponse).build();
+                return ResponseEntity.ok(existingChargeResponse);
             }
         }
 
-        return chargeService.create(chargeRequest, accountId, uriInfo, idempotencyKey)
-                .map(response -> {
+        return chargeService.create(chargeRequest, accountId, BaseUri.from(request), idempotencyKey)
+                .<ResponseEntity<?>>map(response -> {
                     if (authorisationMode == AuthorisationMode.AGREEMENT) {
                         chargeService.markChargeAsEligibleForAuthoriseUserNotPresent(response.getChargeId());
                     }
-                    return created(response.getLink("self")).entity(response).build();
+                    return ResponseEntity.created(response.getLink("self")).body(response);
                 })
                 .orElseGet(() -> notFoundResponse("Unknown gateway account: " + accountId));
     }
 
-    @POST
-    @Path("/v1/api/service/{serviceId}/account/{accountType}/charges")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/service/{serviceId}/account/{accountType}/charges")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Create new charge for service ID and account type",
             tags = {"Charges"},
@@ -206,12 +205,12 @@ public class ChargesApiResource {
             }
     )
     @Transactional
-    public Response createNewChargeByServiceIdAndAccountType(
-            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathParam("serviceId") String serviceId, // pragma: allowlist secret
-            @Parameter(example = "test", description = "Account type") @PathParam("accountType") GatewayAccountType accountType,
-            @NotNull @Valid ChargeCreateRequest chargeRequest,
-            @Context UriInfo uriInfo,
-            @Nullable @Length(min = 1, max = 255, message = "Header [Idempotency-Key] can have a size between 1 and 255") @HeaderParam("Idempotency-Key") String idempotencyKey) {
+    public ResponseEntity<?> createNewChargeByServiceIdAndAccountType(
+            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathVariable("serviceId") String serviceId, // pragma: allowlist secret
+            @Parameter(example = "test", description = "Account type") @PathVariable("accountType") GatewayAccountType accountType,
+            @NotNull @Valid @RequestBody(required = false) ChargeCreateRequest chargeRequest,
+            HttpServletRequest request,
+            @Nullable @Length(min = 1, max = 255, message = "Header [Idempotency-Key] can have a size between 1 and 255") @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
         logger.info("Creating new charge - {}", chargeRequest.toStringWithoutPersonalIdentifiableInformation());
 
         AuthorisationMode authorisationMode = chargeRequest.getAuthorisationMode();
@@ -235,26 +234,25 @@ public class ChargesApiResource {
 
         if (idempotencyKey != null && chargeRequest.getAuthorisationMode() == AuthorisationMode.AGREEMENT) {
             Optional<ChargeResponse> maybeExistingChargeResponse = chargeService.checkForChargeCreatedWithIdempotencyKey(
-                    chargeRequest, accountId, idempotencyKey, uriInfo);
+                    chargeRequest, accountId, idempotencyKey, BaseUri.from(request));
             if (maybeExistingChargeResponse.isPresent()) {
                 ChargeResponse existingChargeResponse = maybeExistingChargeResponse.get();
-                return ok(existingChargeResponse.getLink("self")).entity(existingChargeResponse).build();
+                return ResponseEntity.ok(existingChargeResponse);
             }
         }
 
-        return chargeService.create(chargeRequest, accountId, uriInfo, idempotencyKey)
-                .map(response -> {
+        return chargeService.create(chargeRequest, accountId, BaseUri.from(request), idempotencyKey)
+                .<ResponseEntity<?>>map(response -> {
                     if (authorisationMode == AuthorisationMode.AGREEMENT) {
                         chargeService.markChargeAsEligibleForAuthoriseUserNotPresent(response.getChargeId());
                     }
-                    return created(response.getLink("self")).entity(response).build();
+                    return ResponseEntity.created(response.getLink("self")).body(response);
                 })
                 .orElseGet(() -> notFoundResponse("Unknown gateway account: " + accountId));
     }
 
-    @POST
-    @Path("/v1/api/accounts/{accountId}/telephone-charges")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/accounts/{accountId}/telephone-charges")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Create a new telephone charge for gateway account.",
             description = "Create a new telephone charge for gateway account. These are externally taken payments and the outcome is reported to this endpoint. " +
@@ -275,10 +273,10 @@ public class ChargesApiResource {
                     @ApiResponse(responseCode = "422", description = "Missing required fields or invalid values", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
-    public Response createNewTelephoneChargeByAccountId(
-            @Parameter(example = "1", description = "Gateway account ID") @PathParam(ACCOUNT_ID) Long accountId,
-            @NotNull @Valid TelephoneChargeCreateRequest telephoneChargeCreateRequest,
-            @Context UriInfo uriInfo
+    public ResponseEntity<?> createNewTelephoneChargeByAccountId(
+            @Parameter(example = "1", description = "Gateway account ID") @PathVariable(ACCOUNT_ID) Long accountId,
+            @NotNull @Valid @RequestBody(required = false) TelephoneChargeCreateRequest telephoneChargeCreateRequest,
+            HttpServletRequest request
     ) {
         GatewayAccountEntity gatewayAccount = gatewayAccountService.getGatewayAccount(accountId)
                 .orElseThrow(() -> new GatewayAccountNotFoundException(accountId));
@@ -288,13 +286,12 @@ public class ChargesApiResource {
         }
 
         return chargeService.findCharge(accountId, telephoneChargeCreateRequest)
-                .map(response -> Response.status(200).entity(response).build())
-                .orElseGet(() -> Response.status(201).entity(chargeService.createFromTelephonePaymentNotification(telephoneChargeCreateRequest, gatewayAccount)).build());
+                .map(response -> ResponseEntity.status(200).body(response))
+                .orElseGet(() -> ResponseEntity.status(201).body(chargeService.createFromTelephonePaymentNotification(telephoneChargeCreateRequest, gatewayAccount)));
     }
 
-    @POST
-    @Path("/v1/api/service/{serviceId}/account/{accountType}/telephone-charges")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/service/{serviceId}/account/{accountType}/telephone-charges")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Create a new telephone charge by service id and account type",
             description = "Create a new telephone charge for a service and account type. These are externally taken payments and the outcome is reported to this endpoint. " +
@@ -315,11 +312,11 @@ public class ChargesApiResource {
                     @ApiResponse(responseCode = "422", description = "Missing required fields or invalid values", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
-    public Response createNewTelephoneChargeByServiceIdAndAccountType(
-            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathParam("serviceId") String serviceId, // pragma: allowlist secret
-            @Parameter(example = "test", description = "Account type") @PathParam("accountType") GatewayAccountType accountType,
-            @NotNull @Valid TelephoneChargeCreateRequest telephoneChargeCreateRequest,
-            @Context UriInfo uriInfo
+    public ResponseEntity<?> createNewTelephoneChargeByServiceIdAndAccountType(
+            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathVariable("serviceId") String serviceId, // pragma: allowlist secret
+            @Parameter(example = "test", description = "Account type") @PathVariable("accountType") GatewayAccountType accountType,
+            @NotNull @Valid @RequestBody(required = false) TelephoneChargeCreateRequest telephoneChargeCreateRequest,
+            HttpServletRequest request
     ) {
         GatewayAccountEntity gatewayAccount = gatewayAccountService.getGatewayAccountByServiceIdAndAccountType(serviceId, accountType)
                 .orElseThrow(() -> new GatewayAccountNotFoundException(serviceId, accountType));
@@ -329,13 +326,12 @@ public class ChargesApiResource {
         }
 
         return chargeService.findCharge(gatewayAccount.getId(), telephoneChargeCreateRequest)
-                .map(response -> Response.status(200).entity(response).build())
-                .orElseGet(() -> Response.status(201).entity(chargeService.createFromTelephonePaymentNotification(telephoneChargeCreateRequest, gatewayAccount)).build());
+                .map(response -> ResponseEntity.status(200).body(response))
+                .orElseGet(() -> ResponseEntity.status(201).body(chargeService.createFromTelephonePaymentNotification(telephoneChargeCreateRequest, gatewayAccount)));
     }
 
-    @POST
-    @Path("/v1/api/accounts/{accountId}/charges/{chargeId}/resend-confirmation-email")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/accounts/{accountId}/charges/{chargeId}/resend-confirmation-email")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Resend confirmation email for a charge",
             responses = {
@@ -345,24 +341,23 @@ public class ChargesApiResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response resendConfirmationEmail(
+    public ResponseEntity<?> resendConfirmationEmail(
             @Parameter(example = "1", description = "Gateway account ID")
-            @PathParam(ACCOUNT_ID) Long accountId,
+            @PathVariable(ACCOUNT_ID) Long accountId,
             @Parameter(example = "spmh0fb7rbi1lebv1j3f7hc3m9", description = "Charge external ID")
-            @PathParam("chargeId") String chargeId) {
+            @PathVariable("chargeId") String chargeId) {
         var account = gatewayAccountService.getGatewayAccount(accountId)
                 .orElseThrow(() -> new GatewayAccountNotFoundException(accountId));
 
         return chargeService.findCharge(chargeId, accountId)
                 .map(charge -> userNotificationService.sendPaymentConfirmedEmailSynchronously(charge, account, true)
                         .map((reference) -> noContentResponse())
-                        .orElseGet(() -> buildErrorResponse(Response.Status.PAYMENT_REQUIRED, "Failed to send email")))
+                        .orElseGet(() -> buildErrorResponse(HttpStatus.PAYMENT_REQUIRED, "Failed to send email")))
                 .orElseGet(() -> responseWithChargeNotFound(chargeId));
     }
 
-    @POST
-    @Path("/v1/api/service/{serviceId}/account/{accountType}/charges/{chargeId}/resend-confirmation-email")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/service/{serviceId}/account/{accountType}/charges/{chargeId}/resend-confirmation-email")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Resend confirmation email for a charge",
             responses = {
@@ -372,13 +367,13 @@ public class ChargesApiResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response resendConfirmationEmailByServiceIdAndAccountType(
+    public ResponseEntity<?> resendConfirmationEmailByServiceIdAndAccountType(
             @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") // pragma: allowlist secret
-            @PathParam("serviceId") String serviceId,
+            @PathVariable("serviceId") String serviceId,
             @Parameter(example = "test", description = "Account type")
-            @PathParam("accountType") GatewayAccountType accountType,
+            @PathVariable("accountType") GatewayAccountType accountType,
             @Parameter(example = "spmh0fb7rbi1lebv1j3f7hc3m9", description = "Charge external ID")
-            @PathParam("chargeId") String chargeId) {
+            @PathVariable("chargeId") String chargeId) {
 
         return gatewayAccountService.getGatewayAccountByServiceIdAndAccountType(serviceId, accountType)
                 .or(() -> {
@@ -395,12 +390,11 @@ public class ChargesApiResource {
                         chargeAccountPair.getRight(),
                         true))
                 .map(reference -> noContentResponse())
-                .orElseGet(() -> buildErrorResponse(Response.Status.PAYMENT_REQUIRED, "Failed to send email"));
+                .orElseGet(() -> buildErrorResponse(HttpStatus.PAYMENT_REQUIRED, "Failed to send email"));
     }
 
-    @POST
-    @Path("/v1/tasks/expired-charges-sweep")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/tasks/expired-charges-sweep")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Expire charges, tokens and idempotency keys",
             description = "This starts a task to expire the charges with a default window of 90 minutes. " +
@@ -419,7 +413,7 @@ public class ChargesApiResource {
                                     "}")))
             }
     )
-    public Response expireCharges(@Context UriInfo uriInfo) {
+    public ResponseEntity<?> expireCharges(HttpServletRequest request) {
         Map<String, Integer> resultMap = chargeExpiryService.sweepAndExpireChargesAndTokensAndIdempotencyKeys();
         return successResponseWithEntity(resultMap);
     }
@@ -433,13 +427,12 @@ public class ChargesApiResource {
                     @ApiResponse(responseCode = "404", description = "Not found")
             }
     )
-    @GET
-    @Path("/v1/api/charges/gateway_transaction/{gatewayTransactionId}")
-    @Produces(APPLICATION_JSON)
-    public Response getChargeForGatewayTransactionId(@Parameter(example = "5422624d-12b1-4821-8b26-d0383ecf1602", description = "Gateway transaction ID")
-                                                     @PathParam("gatewayTransactionId") String gatewayTransactionId, @Context UriInfo uriInfo) {
-        return chargeService.findChargeByGatewayTransactionId(gatewayTransactionId, uriInfo)
-                .map(chargeResponse -> ok(chargeResponse).build())
+    @GetMapping("/v1/api/charges/gateway_transaction/{gatewayTransactionId}")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getChargeForGatewayTransactionId(@Parameter(example = "5422624d-12b1-4821-8b26-d0383ecf1602", description = "Gateway transaction ID")
+                                                     @PathVariable("gatewayTransactionId") String gatewayTransactionId, HttpServletRequest request) {
+        return chargeService.findChargeByGatewayTransactionId(gatewayTransactionId, BaseUri.from(request))
+                .<ResponseEntity<?>>map(chargeResponse -> ResponseEntity.ok(chargeResponse))
                 .orElseGet(() -> responseWithGatewayTransactionNotFound(gatewayTransactionId));
     }
 }

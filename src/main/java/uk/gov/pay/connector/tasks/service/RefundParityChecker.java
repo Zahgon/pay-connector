@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.tasks.service;
 
-import com.google.inject.Inject;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -13,6 +13,7 @@ import uk.gov.pay.connector.refund.model.domain.RefundHistory;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -24,6 +25,7 @@ import static uk.gov.pay.connector.tasks.service.ParityCheckService.FIELD_NAME;
 import static uk.gov.service.payments.commons.model.CommonDateTimeFormatters.ISO_INSTANT_MILLISECOND_PRECISION;
 import static uk.gov.service.payments.logging.LoggingKeys.REFUND_EXTERNAL_ID;
 
+@Component
 public class RefundParityChecker {
 
     private static final Logger logger = LoggerFactory.getLogger(RefundParityChecker.class);

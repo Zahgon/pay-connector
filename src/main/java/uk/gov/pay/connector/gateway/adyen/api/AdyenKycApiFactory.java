@@ -10,9 +10,11 @@ import jakarta.inject.Inject;
 import uk.gov.pay.connector.app.adyen.AdyenGatewayConfig;
 
 import java.util.Objects;
+import org.springframework.stereotype.Component;
 
 import static uk.gov.pay.connector.gateway.adyen.api.AdyenHttpClientFactory.createAdyenHttpClientForTestEnvironment;
 
+@Component
 public class AdyenKycApiFactory {
 
     private final PciQuestionnairesApi pciQuestionnairesApi;

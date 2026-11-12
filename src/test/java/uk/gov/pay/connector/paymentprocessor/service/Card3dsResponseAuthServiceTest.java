@@ -1,8 +1,8 @@
 package uk.gov.pay.connector.paymentprocessor.service;
 
+import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Counter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.dropwizard.core.setup.Environment;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -118,8 +118,6 @@ public class Card3dsResponseAuthServiceTest extends CardServiceTest {
 
     @BeforeEach
     public void setUpCardAuthorisationService() {
-        Environment mockEnvironment = mock(Environment.class);
-        when(mockEnvironment.metrics()).thenReturn(mockMetricRegistry);
 
         ConnectorConfiguration mockConfiguration = mock(ConnectorConfiguration.class);
         when(mockConfiguration.getAuthorisation3dsConfig()).thenReturn(mockAuthorisation3dsConfig);
@@ -131,7 +129,7 @@ public class Card3dsResponseAuthServiceTest extends CardServiceTest {
                 mockedRefundService, mockEventService, mockPaymentInstrumentService, mockGatewayAccountCredentialsService,
                 mockAuthCardDetailsToCardDetailsEntityConverter, mockTaskQueueService, mockWorldpay3dsFlexJwtService, mockIdempotencyDao,
                 mockExternalTransactionStateFactory, objectMapper, null, fixedInstantSource);
-        AuthorisationService authorisationService = new AuthorisationService(mockExecutorService, mockEnvironment, mockConfiguration);
+        AuthorisationService authorisationService = new AuthorisationService(mockExecutorService, mockMetricRegistry, mockConfiguration);
 
         card3dsResponseAuthService = new Card3dsResponseAuthService(mockedProviders, chargeService, authorisationService, mockConfiguration);
     }
@@ -393,7 +391,7 @@ public class Card3dsResponseAuthServiceTest extends CardServiceTest {
             card3dsResponseAuthService.process3DSecureAuthorisation(charge.getExternalId(), AuthUtils.buildAuth3dsResult());
             fail("Exception not thrown.");
         } catch (OperationAlreadyInProgressRuntimeException e) {
-            ErrorResponse response = (ErrorResponse) e.getResponse().getEntity();
+            ErrorResponse response = (ErrorResponse) e.getResponse().getBody();
             assertThat(response.messages(), contains(format("Authorisation for charge already in progress, %s", charge.getExternalId())));
         }
     }

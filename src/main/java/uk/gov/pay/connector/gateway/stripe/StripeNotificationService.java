@@ -2,11 +2,11 @@ package uk.gov.pay.connector.gateway.stripe;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.net.Webhook;
-import jakarta.ws.rs.WebApplicationException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -36,6 +36,7 @@ import uk.gov.service.payments.commons.queue.exception.QueueException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.springframework.stereotype.Service;
 
 import static java.lang.String.format;
 import static net.logstash.logback.argument.StructuredArguments.kv;
@@ -60,6 +61,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.GATEWAY_PAYOUT_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.STRIPE_EVENT_ID;
 
+@Service
 public class StripeNotificationService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());

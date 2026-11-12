@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.gatewayaccount.dao;
 
-import com.google.inject.Provider;
+import jakarta.inject.Provider;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import uk.gov.pay.connector.common.dao.JpaDao;
@@ -9,7 +9,9 @@ import uk.gov.pay.connector.gatewayaccount.model.AdyenAccountSetupTask;
 import uk.gov.pay.connector.gatewayaccount.model.AdyenAccountSetupTaskEntity;
 
 import java.util.List;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public class AdyenAccountSetupDao extends JpaDao<AdyenAccountSetupTaskEntity> {
 
     @Inject

@@ -13,9 +13,11 @@ import uk.gov.service.payments.commons.queue.exception.QueueException;
 
 import jakarta.inject.Inject;
 import java.util.List;
+import org.springframework.stereotype.Component;
 
 import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 
+@Component
 public class CardCaptureProcess {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CardCaptureProcess.class);

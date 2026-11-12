@@ -1,7 +1,9 @@
 package uk.gov.pay.connector.gateway.worldpay.utils;
 
 import uk.gov.pay.connector.gateway.model.request.CardAuthorisationGatewayRequest;
+import org.springframework.stereotype.Component;
 
+@Component
 public class WorldpayAuthoriseDescriptionHelper {
     public String getDescription(CardAuthorisationGatewayRequest cardAuthorisationGatewayRequest){
         

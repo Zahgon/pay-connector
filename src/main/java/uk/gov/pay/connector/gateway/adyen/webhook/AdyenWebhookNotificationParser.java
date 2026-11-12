@@ -11,10 +11,12 @@ import uk.gov.pay.connector.gateway.adyen.webhook.model.AdyenWebhookEvent;
 import uk.gov.pay.connector.gateway.adyen.webhook.model.AdyenWebhookNotification;
 
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
 import static uk.gov.pay.connector.gateway.adyen.webhook.model.AdyenEnvironment.LIVE;
 import static uk.gov.pay.connector.gateway.adyen.webhook.model.AdyenEnvironment.TEST;
 
+@Component
 public class AdyenWebhookNotificationParser {
     private final ObjectMapper objectMapper;
     private static final Logger LOGGER = LoggerFactory.getLogger(AdyenWebhookNotificationParser.class);

@@ -3,7 +3,9 @@ package uk.gov.pay.connector.common.model.api;
 import uk.gov.pay.connector.charge.model.domain.ChargeEntity;
 import uk.gov.pay.connector.charge.model.domain.ChargeStatus;
 import uk.gov.service.payments.commons.model.AuthorisationMode;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ExternalTransactionStateFactory {
 
     public ExternalTransactionState newExternalTransactionState(ChargeEntity chargeEntity) {

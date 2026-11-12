@@ -4,17 +4,13 @@ package uk.gov.pay.connector.it.resources.adyen;
 import com.codahale.metrics.MetricRegistry;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
-import com.google.inject.Provides;
-import io.dropwizard.core.setup.Environment;
-import io.dropwizard.testing.ConfigOverride;
-import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
+import uk.gov.pay.connector.app.ConfigOverride;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import uk.gov.pay.connector.app.ConnectorApp;
-import uk.gov.pay.connector.app.ConnectorConfiguration;
-import uk.gov.pay.connector.app.ConnectorModule;
+import org.springframework.context.annotation.Bean;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Primary;
 import uk.gov.pay.connector.charge.dao.ChargeDao;
 import uk.gov.pay.connector.extension.AppWithPostgresAndSqsExtension;
 import uk.gov.pay.connector.gateway.ClientFactory;
@@ -34,7 +30,6 @@ import static uk.gov.pay.connector.it.util.RecurringPaymentSetupUtil.setupCharge
 import static uk.gov.pay.connector.model.domain.AuthCardDetailsFixture.anAuthCardDetails;
 
 
-@ExtendWith(DropwizardExtensionsSupport.class)
 public class AdyenPaymentAuthorisationTimeoutIT {
 
     @RegisterExtension
@@ -45,7 +40,7 @@ public class AdyenPaymentAuthorisationTimeoutIT {
 
     @RegisterExtension
     public static AppWithPostgresAndSqsExtension app = new AppWithPostgresAndSqsExtension(
-            CustomConnectorApp.class,
+            GatewayClientThrowingTimeoutConfiguration.class,
             ConfigOverride.config("adyen.baseUrls.checkout.test", "http://localhost:8081/v72"));
 
     @RegisterExtension
@@ -57,7 +52,7 @@ public class AdyenPaymentAuthorisationTimeoutIT {
     @BeforeEach
     void setUp() {
         app.getDatabaseTestHelper().enableRecurring(Long.parseLong(testBaseExtension.getAccountId()));
-        chargeDao = app.getInstanceFromGuiceContainer(ChargeDao.class);
+        chargeDao = app.getBean(ChargeDao.class);
     }
 
     @Test
@@ -80,7 +75,7 @@ public class AdyenPaymentAuthorisationTimeoutIT {
 
     @Test
     void timed_out_authorisation_for_recurring_payment() {
-        AuthoriseWithUserNotPresentHandler taskHandler = app.getInstanceFromGuiceContainer(AuthoriseWithUserNotPresentHandler.class);
+        AuthoriseWithUserNotPresentHandler taskHandler = app.getBean(AuthoriseWithUserNotPresentHandler.class);
         String storedPaymentMethodId = "4242";
         var chargeId = setupChargeWithAgreementAndPaymentInstrument(testBaseExtension, app, storedPaymentMethodId);
 
@@ -91,20 +86,15 @@ public class AdyenPaymentAuthorisationTimeoutIT {
         assertThat(charge.get().getStatus(), is("AUTHORISATION TIMEOUT"));
     }
 
-    public static class CustomConnectorApp extends ConnectorApp {
-        @Override
-        protected ConnectorModule getModule(ConnectorConfiguration configuration, Environment environment) {
-            return new ConnectorModuleWithCustomGatewayClientThrowingException(configuration, environment);
-        }
-    }
+    /**
+     * Replaces the gateway client factory with one whose clients time out on every POST.
+     */
+    @TestConfiguration(proxyBeanMethods = false)
+    public static class GatewayClientThrowingTimeoutConfiguration {
 
-    private static class ConnectorModuleWithCustomGatewayClientThrowingException extends ConnectorModule {
-        public ConnectorModuleWithCustomGatewayClientThrowingException(ConnectorConfiguration configuration, Environment environment) {
-            super(configuration, environment);
-        }
-
-        @Provides
-        public GatewayClientFactory provideGatewayClientFactory(ClientFactory clientFactory) {
+        @Bean
+        @Primary
+        public GatewayClientFactory gatewayClientFactoryWithTimeouts(ClientFactory clientFactory) {
             return new GatewayClientFactory(clientFactory) {
                 @Override
                 public GatewayClient createGatewayClient(PaymentGatewayName gateway, MetricRegistry metricRegistry) {

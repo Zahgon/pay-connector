@@ -29,8 +29,8 @@ public class TokenDaoJpaIT {
     @BeforeEach
     void setUp() {
         app.getDatabaseTestHelper().truncateAllData();
-        tokenDao = app.getInstanceFromGuiceContainer(TokenDao.class);
-        chargeDao = app.getInstanceFromGuiceContainer(ChargeDao.class);
+        tokenDao = app.getBean(TokenDao.class);
+        chargeDao = app.getBean(ChargeDao.class);
         DatabaseFixtures.TestAccount defaultTestAccount = app.getDatabaseFixtures()
                 .aTestAccount()
                 .insert();

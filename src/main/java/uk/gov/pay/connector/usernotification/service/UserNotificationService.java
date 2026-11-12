@@ -2,7 +2,7 @@ package uk.gov.pay.connector.usernotification.service;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Stopwatch;
-import io.dropwizard.core.setup.Environment;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +35,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.springframework.stereotype.Service;
 
 import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
@@ -50,6 +51,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.GATEWAY_ACCOUNT_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.RESOURCE_EXTERNAL_ID;
 
+@Service
 public class UserNotificationService {
 
     private static final Pattern LITERAL_DOLLAR_REFERENCE = Pattern.compile(Pattern.quote("$reference"));
@@ -66,14 +68,14 @@ public class UserNotificationService {
 
     @Inject
     public UserNotificationService(NotifyClientFactory notifyClientFactory, ConnectorConfiguration configuration,
-                                   Environment environment, TaskQueueService taskQueueService, InstantSource instantSource) {
+                                   MetricRegistry metricRegistry, TaskQueueService taskQueueService, InstantSource instantSource) {
         readEmailConfig(configuration);
         if (emailNotifyGloballyEnabled) {
             this.notifyClientFactory = notifyClientFactory;
             int numberOfThreads = configuration.getExecutorServiceConfig().getThreadsPerCpu() * getRuntime().availableProcessors();
             executorService = Executors.newFixedThreadPool(numberOfThreads);
         }
-        this.metricRegistry = environment.metrics();
+        this.metricRegistry = metricRegistry;
         this.taskQueueService = taskQueueService;
         this.instantSource = instantSource;
     }

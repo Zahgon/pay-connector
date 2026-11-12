@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.dropwizard.validation.ValidationMethod;
+import jakarta.validation.constraints.AssertTrue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import uk.gov.pay.connector.gateway.PaymentGatewayName;
@@ -94,7 +94,7 @@ public class GatewayAccountRequest {
                 PaymentGatewayName.SANDBOX.getName() : paymentProvider;
     }
 
-    @ValidationMethod(message = "Unsupported payment provider account type, should be one of (test, live)")
+    @AssertTrue(message = "Unsupported payment provider account type, should be one of (test, live)")
     @JsonIgnore
     public boolean isValidProviderAccountType() {
         try {
@@ -105,7 +105,7 @@ public class GatewayAccountRequest {
         }
     }
 
-    @ValidationMethod(message = "Unsupported payment provider value.")
+    @AssertTrue(message = "Unsupported payment provider value.")
     @JsonIgnore
     public boolean isValidPaymentProvider() {
         return PaymentGatewayName.isValidPaymentGateway(paymentProvider);

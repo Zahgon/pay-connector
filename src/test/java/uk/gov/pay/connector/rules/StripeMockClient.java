@@ -14,9 +14,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static java.lang.String.format;
-import static jakarta.ws.rs.core.HttpHeaders.CONTENT_TYPE;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static uk.gov.pay.connector.util.TestTemplateResourceLoader.STRIPE_AUTHORISATION_FAILED_RESPONSE;
 import static uk.gov.pay.connector.util.TestTemplateResourceLoader.STRIPE_AUTHORISATION_FAILED_RESPONSE_USER_NOT_PRESENT_PAYMENT_NOT_RETRIABLE;
 import static uk.gov.pay.connector.util.TestTemplateResourceLoader.STRIPE_AUTHORISATION_FAILED_RESPONSE_USER_NOT_PRESENT_PAYMENT_RETRIABLE;
@@ -47,13 +47,13 @@ public class StripeMockClient {
     }
 
     private void setupResponse(String responseBody, String path, int status) {
-        wireMockServer.stubFor(post(urlPathEqualTo(path)).withHeader(CONTENT_TYPE, matching(APPLICATION_FORM_URLENCODED))
-                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON).withStatus(status).withBody(responseBody)));
+        wireMockServer.stubFor(post(urlPathEqualTo(path)).withHeader(CONTENT_TYPE, matching(APPLICATION_FORM_URLENCODED_VALUE))
+                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE).withStatus(status).withBody(responseBody)));
     }
 
     private void setupGetResponse(String responseBody, String path, int status) {
         wireMockServer.stubFor(get(urlPathEqualTo(path))
-                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON).withStatus(status).withBody(responseBody)));
+                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE).withStatus(status).withBody(responseBody)));
     }
 
     public void mockRefundError() {
@@ -108,11 +108,11 @@ public class StripeMockClient {
     public void mockTransferSuccess() {
         String payload = TestTemplateResourceLoader.load(STRIPE_TRANSFER_RESPONSE);
         MappingBuilder builder = post(urlPathEqualTo("/v1/transfers"))
-                .withHeader(CONTENT_TYPE, matching(APPLICATION_FORM_URLENCODED))
+                .withHeader(CONTENT_TYPE, matching(APPLICATION_FORM_URLENCODED_VALUE))
                 .withHeader("Idempotency-Key", matching(".*"));
 
         wireMockServer.stubFor(builder
-                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON).withStatus(200).withBody(payload)));
+                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE).withStatus(200).withBody(payload)));
     }
 
     public void mockTransferFailure() {
@@ -169,8 +169,8 @@ public class StripeMockClient {
         String responseBody = TestTemplateResourceLoader.load(STRIPE_PAYMENT_INTENT_SUCCESS_RESPONSE);
         String path = "/v1/payment_intents";
         wireMockServer.stubFor(post(urlPathEqualTo(path))
-                .withHeader(CONTENT_TYPE, matching(APPLICATION_FORM_URLENCODED))
-                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .withHeader(CONTENT_TYPE, matching(APPLICATION_FORM_URLENCODED_VALUE))
+                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                         .withStatus(200)
                         .withFixedDelay(100)
                         .withBody(responseBody)));
@@ -180,7 +180,7 @@ public class StripeMockClient {
         String responsePayload = TestTemplateResourceLoader.load((STRIPE_SEARCH_PAYMENT_INTENTS_RESPONSE));
         wireMockServer.stubFor(get(urlPathEqualTo("/v1/payment_intents/search"))
                 .withQueryParam("query", equalTo(format("metadata['govuk_pay_transaction_external_id']:'%s'", chargeExternalId)))
-                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                         .withStatus(200)
                         .withBody(responsePayload)));
     }
@@ -188,7 +188,7 @@ public class StripeMockClient {
     public void mockCreateStripeTestConnectAccount() throws Exception {
         Path file = Path.of("src", "test", "resources", "templates", "stripe").resolve("create_account_response.json");
         wireMockServer.stubFor(post(urlPathEqualTo("/v1/accounts"))
-                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                         .withStatus(201)
                         .withBody(Files.readString(file))));
     }
@@ -196,7 +196,7 @@ public class StripeMockClient {
     public void mockCreateRepresentativeForConnectAccount() throws Exception {
         Path file = Path.of("src", "test", "resources", "templates", "stripe").resolve("create_person_response.json");
         wireMockServer.stubFor(post(urlPathEqualTo("/v1/accounts/acct_123/persons"))
-                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                         .withStatus(201)
                         .withBody(Files.readString(file))));
     }
@@ -204,7 +204,7 @@ public class StripeMockClient {
     public void mockCreateExternalAccount() throws Exception {
         Path file = Path.of("src", "test", "resources", "templates", "stripe").resolve("create_external_account_response.json");
         wireMockServer.stubFor(post(urlPathEqualTo("/v1/accounts/acct_123/external_accounts"))
-                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                         .withStatus(201)
                         .withBody(Files.readString(file))));
     }
@@ -212,7 +212,7 @@ public class StripeMockClient {
     public void mockRetrieveAccount() throws Exception {
         Path file = Path.of("src", "test", "resources", "templates", "stripe").resolve("create_account_response.json");
         wireMockServer.stubFor(get(urlPathEqualTo("/v1/accounts/acct_123"))
-                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                         .withStatus(200)
                         .withBody(Files.readString(file))));
     }
@@ -220,7 +220,7 @@ public class StripeMockClient {
     public void mockRetrievePersonCollection() throws Exception {
         Path file = Path.of("src", "test", "resources", "templates", "stripe").resolve("get_persons.json");
         wireMockServer.stubFor(get(urlPathEqualTo("/v1/accounts/acct_123/persons"))
-                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .willReturn(aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                         .withStatus(200)
                         .withBody(Files.readString(file))));
     }

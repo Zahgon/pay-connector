@@ -1,12 +1,10 @@
 package uk.gov.pay.connector.charge.resource;
 
 import com.google.common.collect.ImmutableSet;
-import io.dropwizard.jersey.PATCH;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -30,27 +28,32 @@ import uk.gov.pay.connector.gatewayaccount.model.GatewayAccount;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.UriInfo;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import uk.gov.pay.connector.web.MediaTypes;
+import uk.gov.pay.connector.web.BaseUri;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.validation.annotation.Validated;
+
 import static uk.gov.pay.connector.charge.resource.ChargesApiResource.EMAIL_KEY;
 import static uk.gov.pay.connector.common.service.PatchRequestBuilder.aPatchRequestBuilder;
 import static uk.gov.pay.connector.common.validator.ApiValidators.validateChargePatchParams;
 import static uk.gov.pay.connector.util.ResponseUtil.badRequestResponse;
 import static uk.gov.pay.connector.util.ResponseUtil.responseWithChargeNotFound;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-@Path("/")
 @Tag(name = "Charges - Frontend")
+@RestController
+@Validated
 public class ChargesFrontendResource {
 
     private static final Logger logger = LoggerFactory.getLogger(ChargesFrontendResource.class);
@@ -74,9 +77,8 @@ public class ChargesFrontendResource {
         this.externalTransactionStateFactory = externalTransactionStateFactory;
     }
 
-    @GET
-    @Path("/v1/frontend/charges/{chargeId}")
-    @Produces(APPLICATION_JSON)
+    @GetMapping("/v1/frontend/charges/{chargeId}")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Find a charge",
             responses = {
@@ -85,17 +87,16 @@ public class ChargesFrontendResource {
                     @ApiResponse(responseCode = "404", description = "Not found - charge not found")
             }
     )
-    public Response getCharge(@Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
-                              @PathParam("chargeId") String chargeId, @Context UriInfo uriInfo) {
+    public ResponseEntity<?> getCharge(@Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
+                              @PathVariable("chargeId") String chargeId, HttpServletRequest request) {
 
         return chargeDao.findByExternalId(chargeId)
-                .map(charge -> Response.ok(chargeService.buildChargeResponse(uriInfo, charge)).build())
+                .<ResponseEntity<?>>map(charge -> ResponseEntity.ok(chargeService.buildChargeResponse(BaseUri.from(request), charge)))
                 .orElseGet(() -> responseWithChargeNotFound(chargeId));
     }
 
-    @GET
-    @Path("/v1/frontend/charges/{chargeId}/worldpay/3ds-flex/ddc")
-    @Produces(APPLICATION_JSON)
+    @GetMapping("/v1/frontend/charges/{chargeId}/worldpay/3ds-flex/ddc")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Get Worldpay 3DS Flex DDC JWT",
             responses = {
@@ -108,8 +109,8 @@ public class ChargesFrontendResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response getWorldpay3dsFlexDdcJwt(@Schema(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
-                                             @PathParam("chargeId") String chargeId) {
+    public ResponseEntity<?> getWorldpay3dsFlexDdcJwt(@Schema(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
+                                             @PathVariable("chargeId") String chargeId) {
 
         ChargeEntity chargeEntity = chargeService.findChargeByExternalId(chargeId);
         GatewayAccount gatewayAccount = GatewayAccount.valueOf(chargeEntity.getGatewayAccount());
@@ -118,15 +119,14 @@ public class ChargesFrontendResource {
         String token = worldpay3dsFlexJwtService.generateDdcToken(gatewayAccount, worldpay3dsFlexCredentials,
                 chargeEntity.getCreatedDate(), chargeEntity.getPaymentProvider());
 
-        return Response.ok().entity(Map.of("jwt", token)).build();
+        return ResponseEntity.ok(Map.of("jwt", token));
     }
 
-    @PATCH
-    @Path("/v1/frontend/charges/{chargeId}")
-    @Produces(APPLICATION_JSON)
+    @PatchMapping("/v1/frontend/charges/{chargeId}")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Update charge (email field only)",
-            requestBody = @RequestBody(content = @Content(schema = @Schema(example = "{" +
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(schema = @Schema(example = "{" +
                     "    \"op\": \"replace\"," +
                     "    \"path\": \"email\"," +
                     "    \"value\": \"newemail@example.org\"" +
@@ -139,8 +139,8 @@ public class ChargesFrontendResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response patchCharge(@Schema(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
-                                @PathParam("chargeId") String chargeId, Map<String, String> chargePatchMap, @Context UriInfo uriInfo) {
+    public ResponseEntity<?> patchCharge(@Schema(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
+                                @PathVariable("chargeId") String chargeId, @RequestBody(required = false) Map<String, String> chargePatchMap, HttpServletRequest request) {
         PatchRequestBuilder.PatchRequest chargePatchRequest;
 
         try {
@@ -158,16 +158,15 @@ public class ChargesFrontendResource {
         }
 
         return chargeService.updateCharge(chargeId, chargePatchRequest)
-                .map(chargeEntity -> Response.ok(chargeService.buildChargeResponse(uriInfo, chargeEntity)).build())
+                .<ResponseEntity<?>>map(chargeEntity -> ResponseEntity.ok(chargeService.buildChargeResponse(BaseUri.from(request), chargeEntity)))
                 .orElseGet(() -> responseWithChargeNotFound(chargeId));
     }
 
-    @PUT
-    @Path("/v1/frontend/charges/{chargeId}/status")
-    @Produces(APPLICATION_JSON)
+    @PutMapping("/v1/frontend/charges/{chargeId}/status")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Update status of a charge",
-            requestBody = @RequestBody(content = @Content(schema = @Schema(example = "{" +
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(schema = @Schema(example = "{" +
                     "    \"new_status\": \"ENTERING CARD DETAILS\"" +
                     "}"))),
             responses = {
@@ -178,10 +177,10 @@ public class ChargesFrontendResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response updateChargeStatus(
+    public ResponseEntity<?> updateChargeStatus(
             @Parameter(example = "spmh0fb7rbi1lebv1j3f7hc3m9", description = "Charge external ID")
-            @PathParam("chargeId") String chargeId,
-            @Valid @NotNull NewChargeStatusRequest newChargeStatusRequest) {
+            @PathVariable("chargeId") String chargeId,
+            @Valid @NotNull @RequestBody(required = false) NewChargeStatusRequest newChargeStatusRequest) {
         ChargeStatus newChargeStatus;
 
         try {
@@ -192,11 +191,11 @@ public class ChargesFrontendResource {
         }
 
         return chargeService.updateFromInitialStatus(chargeId, newChargeStatus)
-                .map(chargeEntity -> Response.noContent().build())
+                .<ResponseEntity<?>>map(chargeEntity -> ResponseEntity.noContent().build())
                 .orElseGet(() -> getInvalidStatusResponse(chargeId, newChargeStatus));
     }
 
-    private Response getInvalidStatusResponse(String chargeId, ChargeStatus newChargeStatus) {
+    private ResponseEntity<?> getInvalidStatusResponse(String chargeId, ChargeStatus newChargeStatus) {
         return badRequestResponse("charge with id: " + chargeId +
                 " cannot be updated to the new status: " + newChargeStatus.getValue());
     }

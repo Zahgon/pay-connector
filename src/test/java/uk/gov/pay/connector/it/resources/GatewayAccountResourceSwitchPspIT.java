@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import static java.lang.String.format;
-import static jakarta.ws.rs.core.Response.Status.OK;
+import static org.springframework.http.HttpStatus.OK;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static uk.gov.pay.connector.it.dao.DatabaseFixtures.withDatabaseTestHelper;
@@ -113,12 +113,12 @@ public class GatewayAccountResourceSwitchPspIT {
                     .body(switchPspPayload)
                     .post(format("/v1/api/service/%s/account/%s/switch-psp", serviceExternalId, GatewayAccountType.LIVE))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s", serviceExternalId, GatewayAccountType.LIVE))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("provider_switch_enabled", is(false))
                     .body("description", is("A Worldpay LIVE account"))
                     .body("gateway_account_credentials.size()", is(2))
@@ -130,7 +130,7 @@ public class GatewayAccountResourceSwitchPspIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s", serviceExternalId, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("description", is("A Sandbox TEST account"))
                     .body("gateway_account_credentials.size()", is(2))
                     .body(String.format("gateway_account_credentials.find { it.external_id == '%s' }.state", stripeTestCredentialExternalId),
@@ -181,12 +181,12 @@ public class GatewayAccountResourceSwitchPspIT {
                     .body(switchPspPayload)
                     .post(format("/v1/api/service/%s/account/%s/switch-psp", serviceExternalId, GatewayAccountType.LIVE))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s", serviceExternalId, GatewayAccountType.LIVE))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("provider_switch_enabled", is(false))
                     .body("description", is("A Worldpay LIVE account"))
                     .body("gateway_account_credentials.size()", is(2))
@@ -198,7 +198,7 @@ public class GatewayAccountResourceSwitchPspIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s", serviceExternalId, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("description", is("A Sandbox TEST account, not a Stripe TEST account"))
                     .body("gateway_account_credentials.size()", is(1))
                     .body(String.format("gateway_account_credentials.find { it.external_id == '%s' }.state", sandboxTestCredentialExternalId),
@@ -248,12 +248,12 @@ public class GatewayAccountResourceSwitchPspIT {
                     .body(switchPspPayload)
                     .post(format("/v1/api/service/%s/account/%s/switch-psp", serviceExternalId, GatewayAccountType.LIVE))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s", serviceExternalId, GatewayAccountType.LIVE))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("provider_switch_enabled", is(false))
                     .body("description", is("A Worldpay LIVE account"))
                     .body("gateway_account_credentials.size()", is(2))
@@ -265,7 +265,7 @@ public class GatewayAccountResourceSwitchPspIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s", serviceExternalId, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("description", is("A Sandbox TEST account"))
                     .body("gateway_account_credentials.size()", is(2))
                     .body(String.format("gateway_account_credentials.find { it.external_id == '%s' }.state", stripeTestCredentialExternalId),
@@ -302,12 +302,12 @@ public class GatewayAccountResourceSwitchPspIT {
                     .body(switchPspPayload)
                     .post(format("/v1/api/service/%s/account/%s/switch-psp", serviceExternalId, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s", serviceExternalId, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("provider_switch_enabled", is(false))
                     .body("gateway_account_credentials.size()", is(2))
                     .body(String.format("gateway_account_credentials.find { it.external_id == '%s' }.state", worldpayCredentialExternalId),
@@ -359,7 +359,7 @@ public class GatewayAccountResourceSwitchPspIT {
                     .body(payload)
                     .post("/v1/api/accounts/" + gatewayAccountId + "/switch-psp")
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             Map<String, Object> account = app.getDatabaseTestHelper().getGatewayAccount(Long.valueOf(gatewayAccountId));
             assertThat((Integer) account.get("integration_version_3ds"), is(2));

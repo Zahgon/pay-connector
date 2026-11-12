@@ -1,9 +1,7 @@
 package uk.gov.pay.connector.it.resources.adyen;
 
-import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.shaded.org.checkerframework.checker.nullness.qual.Nullable;
 import uk.gov.pay.connector.charge.dao.ChargeDao;
@@ -32,7 +30,6 @@ import static uk.gov.pay.connector.model.domain.AuthCardDetailsFixture.anAuthCar
 import static uk.gov.pay.connector.util.AddAgreementParams.AddAgreementParamsBuilder.anAddAgreementParams;
 import static uk.gov.service.payments.commons.model.AgreementPaymentType.RECURRING;
 
-@ExtendWith(DropwizardExtensionsSupport.class)
 class AdyenCardResourceAuthoriseRecurringPaymentsIT {
 
     @RegisterExtension
@@ -56,7 +53,7 @@ class AdyenCardResourceAuthoriseRecurringPaymentsIT {
 
     @BeforeEach
     void setUp() {
-        chargeDao = app.getInstanceFromGuiceContainer(ChargeDao.class);
+        chargeDao = app.getBean(ChargeDao.class);
     }
 
     @Test

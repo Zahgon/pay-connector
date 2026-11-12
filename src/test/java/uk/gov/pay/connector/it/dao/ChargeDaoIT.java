@@ -94,7 +94,7 @@ public class ChargeDaoIT {
 
     @BeforeEach
     void setUp() {
-        chargeDao = app.getInstanceFromGuiceContainer(ChargeDao.class);
+        chargeDao = app.getBean(ChargeDao.class);
 
         defaultTestCardDetails = app.getDatabaseFixtures().validTestCardDetails();
         insertTestAccount();

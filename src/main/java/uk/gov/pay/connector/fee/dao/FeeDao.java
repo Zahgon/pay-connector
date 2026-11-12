@@ -1,17 +1,19 @@
 package uk.gov.pay.connector.fee.dao;
 
-import com.google.inject.Provider;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Provider;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import uk.gov.pay.connector.charge.model.domain.FeeEntity;
 import uk.gov.pay.connector.common.dao.JpaDao;
 
 import java.time.LocalDateTime;
+import org.springframework.stereotype.Repository;
 
 import static java.time.ZoneOffset.UTC;
 
 @Transactional
+@Repository
 public class FeeDao extends JpaDao<FeeEntity> {
     @Inject
     public FeeDao(final Provider<EntityManager> entityManager) {

@@ -1,8 +1,8 @@
 package uk.gov.pay.connector.it.resources;
 
-import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
-import io.dropwizard.testing.junit5.ResourceExtension;
-import jakarta.ws.rs.client.Entity;
+import uk.gov.pay.connector.rules.ResourceTestExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import uk.gov.pay.connector.rules.ResourceTestEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -24,24 +24,19 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 
-@ExtendWith(DropwizardExtensionsSupport.class)
 @ExtendWith(MockitoExtension.class)
 class GatewayAccountResourceTest {
 
     private static final GatewayAccountService gatewayAccountService = mock(GatewayAccountService.class);
 
-    private static final ResourceExtension resources = ResourceExtension.builder()
-            .addResource(new GatewayAccountResource(
+    @RegisterExtension
+    private static final ResourceTestExtension resources = ResourceTestExtension.withResources(new GatewayAccountResource(
                     gatewayAccountService,
                     null,
                     null,
                     null,
                     null
-            ))
-            .setRegisterDefaultExceptionMappers(false)
-            .addProvider(ConstraintViolationExceptionMapper.class)
-            .addProvider(ValidationExceptionMapper.class)
-            .build();
+            ));
 
     @Captor
     ArgumentCaptor<GatewayAccountRequest> gatewayAccountRequestCaptor;
@@ -68,7 +63,7 @@ class GatewayAccountResourceTest {
 
         resources.target("/v1/api/accounts")
                 .request()
-                .post(Entity.json("""
+                .post(ResourceTestEntity.json("""
                         {
                           "payment_provider": "stripe",
                           "type": "test",

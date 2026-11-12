@@ -1,8 +1,7 @@
 package uk.gov.pay.connector.refund.service;
 
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.charge.exception.GatewayAccountDisabledException;
@@ -37,6 +36,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.springframework.stereotype.Service;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
+import org.springframework.http.HttpStatus;
 
 import static java.lang.String.format;
 import static net.logstash.logback.argument.StructuredArguments.kv;
@@ -55,6 +57,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.PROVIDER;
 import static uk.gov.service.payments.logging.LoggingKeys.REFUND_EXTERNAL_ID;
 
+@Service
 public class RefundService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -86,7 +89,7 @@ public class RefundService {
 
     public ChargeRefundResponse submitRefund(GatewayAccountEntity gatewayAccountEntity, Charge charge, RefundRequest refundRequest) {
         if (PaymentGatewayName.isUnsupported(charge.getPaymentGatewayName())) {
-            throw new NotFoundException();
+            throw new WebApplicationException(HttpStatus.NOT_FOUND);
         }
         if (gatewayAccountEntity.isDisabled()) {
             throw new GatewayAccountDisabledException("Attempt to create a refund for a disabled gateway account");

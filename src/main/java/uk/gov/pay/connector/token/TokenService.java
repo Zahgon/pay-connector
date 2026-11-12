@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.token;
 
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import uk.gov.pay.connector.charge.exception.motoapi.OneTimeTokenAlreadyUsedException;
 import uk.gov.pay.connector.charge.exception.motoapi.OneTimeTokenInvalidException;
 import uk.gov.pay.connector.charge.exception.motoapi.OneTimeTokenUsageInvalidForMotoApiException;
@@ -8,9 +8,11 @@ import uk.gov.pay.connector.token.dao.TokenDao;
 import uk.gov.pay.connector.token.model.domain.TokenEntity;
 
 import jakarta.inject.Inject;
+import org.springframework.stereotype.Service;
 
 import static uk.gov.service.payments.commons.model.AuthorisationMode.MOTO_API;
 
+@Service
 public class TokenService {
 
     private final TokenDao tokenDao;

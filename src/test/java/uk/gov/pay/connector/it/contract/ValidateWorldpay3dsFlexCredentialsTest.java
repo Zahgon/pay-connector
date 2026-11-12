@@ -1,20 +1,23 @@
 package uk.gov.pay.connector.it.contract;
 
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import uk.gov.pay.connector.charge.util.JwtGenerator;
 import uk.gov.pay.connector.util.RandomIdGenerator;
 
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.MultivaluedHashMap;
-import jakarta.ws.rs.core.MultivaluedMap;
-import jakarta.ws.rs.core.Response;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
-import static jakarta.ws.rs.client.ClientBuilder.newClient;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Disabled
@@ -26,7 +29,12 @@ class ValidateWorldpay3dsFlexCredentialsTest {
     private final static String JWT_MAC_KEY = "";
     
     private final static String DDC_URL = "https://centinelapi.cardinalcommerce.com/V1/Cruise/Collect";
-    private final static Client client = newClient();
+    private final static CloseableHttpClient client = HttpClients.createDefault();
+
+    @AfterAll
+    static void closeClient() throws IOException {
+        client.close();
+    }
 
     @Test
     void should_process_server_side_ddc_change_with_correct_values() {
@@ -60,11 +68,13 @@ class ValidateWorldpay3dsFlexCredentialsTest {
 
         String jwt = new JwtGenerator().createJwt(claims, jwtMacKey);
 
-        MultivaluedMap<String, String> formData = new MultivaluedHashMap<>();
-        formData.add("JWT", jwt);
-
-        Response response = client.target(DDC_URL).request().post(Entity.form(formData));
-        return response.getStatus();
+        HttpPost request = new HttpPost(DDC_URL);
+        request.setEntity(new UrlEncodedFormEntity(List.of(new BasicNameValuePair("JWT", jwt))));
+        try {
+            return client.execute(request, response -> response.getCode());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
 }

@@ -26,8 +26,8 @@ import uk.gov.pay.connector.util.JsonObjectMapper;
 
 import java.util.List;
 
-import static jakarta.ws.rs.core.Response.Status.Family.CLIENT_ERROR;
-import static jakarta.ws.rs.core.Response.Status.Family.SERVER_ERROR;
+import static uk.gov.pay.connector.gateway.GatewayException.Family.CLIENT_ERROR;
+import static uk.gov.pay.connector.gateway.GatewayException.Family.SERVER_ERROR;
 import static uk.gov.pay.connector.gateway.CaptureResponse.ChargeState.COMPLETE;
 import static uk.gov.pay.connector.gateway.CaptureResponse.fromBaseCaptureResponse;
 import static uk.gov.pay.connector.gateway.model.GatewayError.gatewayConnectionError;

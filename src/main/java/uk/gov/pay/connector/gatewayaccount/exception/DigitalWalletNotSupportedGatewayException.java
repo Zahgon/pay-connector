@@ -2,9 +2,9 @@ package uk.gov.pay.connector.gatewayaccount.exception;
 
 import uk.gov.pay.connector.util.ResponseUtil;
 
-import jakarta.ws.rs.BadRequestException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 
-public class DigitalWalletNotSupportedGatewayException extends BadRequestException {
+public class DigitalWalletNotSupportedGatewayException extends WebApplicationException {
     public DigitalWalletNotSupportedGatewayException(String gatewayName){
         super(ResponseUtil.badRequestResponse((String.format("Gateway %s does not support digital wallets.", gatewayName))));
     }

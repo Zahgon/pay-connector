@@ -16,7 +16,9 @@ import uk.gov.pay.connector.gateway.model.PayersCardPrepaidStatus;
 
 import jakarta.inject.Inject;
 import java.util.Locale;
+import org.springframework.stereotype.Service;
 
+@Service
 public class MotoApiCardNumberValidationService {
 
     private final Logger logger = LoggerFactory.getLogger(MotoApiCardNumberValidationService.class);

@@ -52,8 +52,8 @@ class AdyenTransferNotificationHandlerIT {
                 .withChargeId(secureRandomLong())
                 .withExternalChargeId(RandomIdGenerator.newId())
                 .insert();
-        adyenTransferNotificationHandler = app.getInstanceFromGuiceContainer(AdyenTransferNotificationHandler.class);
-        feeDao = app.getInstanceFromGuiceContainer(FeeDao.class);
+        adyenTransferNotificationHandler = app.getBean(AdyenTransferNotificationHandler.class);
+        feeDao = app.getBean(FeeDao.class);
     }
 
     @Test

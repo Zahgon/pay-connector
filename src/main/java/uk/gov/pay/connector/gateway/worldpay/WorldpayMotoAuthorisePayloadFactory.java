@@ -6,7 +6,9 @@ import uk.gov.pay.connector.gateway.model.request.records.WorldpayMotoAuthoriseP
 import uk.gov.pay.connector.gateway.worldpay.utils.WorldpayAuthoriseCredentialsHelper;
 import uk.gov.pay.connector.gateway.worldpay.utils.WorldpayAuthoriseDescriptionHelper;
 import uk.gov.pay.connector.gatewayaccount.model.WorldpayMerchantCodeCredentials;
+import org.springframework.stereotype.Component;
 
+@Component
 public class WorldpayMotoAuthorisePayloadFactory {
 
     private final WorldpayAuthoriseDescriptionHelper descriptionHelper;

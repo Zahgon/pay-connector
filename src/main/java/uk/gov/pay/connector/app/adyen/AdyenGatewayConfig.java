@@ -1,6 +1,5 @@
 package uk.gov.pay.connector.app.adyen;
 
-import io.dropwizard.core.Configuration;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -8,7 +7,7 @@ import uk.gov.pay.connector.app.JerseyClientOverrides;
 
 import java.util.Optional;
 
-public class AdyenGatewayConfig extends Configuration {
+public class AdyenGatewayConfig {
     @Valid
     @NotNull
     private BaseUrls baseUrls;

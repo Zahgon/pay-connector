@@ -4,11 +4,18 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Stopwatch;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
-import jakarta.ws.rs.ProcessingException;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.client.Invocation.Builder;
-import jakarta.ws.rs.client.WebTarget;
+import org.apache.hc.client5.http.classic.methods.HttpDelete;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.gateway.GatewayException.GatewayConnectionTimeoutException;
@@ -19,18 +26,18 @@ import uk.gov.pay.connector.gateway.model.request.GatewayClientDeleteRequest;
 import uk.gov.pay.connector.gateway.model.request.GatewayClientGetRequest;
 import uk.gov.pay.connector.gateway.model.request.GatewayClientPostRequest;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.HttpCookie;
 import java.net.SocketTimeoutException;
 import java.net.URI;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
-import static jakarta.ws.rs.core.Response.Status.Family.SUCCESSFUL;
-import static jakarta.ws.rs.core.Response.Status.Family.familyOf;
-import static jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
@@ -38,7 +45,10 @@ public class GatewayClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GatewayClient.class);
 
-    private final Client client;
+    private static final String QUERY_PARAMETER_CHARACTERS =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~!$'()*,;:@/?";
+
+    private final CloseableHttpClient client;
     private final MetricRegistry metricRegistry;
 
     private static final Counter gatewayOperationsFailures = Counter.build()
@@ -53,7 +63,7 @@ public class GatewayClient {
             .labelNames("gatewayName", "gatewayAccountType", "requestType")
             .register();
 
-    public GatewayClient(Client client, MetricRegistry metricRegistry) {
+    public GatewayClient(CloseableHttpClient client, MetricRegistry metricRegistry) {
         this.client = client;
         this.metricRegistry = metricRegistry;
     }
@@ -78,13 +88,15 @@ public class GatewayClient {
 
         String metricsPrefix = format("gateway-operations.%s.%s.%s", gatewayName.getName(), gatewayAccountType, request.orderRequestType());
 
-        Supplier<jakarta.ws.rs.core.Response> requestCallable = () -> {
+        RequestExecution requestCallable = () -> {
             LOGGER.info("POSTing request for account '{}' with type '{}'", gatewayName.getName(), gatewayAccountType);
 
-            Builder requestBuilder = client.target(url).request();
-            headers.keySet().forEach(headerKey -> requestBuilder.header(headerKey, headers.get(headerKey)));
-            cookies.forEach(cookie -> requestBuilder.header("Cookie", cookie.getName() + "=" + cookie.getValue()));
-            return requestBuilder.post(Entity.entity(request.payload(), request.mediaType()));
+            HttpPost httpRequest = new HttpPost(url);
+            addHeaders(httpRequest, headers, cookies);
+            Charset charset = request.mediaType().getCharset() == null ? StandardCharsets.UTF_8 : request.mediaType().getCharset();
+            httpRequest.setEntity(new ByteArrayEntity(request.payload().getBytes(charset),
+                    ContentType.parse(request.mediaType().toString()), true));
+            return client.execute(httpRequest, Response::new);
         };
         return executeRequest(url, gatewayName, gatewayAccountType, request.orderRequestType(), metricsPrefix, requestCallable);
     }
@@ -112,17 +124,12 @@ public class GatewayClient {
 
         String metricsPrefix = format("gateway-operations.get.%s.%s.%s", gatewayName.getName(), gatewayAccountType, orderRequestType);
 
-        Supplier<jakarta.ws.rs.core.Response> requestCallable = () -> {
+        RequestExecution requestCallable = () -> {
             LOGGER.info("Making GET request for account '{}' with type '{}'", gatewayName.getName(), gatewayAccountType);
 
-            WebTarget target = client.target(url);
-            for (Map.Entry<String, String> entry : queryParams.entrySet()) {
-                target = target.queryParam(entry.getKey(), entry.getValue());
-            }
-            Builder requestBuilder = target.request();
-            headers.keySet().forEach(headerKey -> requestBuilder.header(headerKey, headers.get(headerKey)));
-            cookies.forEach(cookie -> requestBuilder.header("Cookie", cookie.getName() + "=" + cookie.getValue()));
-            return requestBuilder.get();
+            HttpGet httpRequest = new HttpGet(withQueryParameters(url, queryParams));
+            addHeaders(httpRequest, headers, cookies);
+            return client.execute(httpRequest, Response::new);
         };
 
         return executeRequest(url, gatewayName, gatewayAccountType, orderRequestType, metricsPrefix, requestCallable);
@@ -139,17 +146,12 @@ public class GatewayClient {
 
         String metricsPrefix = format("gateway-operations.delete.%s.%s.%s", gatewayName.getName(), gatewayAccountType, orderRequestType);
 
-        Supplier<jakarta.ws.rs.core.Response> requestCallable = () -> {
+        RequestExecution requestCallable = () -> {
             LOGGER.info("Making DELETE request for account '{}' with type '{}'", gatewayName.getName(), gatewayAccountType);
 
-            WebTarget target = client.target(url);
-            for (Map.Entry<String, String> entry : queryParams.entrySet()) {
-                target = target.queryParam(entry.getKey(), entry.getValue());
-            }
-            Builder requestBuilder = target.request();
-            headers.keySet().forEach(headerKey -> requestBuilder.header(headerKey, headers.get(headerKey)));
-            cookies.forEach(cookie -> requestBuilder.header("Cookie", cookie.getName() + "=" + cookie.getValue()));
-            return requestBuilder.delete();
+            HttpDelete httpRequest = new HttpDelete(withQueryParameters(url, queryParams));
+            addHeaders(httpRequest, headers, cookies);
+            return client.execute(httpRequest, Response::new);
         };
 
         return executeRequest(url, gatewayName, gatewayAccountType, orderRequestType, metricsPrefix, requestCallable);
@@ -160,9 +162,8 @@ public class GatewayClient {
                                     String gatewayAccountType,
                                     OrderRequestType orderRequestType,
                                     String metricsPrefix,
-                                    Supplier<jakarta.ws.rs.core.Response> requestCallable)
+                                    RequestExecution requestCallable)
             throws GenericGatewayException, GatewayConnectionTimeoutException, GatewayErrorException {
-        jakarta.ws.rs.core.Response response = null;
 
         Stopwatch responseTimeStopwatch = Stopwatch.createStarted();
         Histogram.Timer responseTimeTimer = gatewayOperationsResponseTime.labels(
@@ -172,13 +173,12 @@ public class GatewayClient {
         ).startTimer();
 
         try {
-            response = requestCallable.get();
-            int statusCode = response.getStatus();
-            Response gatewayResponse = new Response(response);
-            if (familyOf(statusCode) == SUCCESSFUL) {
+            Response gatewayResponse = requestCallable.execute();
+            int statusCode = gatewayResponse.getStatus();
+            if (statusCode >= 200 && statusCode < 300) {
                 return gatewayResponse;
             } else {
-                if (statusCode >= INTERNAL_SERVER_ERROR.getStatusCode()) {
+                if (statusCode >= 500) {
                     LOGGER.warn("Gateway returned unexpected status code: {}, for gateway url={} with type {} with order request type {}",
                             statusCode, url, gatewayAccountType, orderRequestType);
                     incrementFailureCounter(metricRegistry, metricsPrefix);
@@ -189,17 +189,16 @@ public class GatewayClient {
                 }
                 throw new GatewayErrorException("Non-success HTTP status code " + statusCode + " from gateway", gatewayResponse.getEntity(), statusCode);
             }
-        } catch (ProcessingException pe) {
+        } catch (IOException | UncheckedIOException e) {
             incrementFailureCounter(metricRegistry, metricsPrefix);
             incrementPrometheusFailureCounter(gatewayName, gatewayAccountType, orderRequestType);
-            if (pe.getCause() != null) {
-                if (pe.getCause() instanceof SocketTimeoutException) {
-                    LOGGER.warn(format("Connection timed out error for gateway url=%s", url), pe);
-                    throw new GatewayConnectionTimeoutException("Gateway connection timeout error");
-                }
+            Throwable cause = e instanceof UncheckedIOException ? e.getCause() : e;
+            if (cause instanceof SocketTimeoutException) {
+                LOGGER.warn(format("Connection timed out error for gateway url=%s", url), e);
+                throw new GatewayConnectionTimeoutException("Gateway connection timeout error");
             }
-            LOGGER.warn(format("Exception for gateway url=%s, error message: %s", url, pe.getMessage()), pe);
-            throw new GenericGatewayException(pe.getMessage());
+            LOGGER.warn(format("Exception for gateway url=%s, error message: %s", url, cause), e);
+            throw new GenericGatewayException(cause.toString());
         } catch (GatewayErrorException e) {
             throw e;
         } catch (Exception e) {
@@ -211,10 +210,57 @@ public class GatewayClient {
             responseTimeStopwatch.stop();
             metricRegistry.histogram(metricsPrefix + ".response_time").update(responseTimeStopwatch.elapsed(TimeUnit.MILLISECONDS));
             responseTimeTimer.observeDuration();
-            if (response != null) {
-                response.close();
+        }
+    }
+
+    private static void addHeaders(HttpUriRequestBase httpRequest, Map<String, String> headers, List<HttpCookie> cookies) {
+        headers.keySet().forEach(headerKey -> httpRequest.addHeader(headerKey, headers.get(headerKey)));
+        cookies.forEach(cookie -> httpRequest.addHeader("Cookie", cookie.getName() + "=" + cookie.getValue()));
+    }
+
+    /**
+     * Appends the query parameters to the URL, encoding their names and values for a query: spaces as {@code +},
+     * escape sequences kept as they are and every other character outside the query's character set percent-encoded.
+     */
+    private static URI withQueryParameters(URI url, Map<String, String> queryParams) {
+        if (queryParams.isEmpty()) {
+            return url;
+        }
+        StringBuilder uri = new StringBuilder(url.toString());
+        char separator = url.getRawQuery() == null ? '?' : '&';
+        for (Map.Entry<String, String> entry : queryParams.entrySet()) {
+            uri.append(separator).append(encodeQueryParameter(entry.getKey()))
+                    .append('=').append(encodeQueryParameter(entry.getValue()));
+            separator = '&';
+        }
+        return URI.create(uri.toString());
+    }
+
+    private static String encodeQueryParameter(String value) {
+        StringBuilder encoded = new StringBuilder();
+        byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
+        for (int i = 0; i < bytes.length; i++) {
+            char c = (char) (bytes[i] & 0xff);
+            if (c == ' ') {
+                encoded.append('+');
+            } else if (c < 0x80 && QUERY_PARAMETER_CHARACTERS.indexOf(c) >= 0) {
+                encoded.append(c);
+            } else if (c == '%' && i + 2 < bytes.length && isHex(bytes[i + 1]) && isHex(bytes[i + 2])) {
+                encoded.append(c);
+            } else {
+                encoded.append(format("%%%02X", (int) c));
             }
         }
+        return encoded.toString();
+    }
+
+    private static boolean isHex(byte b) {
+        return Character.digit((char) b, 16) >= 0;
+    }
+
+    @FunctionalInterface
+    private interface RequestExecution {
+        Response execute() throws IOException;
     }
 
     private void incrementFailureCounter(MetricRegistry metricRegistry, String metricsPrefix) {
@@ -234,10 +280,16 @@ public class GatewayClient {
         private final String entity;
         private final Map<String, String> responseCookies = new HashMap<>();
 
-        protected Response(final jakarta.ws.rs.core.Response delegate) {
-            this.status = delegate.getStatus();
-            this.entity = delegate.readEntity(String.class);
-            delegate.getCookies().forEach((name, cookie) -> responseCookies.put(name, cookie.getValue()));
+        protected Response(final ClassicHttpResponse delegate) throws IOException {
+            this.status = delegate.getCode();
+            try {
+                this.entity = delegate.getEntity() == null ? "" : EntityUtils.toString(delegate.getEntity(), StandardCharsets.UTF_8);
+            } catch (ParseException e) {
+                throw new IOException(e);
+            }
+            for (Header header : delegate.getHeaders(HttpHeaders.SET_COOKIE)) {
+                HttpCookie.parse(header.getValue()).forEach(cookie -> responseCookies.put(cookie.getName(), cookie.getValue()));
+            }
         }
 
         public int getStatus() {

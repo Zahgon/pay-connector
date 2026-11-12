@@ -19,23 +19,24 @@ import uk.gov.pay.connector.gatewayaccount.service.StripeAccountService;
 import uk.gov.pay.connector.gatewayaccount.service.StripeAccountSetupService;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.NotFoundException;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.UriInfo;
 import java.util.Map;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import uk.gov.pay.connector.web.MediaTypes;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
+
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.STRIPE;
 import static uk.gov.pay.connector.gatewayaccount.model.GatewayAccountType.TEST;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-@Path("/")
 @Tag(name = "Gateway accounts")
+@RestController
 public class StripeAccountResource {
 
     private final StripeAccountService stripeAccountService;
@@ -51,9 +52,8 @@ public class StripeAccountResource {
         this.gatewayAccountService = gatewayAccountService;
     }
 
-    @POST
-    @Path("/v1/api/service/{serviceId}/request-stripe-test-account")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/service/{serviceId}/request-stripe-test-account")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "1) Creates a Stripe Connect Account " +
                     "2) Creates a gateway account in connector and links this with the Stripe Connect Account id " +
@@ -64,9 +64,9 @@ public class StripeAccountResource {
                     @ApiResponse(responseCode = "409", description = "Stripe Connect Account already exists, or existing test account is not a Sandbox one"),
             }
     )
-    public Response requestStripeTestAccount(
-            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathParam("serviceId") String serviceId,
-            @Context UriInfo uriInfo
+    public ResponseEntity<?> requestStripeTestAccount(
+            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathVariable("serviceId") String serviceId,
+            HttpServletRequest request
     ) {
         var sandboxGatewayAccount = getSandboxGatewayAccount(serviceId);
 
@@ -97,7 +97,7 @@ public class StripeAccountResource {
         Map<String, String> response = Map.of("stripe_connect_account_id", stripeTestConnectAccount.getId(),
                 "gateway_account_id", stripeTestGatewayAccount.getId().toString(),
                 "gateway_account_external_id", stripeTestGatewayAccount.getExternalId());
-        return Response.ok(response).build();
+        return ResponseEntity.ok(response);
     }
 
     private GatewayAccountEntity getSandboxGatewayAccount(String serviceId) {
@@ -114,9 +114,8 @@ public class StripeAccountResource {
         return maybeSandboxTestAccount;
     }
 
-    @GET
-    @Path("/v1/api/accounts/{accountId}/stripe-account")
-    @Produces(APPLICATION_JSON)
+    @GetMapping("/v1/api/accounts/{accountId}/stripe-account")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Retrieves Stripe Connect account information for a given gateway account ID",
             responses = {
@@ -127,16 +126,15 @@ public class StripeAccountResource {
     )
     public StripeAccountResponse getStripeAccount(
             @Parameter(example = "1", description = "Gateway account ID")
-            @PathParam("accountId") Long accountId) {
+            @PathVariable("accountId") Long accountId) {
         return gatewayAccountService.getGatewayAccount(accountId)
                 .filter(GatewayAccountEntity::isStripeGatewayAccount)
                 .flatMap(stripeAccountService::buildStripeAccountResponse)
-                .orElseThrow(NotFoundException::new);
+                .orElseThrow(() -> new WebApplicationException(HttpStatus.NOT_FOUND));
     }
 
-    @GET
-    @Path("/v1/api/service/{serviceId}/account/{accountType}/stripe-account")
-    @Produces(APPLICATION_JSON)
+    @GetMapping("/v1/api/service/{serviceId}/account/{accountType}/stripe-account")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Retrieves Stripe Connect account information for a given service ID and account type (test|live)",
             responses = {
@@ -146,8 +144,8 @@ public class StripeAccountResource {
             }
     )
     public StripeAccountResponse getStripeAccountByServiceIdAndAccountType(
-            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathParam("serviceId") String serviceId,
-            @Parameter(example = "test", description = "Account type") @PathParam("accountType") GatewayAccountType accountType) {
+            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathVariable("serviceId") String serviceId,
+            @Parameter(example = "test", description = "Account type") @PathVariable("accountType") GatewayAccountType accountType) {
         return gatewayAccountService.getGatewayAccountByServiceIdAndAccountType(serviceId, accountType)
                 .or(() -> {
                     throw new GatewayAccountNotFoundException(serviceId, accountType);
@@ -157,7 +155,7 @@ public class StripeAccountResource {
                     throw new GatewayAccountNotFoundException(String.format("Gateway account for service ID [%s] and account type [%s] is not a Stripe account", serviceId, accountType));
                 })
                 .flatMap(stripeAccountService::buildStripeAccountResponse)
-                .orElseThrow(() -> new NotFoundException(String.format("Stripe gateway account for service ID [%s] and account type [%s] does not have Stripe credentials", serviceId, accountType)));
+                .orElseThrow(() -> new WebApplicationException(String.format("Stripe gateway account for service ID [%s] and account type [%s] does not have Stripe credentials", serviceId, accountType), HttpStatus.NOT_FOUND));
     }
 
 }

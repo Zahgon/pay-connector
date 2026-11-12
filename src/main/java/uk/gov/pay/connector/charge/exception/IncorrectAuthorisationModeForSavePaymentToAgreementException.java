@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.charge.exception;
 
-import jakarta.ws.rs.WebApplicationException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 
 public class IncorrectAuthorisationModeForSavePaymentToAgreementException extends WebApplicationException {
 

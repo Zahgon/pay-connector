@@ -1,17 +1,18 @@
 package uk.gov.pay.connector.app;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.dropwizard.client.JerseyClientConfiguration;
-import io.dropwizard.core.Configuration;
-import io.dropwizard.db.DataSourceFactory;
+import com.fasterxml.jackson.databind.JsonNode;
 import uk.gov.pay.connector.app.adyen.AdyenGatewayConfig;
 import uk.gov.pay.connector.app.config.Authorisation3dsConfig;
 import uk.gov.pay.connector.app.config.AuthorisationConfig;
 import uk.gov.pay.connector.app.config.EmittedEventSweepConfig;
 import uk.gov.pay.connector.app.config.EventEmitterConfig;
+import uk.gov.pay.connector.app.config.DatabaseConfig;
 import uk.gov.pay.connector.app.config.ExpungeConfig;
+import uk.gov.pay.connector.app.config.HttpClientConfiguration;
 import uk.gov.pay.connector.app.config.PayoutReconcileProcessConfig;
 import uk.gov.pay.connector.app.config.RestClientConfig;
+import uk.gov.pay.connector.app.config.ServerConfig;
 import uk.gov.pay.connector.app.config.TaskQueueConfig;
 import uk.gov.pay.connector.gateway.PaymentGatewayName;
 
@@ -21,7 +22,22 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.Optional;
 
-public class ConnectorConfiguration extends Configuration {
+/**
+ * The service's settings: {@code config/config.yaml} with the environment variables it names substituted (see
+ * {@link ConfigurationLoader}).
+ */
+public class ConnectorConfiguration {
+
+    @Valid
+    @NotNull
+    @JsonProperty("server")
+    private ServerConfig serverConfig;
+
+    /**
+     * Log levels and appenders; logging is configured by {@code logback.xml}.
+     */
+    @JsonProperty("logging")
+    private JsonNode logging;
 
     @Valid
     @NotNull
@@ -59,7 +75,7 @@ public class ConnectorConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    private DataSourceFactory dataSourceFactory;
+    private DatabaseConfig databaseConfig;
 
     @Valid
     @NotNull
@@ -72,7 +88,7 @@ public class ConnectorConfiguration extends Configuration {
     @Valid
     @NotNull
     @JsonProperty("jerseyClient")
-    private JerseyClientConfiguration jerseyClientConfig;
+    private HttpClientConfiguration jerseyClientConfig;
 
     @Valid
     @NotNull
@@ -162,8 +178,12 @@ public class ConnectorConfiguration extends Configuration {
     }
 
     @JsonProperty("database")
-    public DataSourceFactory getDataSourceFactory() {
-        return dataSourceFactory;
+    public DatabaseConfig getDatabaseConfig() {
+        return databaseConfig;
+    }
+
+    public ServerConfig getServerConfig() {
+        return serverConfig;
     }
 
     public LinksConfig getLinks() {
@@ -217,7 +237,7 @@ public class ConnectorConfiguration extends Configuration {
         return notifyConfig;
     }
 
-    public JerseyClientConfiguration getClientConfiguration() {
+    public HttpClientConfiguration getClientConfiguration() {
         return jerseyClientConfig;
     }
 

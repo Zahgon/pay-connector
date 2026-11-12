@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.tasks.service;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Inject;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.charge.model.domain.ChargeEntity;
@@ -15,9 +15,11 @@ import uk.gov.pay.connector.tasks.HistoricalEventEmitter;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 import static uk.gov.pay.connector.charge.model.domain.ParityCheckStatus.EXISTS_IN_LEDGER;
 
+@Service
 public class ParityCheckService {
 
     public static final String FIELD_NAME = "field_name";

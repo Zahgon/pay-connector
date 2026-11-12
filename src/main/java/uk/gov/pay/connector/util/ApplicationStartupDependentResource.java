@@ -6,7 +6,9 @@ import jakarta.inject.Inject;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ApplicationStartupDependentResource {
 
     private final ConnectorConfiguration configuration;
@@ -18,9 +20,9 @@ public class ApplicationStartupDependentResource {
 
     public Connection getDatabaseConnection() throws SQLException {
         return DriverManager.getConnection(
-                configuration.getDataSourceFactory().getUrl(),
-                configuration.getDataSourceFactory().getUser(),
-                configuration.getDataSourceFactory().getPassword());
+                configuration.getDatabaseConfig().getUrl(),
+                configuration.getDatabaseConfig().getUser(),
+                configuration.getDatabaseConfig().getPassword());
     }
 
     public void sleep(long durationSeconds) {

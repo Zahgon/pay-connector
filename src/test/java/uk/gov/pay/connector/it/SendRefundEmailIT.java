@@ -11,9 +11,9 @@ import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static io.dropwizard.testing.ConfigOverride.config;
+import static uk.gov.pay.connector.app.ConfigOverride.config;
 import static io.restassured.RestAssured.given;
-import static jakarta.ws.rs.core.MediaType.TEXT_XML;
+import static org.springframework.http.MediaType.TEXT_XML_VALUE;
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.CAPTURED;
 import static uk.gov.pay.connector.gatewayaccount.model.GatewayAccount.CREDENTIALS_MERCHANT_ID;
 import static uk.gov.pay.connector.gatewayaccount.model.GatewayAccount.CREDENTIALS_PASSWORD;
@@ -59,7 +59,7 @@ public class SendRefundEmailIT {
         given().port(app.getLocalPort())
                 .header("X-Forwarded-For", WORLDPAY_IP_ADDRESS)
                 .body(worldpayRefundNotificationPayload(transactionId, "REFUNDED", refundExternalId))
-                .contentType(TEXT_XML)
+                .contentType(TEXT_XML_VALUE)
                 .post("/v1/api/notifications/worldpay");
 
         Thread.sleep(500L); // Email sent using ExecutorService task: give it some time to complete

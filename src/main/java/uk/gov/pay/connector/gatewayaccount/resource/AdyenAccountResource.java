@@ -5,11 +5,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Response;
 import uk.gov.pay.connector.gatewayaccount.exception.GatewayAccountNotFoundException;
 import uk.gov.pay.connector.gatewayaccount.model.AdyenCredentials;
 import uk.gov.pay.connector.gatewayaccount.model.AdyenGatewayAccountRequest;
@@ -21,12 +16,19 @@ import uk.gov.pay.connector.gatewayaccount.service.GatewayAccountSwitchPaymentPr
 
 import java.util.Map;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import uk.gov.pay.connector.web.MediaTypes;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
+
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.ADYEN;
 import static uk.gov.pay.connector.gatewayaccount.model.GatewayAccountType.TEST;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-@Path("/")
 @Tag(name = "Gateway accounts")
+@RestController
 public class AdyenAccountResource {
 
     private final AdyenTestAccountService adyenTestAccountService;
@@ -44,9 +46,8 @@ public class AdyenAccountResource {
         this.gatewayAccountSwitchPaymentProviderService = gatewayAccountSwitchPaymentProviderService;
     }
 
-    @POST
-    @Path("/v1/api/service/{serviceId}/request-adyen-test-account")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/service/{serviceId}/request-adyen-test-account")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Creates an Adyen Test Account " +
                     "and associated entities",
@@ -56,10 +57,10 @@ public class AdyenAccountResource {
                     @ApiResponse(responseCode = "502", description = "Bad gateway"),
             }
     )
-    public Response requestAdyenTestAccount(
+    public ResponseEntity<?> requestAdyenTestAccount(
             @Parameter(example = "service-external-id-123", description = "Service ID") 
-            @PathParam("serviceId") String serviceId, 
-            Map<String, String> payload) {
+            @PathVariable("serviceId") String serviceId, 
+            @RequestBody(required = false) Map<String, String> payload) {
 
         gatewayAccountService.throwIfStripeOrAdyenTestAccountAlreadyExists(serviceId);
 
@@ -85,12 +86,11 @@ public class AdyenAccountResource {
                 "store_id", adyenCredentials.storeId(),
                 "account_holder_id", adyenCredentials.accountHolderId(),
                 "balance_account_id", adyenCredentials.balanceAccountId());
-        return Response.ok(response).build();
+        return ResponseEntity.ok(response);
     }
 
-    @POST
-    @Path("/v1/api/service/{serviceId}/switch-to-adyen-test-account")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/service/{serviceId}/switch-to-adyen-test-account")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Disables Stripe test account, creates an Adyen Test Account and associated entities",
             responses = {
@@ -99,10 +99,10 @@ public class AdyenAccountResource {
                     @ApiResponse(responseCode = "502", description = "Bad gateway"),
             }
     )
-    public Response switchToAdyenTestAccount(
+    public ResponseEntity<?> switchToAdyenTestAccount(
             @Parameter(example = "service-external-id-123", description = "Service ID")
-            @PathParam("serviceId") String serviceId,
-            Map<String, String> payload) {
+            @PathVariable("serviceId") String serviceId,
+            @RequestBody(required = false) Map<String, String> payload) {
         
         gatewayAccountService.throwIfNoStripeTestAccount(serviceId);
         var gatewayAccount = gatewayAccountService.getGatewayAccountByServiceIdAndAccountType(serviceId, TEST)
@@ -123,6 +123,6 @@ public class AdyenAccountResource {
                 "account_holder_id", adyenCredentials.accountHolderId(),
                 "balance_account_id", adyenCredentials.balanceAccountId());
         
-        return Response.ok(response).build();
+        return ResponseEntity.ok(response);
     }
 }

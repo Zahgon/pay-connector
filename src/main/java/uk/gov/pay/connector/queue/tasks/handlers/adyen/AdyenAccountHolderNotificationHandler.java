@@ -5,7 +5,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.gateway.adyen.webhook.AdyenWebhookDeserialiser;
 import uk.gov.pay.connector.gateway.exception.AdyenNotificationException;
+import org.springframework.stereotype.Component;
 
+@Component
 public class AdyenAccountHolderNotificationHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AdyenAccountHolderNotificationHandler.class);

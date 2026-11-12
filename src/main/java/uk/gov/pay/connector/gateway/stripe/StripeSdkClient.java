@@ -11,9 +11,11 @@ import jakarta.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.stereotype.Component;
 
 import static org.yaml.snakeyaml.nodes.Tag.STR;
 
+@Component
 public class StripeSdkClient {
 
     private final StripeGatewayConfig stripeGatewayConfig;

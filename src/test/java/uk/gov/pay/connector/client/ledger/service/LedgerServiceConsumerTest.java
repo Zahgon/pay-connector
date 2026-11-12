@@ -7,8 +7,8 @@ import au.com.dius.pact.consumer.junit.PactProviderRule;
 import au.com.dius.pact.consumer.junit.PactVerification;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.core.Response;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,6 +31,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.when;
@@ -53,10 +56,18 @@ public class LedgerServiceConsumerTest {
 
     private LedgerService ledgerService;
 
+
+    private CloseableHttpClient client;
+
+    @After
+    public void closeClient() throws IOException {
+        client.close();
+    }
+
     @Before
     public void setUp() {
         when(configuration.getLedgerBaseUrl()).thenReturn(mockLedger.getUrl());
-        Client client = RestClientFactory.buildClient(new RestClientConfig(), null);
+        client = RestClientFactory.buildClient(new RestClientConfig(), null);
         ledgerService = new LedgerService(client, client, configuration);
     }
 
@@ -304,9 +315,8 @@ public class LedgerServiceConsumerTest {
                 .build();
         agreementEntity.setGatewayAccount(gatewayAccountEntity);
         Event event = AgreementCreated.from(agreementEntity);
-        Response response = ledgerService.postEvent(event);
-
-        assertThat(response.getStatus(), is(202));
+        // posting fails with a LedgerException unless ledger answers 202 Accepted
+        assertDoesNotThrow(() -> ledgerService.postEvent(event));
     }
 
     @Pact(consumer = "connector")

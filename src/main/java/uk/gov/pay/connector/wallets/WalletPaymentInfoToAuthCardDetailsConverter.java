@@ -3,7 +3,9 @@ package uk.gov.pay.connector.wallets;
 import uk.gov.pay.connector.gateway.model.AuthCardDetails;
 import uk.gov.pay.connector.wallets.model.WalletPaymentInfo;
 import uk.gov.service.payments.commons.model.CardExpiryDate;
+import org.springframework.stereotype.Component;
 
+@Component
 public class WalletPaymentInfoToAuthCardDetailsConverter {
 
     public AuthCardDetails convert(WalletPaymentInfo walletPaymentInfo, CardExpiryDate cardExpiryDate) {

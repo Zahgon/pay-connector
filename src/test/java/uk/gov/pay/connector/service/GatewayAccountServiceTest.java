@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.persist.UnitOfWork;
+import uk.gov.pay.connector.common.dao.UnitOfWork;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

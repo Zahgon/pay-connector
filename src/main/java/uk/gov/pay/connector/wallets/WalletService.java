@@ -9,11 +9,13 @@ import uk.gov.pay.connector.gateway.model.response.GatewayResponse;
 import uk.gov.pay.connector.util.ResponseUtil;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.Response;
+import org.springframework.http.ResponseEntity;
 import java.util.Map;
+import org.springframework.stereotype.Service;
 
 import static uk.gov.pay.connector.util.ResponseUtil.authorisationRejectedResponse;
 import static uk.gov.pay.connector.util.ResponseUtil.gatewayErrorResponse;
+@Service
 public class WalletService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WalletService.class);
@@ -28,7 +30,7 @@ public class WalletService {
         this.chargeService = chargeService;
     }
 
-    public Response authorise(String chargeId, WalletAuthorisationRequest walletAuthorisationRequest) {
+    public ResponseEntity<Object> authorise(String chargeId, WalletAuthorisationRequest walletAuthorisationRequest) {
         LOGGER.info("Authorising {} charge with id {} ", walletAuthorisationRequest.getWalletType().toString(), chargeId);
         GatewayResponse<BaseAuthoriseResponse> response = authoriseService.authorise(chargeId, walletAuthorisationRequest);
         return response.getGatewayError()
@@ -38,7 +40,7 @@ public class WalletService {
 
     }
 
-    private Response handleAuthorisationResponse(BaseAuthoriseResponse baseAuthoriseResponse) {
+    private ResponseEntity<Object> handleAuthorisationResponse(BaseAuthoriseResponse baseAuthoriseResponse) {
         switch (baseAuthoriseResponse.authoriseStatus()) {
             case REJECTED:
                 return authorisationRejectedResponse("This transaction was declined.");
@@ -50,7 +52,7 @@ public class WalletService {
         }
     }
 
-    protected Response handleError(String chargeId, GatewayError error) {
+    protected ResponseEntity<Object> handleError(String chargeId, GatewayError error) {
         switch (error.getErrorType()) {
             case GATEWAY_ERROR:
             case GATEWAY_CONNECTION_TIMEOUT_ERROR:

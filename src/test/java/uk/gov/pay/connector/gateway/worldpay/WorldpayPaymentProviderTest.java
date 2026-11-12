@@ -1,8 +1,8 @@
 package uk.gov.pay.connector.gateway.worldpay;
 
-import io.dropwizard.core.setup.Environment;
+import com.codahale.metrics.MetricRegistry;
 import io.github.netmikey.logunit.api.LogCapturer;
-import jakarta.ws.rs.WebApplicationException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -68,7 +68,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -203,7 +203,7 @@ class WorldpayPaymentProviderTest {
                 worldpayCaptureHandler,
                 worldpayRefundHandler,
                 refundEntityFactory,
-                new AuthorisationService(mock(CardExecutorService.class), mock(Environment.class), mock(ConnectorConfiguration.class)),
+                new AuthorisationService(mock(CardExecutorService.class), mock(MetricRegistry.class), mock(ConnectorConfiguration.class)),
                 new AuthorisationLogger(new AuthorisationRequestSummaryStringifier(), new AuthorisationRequestSummaryStructuredLogging(), new AdyenAuthoriseRequestLogGenerator(), new WorldpayAuthoriseRequestLogGenerator()),
                 chargeDao,
                 eventService,

@@ -24,11 +24,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
 
 import static java.lang.String.format;
 import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.REFUND_EXTERNAL_ID;
 
+@Component
 public class AdyenPayoutReconciliationHandler implements PayoutReconcileHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AdyenPayoutReconciliationHandler.class);

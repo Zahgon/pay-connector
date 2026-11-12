@@ -7,7 +7,9 @@ import uk.gov.pay.connector.gateway.model.request.records.ApplePayAuthoriseReque
 import uk.gov.pay.connector.wallets.applepay.ApplePayAuthorisationGatewayRequest;
 
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ApplePayAuthoriseRequestFactory {
 
     private final AdyenApplePayAuthorisePayloadFactory adyenApplePayAuthorisePayloadFactory;

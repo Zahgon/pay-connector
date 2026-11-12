@@ -47,12 +47,12 @@ public class AdyenAuthoriseWithUserNotPresentTaskHandlerIT {
     @BeforeEach
     void setUp() {
         app.getDatabaseTestHelper().enableRecurring(Long.parseLong(testBaseExtension.getAccountId()));
-        chargeDao = app.getInstanceFromGuiceContainer(ChargeDao.class);
+        chargeDao = app.getBean(ChargeDao.class);
     }
 
     @Test
     void shouldProcess_ACorrectlyConfiguredAuthorisationModeAgreementCharge_AndMarkForCapture() {
-        AuthoriseWithUserNotPresentHandler taskHandler = app.getInstanceFromGuiceContainer(AuthoriseWithUserNotPresentHandler.class);
+        AuthoriseWithUserNotPresentHandler taskHandler = app.getBean(AuthoriseWithUserNotPresentHandler.class);
         String storedPaymentMethodId = "4242";
         var chargeId = setupChargeWithAgreementAndPaymentInstrument(testBaseExtension, app, storedPaymentMethodId);
         var expectedStatus = CAPTURE_QUEUED.getValue();
@@ -71,7 +71,7 @@ public class AdyenAuthoriseWithUserNotPresentTaskHandlerIT {
 
     @Test
     void shouldProcess_AnAuthorisationDeclineResponse_AndMarkAsRejectedWithReason() {
-        AuthoriseWithUserNotPresentHandler taskHandler = app.getInstanceFromGuiceContainer(AuthoriseWithUserNotPresentHandler.class);
+        AuthoriseWithUserNotPresentHandler taskHandler = app.getBean(AuthoriseWithUserNotPresentHandler.class);
         String storedPaymentMethodId = "4242";
         var chargeId = setupChargeWithAgreementAndPaymentInstrument(testBaseExtension, app, storedPaymentMethodId);
         var expectedStatus = AUTHORISATION_REJECTED.getValue();
@@ -96,7 +96,7 @@ public class AdyenAuthoriseWithUserNotPresentTaskHandlerIT {
 
     @Test
     void shouldProcess_AnAuthorisationErrorResponse_AndMarkAsError() {
-        AuthoriseWithUserNotPresentHandler taskHandler = app.getInstanceFromGuiceContainer(AuthoriseWithUserNotPresentHandler.class);
+        AuthoriseWithUserNotPresentHandler taskHandler = app.getBean(AuthoriseWithUserNotPresentHandler.class);
         String storedPaymentMethodId = "4242";
         var chargeId = setupChargeWithAgreementAndPaymentInstrument(testBaseExtension, app, storedPaymentMethodId);
         var expectedStatus = AUTHORISATION_ERROR.getValue();
@@ -118,7 +118,7 @@ public class AdyenAuthoriseWithUserNotPresentTaskHandlerIT {
 
     @Test
     void shouldProcess_AGatewayError_AndMarkAsAuthorisationError() {
-        AuthoriseWithUserNotPresentHandler taskHandler = app.getInstanceFromGuiceContainer(AuthoriseWithUserNotPresentHandler.class);
+        AuthoriseWithUserNotPresentHandler taskHandler = app.getBean(AuthoriseWithUserNotPresentHandler.class);
         String storedPaymentMethodId = "4242";
         var chargeId = setupChargeWithAgreementAndPaymentInstrument(testBaseExtension, app, storedPaymentMethodId);
         var expectedStatus = AUTHORISATION_UNEXPECTED_ERROR.getValue();

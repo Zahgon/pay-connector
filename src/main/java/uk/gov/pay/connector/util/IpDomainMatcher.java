@@ -1,6 +1,5 @@
 package uk.gov.pay.connector.util;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,10 +7,12 @@ import jakarta.inject.Inject;
 
 import java.util.Collections;
 import java.util.List;
+import org.springframework.stereotype.Component;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
+@Component
 public class IpDomainMatcher {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(IpDomainMatcher.class);

@@ -2,9 +2,9 @@ package uk.gov.pay.connector.gatewayaccount.exception;
 
 import uk.gov.pay.connector.util.ResponseUtil;
 
-import jakarta.ws.rs.BadRequestException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 
-public class NotSupportedGatewayAccountException extends BadRequestException {
+public class NotSupportedGatewayAccountException extends WebApplicationException {
     public NotSupportedGatewayAccountException(Long accountId,
                                                String gatewayName,
                                                String path) {

@@ -38,7 +38,7 @@ public class CardAuthoriseServiceIT {
     void shouldAuthoriseSandboxWebPayment() {
         String chargeExternalId = testBaseExtension.addCharge(
                 anAddChargeParameters().withChargeStatus(ENTERING_CARD_DETAILS).build());
-        var response = app.getInstanceFromGuiceContainer(CardAuthoriseService.class)
+        var response = app.getBean(CardAuthoriseService.class)
                 .doAuthoriseWeb(chargeExternalId, AuthCardDetailsFixture.anAuthCardDetails().build());
         assertThat(response.getGatewayError(), is(Optional.empty()));
         assertThat(response.getAuthoriseStatus(), is(Optional.of(BaseAuthoriseResponse.AuthoriseStatus.AUTHORISED)));
@@ -49,9 +49,9 @@ public class CardAuthoriseServiceIT {
         ChargeUtils.ExternalChargeId userNotPresentChargeId = testBaseExtension.addChargeWithAuthorisationModeAgreement(
                 SANDBOX_SUCCESS_FIRST_SIX_DIGITS, SANDBOX_SUCCESS_LAST_FOUR_DIGITS, null);
 
-        var successCharge = app.getInstanceFromGuiceContainer(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
+        var successCharge = app.getBean(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
 
-        var successResponse = app.getInstanceFromGuiceContainer(CardAuthoriseService.class).doAuthoriseUserNotPresent(successCharge);
+        var successResponse = app.getBean(CardAuthoriseService.class).doAuthoriseUserNotPresent(successCharge);
         assertThat(successResponse.getGatewayError(), is(Optional.empty()));
         assertThat(successResponse.getAuthoriseStatus(), is(Optional.of(BaseAuthoriseResponse.AuthoriseStatus.AUTHORISED)));
 
@@ -63,9 +63,9 @@ public class CardAuthoriseServiceIT {
     void shouldDeclineAuthoriseSandboxUserNotPresentPayment() {
         ChargeUtils.ExternalChargeId userNotPresentChargeId = testBaseExtension.addChargeWithAuthorisationModeAgreement(SANDBOX_DECLINE_FIRST_SIX_DIGITS, SANDBOX_DECLINE_LAST_FOUR_DIGITS, null);
 
-        var declineCharge = app.getInstanceFromGuiceContainer(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
+        var declineCharge = app.getBean(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
 
-        var declineResponse = app.getInstanceFromGuiceContainer(CardAuthoriseService.class).doAuthoriseUserNotPresent(declineCharge);
+        var declineResponse = app.getBean(CardAuthoriseService.class).doAuthoriseUserNotPresent(declineCharge);
         assertThat(declineResponse.getGatewayError(), is(Optional.empty()));
         assertThat(declineResponse.getAuthoriseStatus(), is(Optional.of(BaseAuthoriseResponse.AuthoriseStatus.REJECTED)));
     }
@@ -76,10 +76,10 @@ public class CardAuthoriseServiceIT {
                 anAddChargeParameters().withChargeStatus(ENTERING_CARD_DETAILS).build());
         ChargeUtils.ExternalChargeId userNotPresentChargeId = testBaseExtension.addChargeWithAuthorisationModeAgreement(SANDBOX_SUCCESS_SETUP_DECLINE_RECURRING_FIRST_SIX_DIGITS, SANDBOX_SUCCESS_SETUP_DECLINE_RECURRING_LAST_FOUR_DIGITS, null);
 
-        var chargeRecurring = app.getInstanceFromGuiceContainer(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
+        var chargeRecurring = app.getBean(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
 
-        var agreementSetUpResponse = app.getInstanceFromGuiceContainer(CardAuthoriseService.class).doAuthoriseWeb(setupAgreementChargeId, AuthCardDetailsFixture.anAuthCardDetails().withCardNo(SANDBOX_RECURRING_FIRST_AUTHORISE_SUCCESS_SUBSEQUENT_DECLINE_CARD_NO).build());
-        var recurringPaymentResponse = app.getInstanceFromGuiceContainer(CardAuthoriseService.class).doAuthoriseUserNotPresent(chargeRecurring);
+        var agreementSetUpResponse = app.getBean(CardAuthoriseService.class).doAuthoriseWeb(setupAgreementChargeId, AuthCardDetailsFixture.anAuthCardDetails().withCardNo(SANDBOX_RECURRING_FIRST_AUTHORISE_SUCCESS_SUBSEQUENT_DECLINE_CARD_NO).build());
+        var recurringPaymentResponse = app.getBean(CardAuthoriseService.class).doAuthoriseUserNotPresent(chargeRecurring);
 
         assertThat(agreementSetUpResponse.getGatewayError(), is(Optional.empty()));
         assertThat(agreementSetUpResponse.getAuthoriseStatus(), is(Optional.of(BaseAuthoriseResponse.AuthoriseStatus.AUTHORISED)));

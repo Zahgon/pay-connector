@@ -18,7 +18,7 @@ import uk.gov.pay.connector.charge.model.ServicePaymentReference;
 import uk.gov.pay.connector.charge.model.domain.ChargeStatus;
 import uk.gov.pay.connector.gateway.PaymentGatewayName;
 import uk.gov.pay.connector.it.dao.DatabaseFixtures;
-import uk.gov.pay.connector.rules.DropwizardAppWithPostgresRule;
+import uk.gov.pay.connector.rules.AppWithPostgresRule;
 import uk.gov.pay.connector.rules.StripeMockClient;
 import uk.gov.pay.connector.rules.WorldpayMockClient;
 import uk.gov.pay.connector.util.AddGatewayAccountCredentialsParams;
@@ -48,7 +48,7 @@ import static uk.gov.pay.connector.util.RandomTestDataGeneratorUtils.secureRando
 public class FrontendContractTest {
 
     @ClassRule
-    public static DropwizardAppWithPostgresRule app = new DropwizardAppWithPostgresRule();
+    public static AppWithPostgresRule app = new AppWithPostgresRule();
 
     @ClassRule
     public static WireMockRule wireMockRule = new WireMockRule(app.getWireMockPort());

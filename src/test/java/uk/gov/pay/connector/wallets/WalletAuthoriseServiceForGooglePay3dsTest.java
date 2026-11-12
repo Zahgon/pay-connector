@@ -3,7 +3,6 @@ package uk.gov.pay.connector.wallets;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.dropwizard.core.setup.Environment;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,8 +77,6 @@ class WalletAuthoriseServiceForGooglePay3dsTest {
     @Mock
     private WalletPaymentInfoToAuthCardDetailsConverter mockWalletPaymentInfoToAuthCardDetailsConverter;
 
-    @Mock
-    private Environment mockEnvironment;
 
     @Mock
     protected MetricRegistry mockMetricRegistry;
@@ -117,14 +114,13 @@ class WalletAuthoriseServiceForGooglePay3dsTest {
     void setup() {
         when(mockedProviders.byName(any())).thenReturn(mockedPaymentProvider);
         when(mockMetricRegistry.counter(anyString())).thenReturn(mockCounter);
-        when(mockEnvironment.metrics()).thenReturn(mockMetricRegistry);
         when(mockConfiguration.getAuthorisationConfig()).thenReturn(mockAuthorisationConfig);
         when(mockAuthorisationConfig.getAsynchronousAuthTimeoutInMilliseconds()).thenReturn(1000);
 
         doAnswer(invocation -> Pair.of(COMPLETED, ((Supplier) invocation.getArguments()[0]).get()))
                 .when(mockExecutorService).execute(any(Supplier.class), anyInt());
         
-        AuthorisationService authorisationService = new AuthorisationService(mockExecutorService, mockEnvironment,
+        AuthorisationService authorisationService = new AuthorisationService(mockExecutorService, mockMetricRegistry,
                 mockConfiguration);
         walletAuthoriseService = new WalletAuthoriseService(
                 mockedProviders,
@@ -134,7 +130,7 @@ class WalletAuthoriseServiceForGooglePay3dsTest {
                 mockGooglePayAuthoriseRequestFactory,
                 mockWalletPaymentInfoToAuthCardDetailsConverter,
                 mock(AuthorisationLogger.class), 
-                mockEnvironment);
+                mockMetricRegistry);
         
         when(chargeService.lockChargeForProcessing(anyString(), any(OperationType.class))).thenReturn(chargeEntity);
         when(mockWalletPaymentInfoToAuthCardDetailsConverter.convert(any(WalletPaymentInfo.class), nullable(CardExpiryDate.class)))

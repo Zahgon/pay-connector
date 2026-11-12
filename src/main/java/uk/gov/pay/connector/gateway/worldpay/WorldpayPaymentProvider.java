@@ -1,9 +1,9 @@
 package uk.gov.pay.connector.gateway.worldpay;
 
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.ws.rs.WebApplicationException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.charge.dao.ChargeDao;
@@ -62,6 +62,7 @@ import java.time.InstantSource;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -83,6 +84,7 @@ import static uk.gov.pay.connector.paymentprocessor.model.Exemption3ds.EXEMPTION
 import static uk.gov.pay.connector.paymentprocessor.model.Exemption3ds.EXEMPTION_OUT_OF_SCOPE;
 import static uk.gov.pay.connector.paymentprocessor.model.Exemption3ds.EXEMPTION_REJECTED;
 
+@Component
 public class WorldpayPaymentProvider implements PaymentProvider, WorldpayGatewayResponseGenerator {
 
     static final String WORLDPAY_MACHINE_COOKIE_NAME = "machine";

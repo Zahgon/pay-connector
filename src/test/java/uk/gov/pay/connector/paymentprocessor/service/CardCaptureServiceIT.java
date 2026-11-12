@@ -51,7 +51,7 @@ public class CardCaptureServiceIT {
         CaptureResponse captureResponse = new CaptureResponse(transactionId, CaptureResponse.ChargeState.COMPLETE, feeList);
 
         // Trigger the post gateway capture response programmatically which normally would be invoked by the scheduler.
-        app.getInstanceFromGuiceContainer(CardCaptureService.class).processGatewayCaptureResponse(externalChargeId, oldChargeStatus, captureResponse);
+        app.getBean(CardCaptureService.class).processGatewayCaptureResponse(externalChargeId, oldChargeStatus, captureResponse);
 
         List<Map<String, Object>> listOfFees = app.getDatabaseTestHelper().getFeesByChargeId(chargeId);
 

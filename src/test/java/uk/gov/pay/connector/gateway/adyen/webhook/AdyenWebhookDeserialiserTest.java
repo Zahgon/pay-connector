@@ -9,7 +9,7 @@ import com.adyen.model.configurationwebhooks.AccountHolderNotificationRequest;
 import com.adyen.model.reportwebhooks.ReportNotificationData;
 import com.adyen.model.reportwebhooks.ReportNotificationRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.ws.rs.WebApplicationException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

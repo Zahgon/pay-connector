@@ -17,9 +17,9 @@ import java.util.List;
 import java.util.Map;
 
 import static io.restassured.http.ContentType.JSON;
-import static jakarta.ws.rs.core.Response.Status.CONFLICT;
-import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
-import static jakarta.ws.rs.core.Response.Status.OK;
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.OK;
 import static java.lang.String.format;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasSize;
@@ -85,7 +85,7 @@ public class GatewayAccountResourceIT {
             app.givenSetup().body(toJson(gatewayAccountRequest))
                     .post("/v1/api/accounts/")
                     .then()
-                    .statusCode(CONFLICT.getStatusCode());
+                    .statusCode(CONFLICT.value());
         }
 
         @Test
@@ -110,7 +110,7 @@ public class GatewayAccountResourceIT {
                             .build());
 
             app.givenSetup().get(format("/v1/api/service/%s/account/live", serviceId))
-                    .then().statusCode(CONFLICT.getStatusCode());
+                    .then().statusCode(CONFLICT.value());
         }
 
         @Test
@@ -120,7 +120,7 @@ public class GatewayAccountResourceIT {
             addGatewayAccountForServiceId(serviceId, "sandbox");
 
             app.givenSetup().get(format("/v1/api/service/%s/account/test", serviceId))
-                    .then().statusCode(OK.getStatusCode())
+                    .then().statusCode(OK.value())
                     .body("gateway_account_credentials", hasSize(1))
                     .body("gateway_account_credentials[0].payment_provider", is("sandbox"))
                     .body("service_name", is("Service Name"))
@@ -129,7 +129,7 @@ public class GatewayAccountResourceIT {
             addGatewayAccountForServiceId(serviceId, "stripe");
 
             app.givenSetup().get(format("/v1/api/service/%s/account/test", serviceId))
-                    .then().statusCode(OK.getStatusCode())
+                    .then().statusCode(OK.value())
                     .body("gateway_account_credentials", hasSize(1))
                     .body("gateway_account_credentials[0].payment_provider", is("stripe"))
                     .body("service_name", is("Service Name"))
@@ -732,7 +732,7 @@ public class GatewayAccountResourceIT {
         app.givenSetup()
                 .get("/v1/api/accounts")
                 .then()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .body("accounts", hasSize(2))
                 .body("accounts[0].gateway_account_id", is(Integer.valueOf(gatewayAccountId1)))
                 .body("accounts[0].worldpay_3ds_flex", nullValue())
@@ -835,7 +835,7 @@ public class GatewayAccountResourceIT {
         app.givenSetup()
                 .get("/v1/api/accounts?accountIds=" + gatewayAccountId1 + "," + gatewayAccountId2)
                 .then()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .body("accounts", hasSize(2))
                 .body("accounts[0].gateway_account_id", is(Integer.valueOf(gatewayAccountId1)))
                 .body("accounts[0].external_id", is(notNullValue()))
@@ -882,7 +882,7 @@ public class GatewayAccountResourceIT {
         app.givenSetup()
                 .get("/v1/api/accounts?moto_enabled=true")
                 .then()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .body("accounts", hasSize(1))
                 .body("accounts[0].gateway_account_id", is(Integer.valueOf(gatewayAccountId1)));
     }
@@ -896,7 +896,7 @@ public class GatewayAccountResourceIT {
         app.givenSetup()
                 .get("/v1/api/accounts?moto_enabled=false")
                 .then()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .body("accounts", hasSize(1))
                 .body("accounts[0].gateway_account_id", is(Integer.valueOf(gatewayAccountId2)));
     }
@@ -916,7 +916,7 @@ public class GatewayAccountResourceIT {
         app.givenSetup()
                 .get("/v1/api/accounts?apple_pay_enabled=true")
                 .then()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .body("accounts", hasSize(1))
                 .body("accounts[0].gateway_account_id", is(Integer.valueOf(gatewayAccountId1)));
     }
@@ -936,7 +936,7 @@ public class GatewayAccountResourceIT {
         app.givenSetup()
                 .get("/v1/api/accounts?google_pay_enabled=true")
                 .then()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .body("accounts", hasSize(1))
                 .body("accounts[0].gateway_account_id", is(Integer.valueOf(gatewayAccountId1)));
     }
@@ -952,7 +952,7 @@ public class GatewayAccountResourceIT {
         app.givenSetup()
                 .get("/v1/api/accounts?type=live")
                 .then()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .body("accounts", hasSize(1))
                 .body("accounts[0].gateway_account_id", is(Integer.valueOf(gatewayAccountId1)));
     }
@@ -968,7 +968,7 @@ public class GatewayAccountResourceIT {
         app.givenSetup()
                 .get("/v1/api/accounts?recurring_enabled=true")
                 .then()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .body("accounts", hasSize(1))
                 .body("accounts[0].gateway_account_id", is(Integer.valueOf(gatewayAccountId1)));
     }
@@ -985,7 +985,7 @@ public class GatewayAccountResourceIT {
         app.givenSetup()
                 .get("/v1/api/accounts?payment_provider=worldpay")
                 .then()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .body("accounts", hasSize(1))
                 .body("accounts[0].gateway_account_id", is(Integer.valueOf(gatewayAccountId1)));
     }
@@ -1061,7 +1061,7 @@ public class GatewayAccountResourceIT {
                 .get(ACCOUNTS_API_URL + unknownAccountId)
                 .then()
                 .contentType(JSON)
-                .statusCode(NOT_FOUND.getStatusCode())
+                .statusCode(NOT_FOUND.value())
                 .body("code", Is.is(404))
                 .body("message", Is.is("HTTP 404 Not Found"));
     }
@@ -1088,31 +1088,31 @@ public class GatewayAccountResourceIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("requires3ds", is(false));
 
             app.givenSetup()
                     .body(toJson(Map.of("toggle_3ds", true)))
                     .patch(format("/v1/frontend/service/%s/account/test/3ds-toggle", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("requires3ds", is(true));
 
             app.givenSetup()
                     .body(toJson(Map.of("toggle_3ds", false)))
                     .patch(format("/v1/frontend/service/%s/account/test/3ds-toggle", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("requires3ds", is(false));
         }
 
@@ -1122,7 +1122,7 @@ public class GatewayAccountResourceIT {
                     .body(toJson(Map.of("toggle_3ds", true)))
                     .patch(format("/v1/frontend/service/%s/account/test/3ds-toggle", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             String maestroCardTypeId = app.getDatabaseTestHelper().getCardTypeId("maestro", "DEBIT");
 
@@ -1130,13 +1130,13 @@ public class GatewayAccountResourceIT {
                     .body("{\"card_types\": [\"" + maestroCardTypeId + "\"]}")
                     .post(format("/v1/frontend/service/%s/account/test/card-types", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .body(toJson(Map.of("toggle_3ds", false)))
                     .patch(format("/v1/frontend/service/%s/account/test/3ds-toggle", serviceId))
                     .then()
-                    .statusCode(CONFLICT.getStatusCode());
+                    .statusCode(CONFLICT.value());
         }
     }
 
@@ -1158,7 +1158,7 @@ public class GatewayAccountResourceIT {
                     .body(toJson(Map.of("toggle_3ds", true)))
                     .patch("/v1/frontend/accounts/" + gatewayAccountId + "/3ds-toggle")
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .get("/v1/api/accounts/" + gatewayAccountId)
@@ -1172,7 +1172,7 @@ public class GatewayAccountResourceIT {
                     .body(toJson(Map.of("toggle_3ds", false)))
                     .patch("/v1/frontend/accounts/" + gatewayAccountId + "/3ds-toggle")
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .get("/v1/api/accounts/" + gatewayAccountId)
@@ -1188,19 +1188,19 @@ public class GatewayAccountResourceIT {
                     .body(toJson(Map.of("toggle_3ds", true)))
                     .patch("/v1/frontend/accounts/" + gatewayAccountId + "/3ds-toggle")
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup().accept(JSON)
                     .body("{\"card_types\": [\"" + maestroCardTypeId + "\"]}")
                     .post(ACCOUNTS_FRONTEND_URL + gatewayAccountId + "/card-types")
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .body(toJson(Map.of("toggle_3ds", false)))
                     .patch("/v1/frontend/accounts/" + gatewayAccountId + "/3ds-toggle")
                     .then()
-                    .statusCode(CONFLICT.getStatusCode());
+                    .statusCode(CONFLICT.value());
         }
     }
 
@@ -1267,7 +1267,7 @@ public class GatewayAccountResourceIT {
         app.givenSetup()
                 .get("/v1/api/accounts?payment_provider_account_id=" + urlEncodedQueryParam)
                 .then()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .body("accounts", hasSize(0));
     }
 }

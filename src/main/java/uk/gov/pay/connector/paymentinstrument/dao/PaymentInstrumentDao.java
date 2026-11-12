@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.paymentinstrument.dao;
 
-import com.google.inject.Provider;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Provider;
+import org.springframework.transaction.annotation.Transactional;
 import uk.gov.pay.connector.common.dao.JpaDao;
 import uk.gov.pay.connector.paymentinstrument.model.PaymentInstrumentEntity;
 import uk.gov.pay.connector.paymentinstrument.model.PaymentInstrumentStatus;
@@ -10,8 +10,10 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
 @Transactional
+@Repository
 public class PaymentInstrumentDao extends JpaDao<PaymentInstrumentEntity> {
     
     @Inject

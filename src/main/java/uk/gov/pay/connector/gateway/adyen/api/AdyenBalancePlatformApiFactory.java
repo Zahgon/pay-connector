@@ -8,10 +8,12 @@ import jakarta.inject.Inject;
 import uk.gov.pay.connector.app.adyen.AdyenGatewayConfig;
 
 import java.util.Objects;
+import org.springframework.stereotype.Component;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static uk.gov.pay.connector.gateway.adyen.api.AdyenHttpClientFactory.createAdyenHttpClientForTestEnvironment;
 
+@Component
 public class AdyenBalancePlatformApiFactory {
 
     private final AccountHoldersApi accountHoldersApi;

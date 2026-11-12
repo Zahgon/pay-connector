@@ -1,8 +1,7 @@
 package uk.gov.pay.connector.app;
 
-import io.dropwizard.core.Configuration;
 
-public class EventQueueConfig extends Configuration {
+public class EventQueueConfig {
     private Boolean eventQueueEnabled;
     private int paymentStateTransitionPollerNumberOfThreads;
 

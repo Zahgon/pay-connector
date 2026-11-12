@@ -23,8 +23,8 @@ import static io.restassured.http.ContentType.JSON;
 import static java.time.temporal.ChronoUnit.DAYS;
 import static java.time.temporal.ChronoUnit.HOURS;
 import static java.util.Collections.singletonList;
-import static jakarta.ws.rs.core.HttpHeaders.CONTENT_TYPE;
-import static jakarta.ws.rs.core.MediaType.TEXT_XML;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+import static org.springframework.http.MediaType.TEXT_XML_VALUE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -182,12 +182,12 @@ public class DiscrepancyResourceIT {
         app.getWorldpayWireMockServer().stubFor(post(urlPathEqualTo(WORLDPAY_URL)).inScenario("process discrepancies")
                 .whenScenarioStateIs(STARTED)
                 .withRequestBody(matchingXPath("//orderInquiry[@orderCode]"))
-                .willReturn(aResponse().withHeader(CONTENT_TYPE, TEXT_XML).withStatus(200).withBody(authQueryResponse))
+                .willReturn(aResponse().withHeader(CONTENT_TYPE, TEXT_XML_VALUE).withStatus(200).withBody(authQueryResponse))
                 .willSetStateTo("payment status queried"));
 
         app.getWorldpayWireMockServer().stubFor(post(urlPathEqualTo(WORLDPAY_URL)).inScenario("process discrepancies")
                 .whenScenarioStateIs("payment status queried")
-                .willReturn(aResponse().withHeader(CONTENT_TYPE, TEXT_XML).withStatus(200).withBody(load(WORLDPAY_CANCEL_SUCCESS_RESPONSE)))
+                .willReturn(aResponse().withHeader(CONTENT_TYPE, TEXT_XML_VALUE).withStatus(200).withBody(load(WORLDPAY_CANCEL_SUCCESS_RESPONSE)))
                 .willSetStateTo(STARTED));
     }
 }

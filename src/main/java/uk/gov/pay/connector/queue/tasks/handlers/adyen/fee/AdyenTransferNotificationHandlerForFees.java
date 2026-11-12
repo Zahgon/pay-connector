@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.queue.tasks.handlers.adyen.fee;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Inject;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -28,6 +28,7 @@ import uk.gov.service.payments.commons.queue.exception.QueueException;
 import java.time.InstantSource;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
 import static uk.gov.pay.connector.charge.model.domain.FeeType.GATEWAY;
 import static uk.gov.pay.connector.charge.util.AdyenFeeCalculator.generateFeeList;
@@ -44,6 +45,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.PROVIDER;
 import static uk.gov.service.payments.logging.LoggingKeys.REFUND_EXTERNAL_ID;
 
+@Component
 public class AdyenTransferNotificationHandlerForFees {
 
     public static final String PAYMENT_FEE = "PaymentFee";

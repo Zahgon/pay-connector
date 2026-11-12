@@ -4,12 +4,13 @@ import uk.gov.pay.connector.common.model.api.ErrorResponse;
 import uk.gov.pay.connector.common.model.api.ExternalChargeRefundAvailability;
 import uk.gov.service.payments.commons.model.ErrorIdentifier;
 
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import static java.lang.String.format;
-import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
-import static jakarta.ws.rs.core.Response.Status.PRECONDITION_FAILED;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.PRECONDITION_FAILED;
 import static uk.gov.service.payments.commons.model.ErrorIdentifier.REFUND_AMOUNT_AVAILABLE_MISMATCH;
 import static uk.gov.service.payments.commons.model.ErrorIdentifier.REFUND_NOT_AVAILABLE;
 import static uk.gov.service.payments.commons.model.ErrorIdentifier.REFUND_NOT_AVAILABLE_DUE_TO_DISPUTE;
@@ -33,10 +34,9 @@ public class RefundException extends WebApplicationException {
         return new RefundException("Refund not available as the charge is disputed", REFUND_NOT_AVAILABLE_DUE_TO_DISPUTE, BAD_REQUEST, null);
     }
 
-    private RefundException(String message, ErrorIdentifier errorIdentifier, Response.Status status, String reason) {
-        super(Response.status(status)
-                .entity(new ErrorResponse(errorIdentifier, message, reason))
-                .build());
+    private RefundException(String message, ErrorIdentifier errorIdentifier, HttpStatus status, String reason) {
+        super(ResponseEntity.status(status)
+                .body(new ErrorResponse(errorIdentifier, message, reason)));
     }
 
     public enum ErrorCode {

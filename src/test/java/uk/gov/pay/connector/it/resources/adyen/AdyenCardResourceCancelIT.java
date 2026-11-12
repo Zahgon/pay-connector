@@ -1,9 +1,7 @@
 package uk.gov.pay.connector.it.resources.adyen;
 
-import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import uk.gov.pay.connector.charge.dao.ChargeDao;
 import uk.gov.pay.connector.charge.model.domain.ChargeStatus;
@@ -15,7 +13,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathTemplate;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-@ExtendWith(DropwizardExtensionsSupport.class)
 public class AdyenCardResourceCancelIT {
 
     @RegisterExtension
@@ -29,7 +26,7 @@ public class AdyenCardResourceCancelIT {
 
     @BeforeEach
     void setUp() {
-        chargeDao = app.getInstanceFromGuiceContainer(ChargeDao.class);
+        chargeDao = app.getBean(ChargeDao.class);
     }
 
     @Test

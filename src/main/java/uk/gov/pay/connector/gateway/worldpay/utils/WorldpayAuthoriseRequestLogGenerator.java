@@ -10,6 +10,7 @@ import uk.gov.pay.connector.gateway.util.AuthorisationRequestLog;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
+import org.springframework.stereotype.Component;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static uk.gov.pay.connector.gateway.util.AuthorisationRequestSummaryStructuredLogging.BILLING_ADDRESS;
@@ -19,6 +20,7 @@ import static uk.gov.pay.connector.gateway.util.AuthorisationRequestSummaryStruc
 import static uk.gov.pay.connector.gateway.util.AuthorisationRequestSummaryStructuredLogging.IP_ADDRESS;
 import static uk.gov.pay.connector.gateway.util.AuthorisationRequestSummaryStructuredLogging.MOTO;
 
+@Component
 public class WorldpayAuthoriseRequestLogGenerator {
 
     public static String GATEWAY_REQUEST_RECORD = "gateway_request_record";

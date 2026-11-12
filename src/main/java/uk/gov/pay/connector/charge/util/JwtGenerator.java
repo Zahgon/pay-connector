@@ -5,7 +5,9 @@ import io.jsonwebtoken.Jwts;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Map;
+import org.springframework.stereotype.Component;
 
+@Component
 public class JwtGenerator {
 
     public String createJwt(Map<String, Object> claims, String secret) {

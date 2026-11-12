@@ -11,7 +11,7 @@ import uk.gov.pay.connector.util.JsonObjectMapper;
 import java.net.URI;
 import java.util.Map;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
@@ -47,7 +47,7 @@ class AdyenRefundRequestTest {
         var request = buildValidRefundRequest();
 
         assertThat(request.getGatewayOrder().orderRequestType(), is(REFUND));
-        assertThat(request.getGatewayOrder().mediaType(), is(APPLICATION_JSON_TYPE));
+        assertThat(request.getGatewayOrder().mediaType(), is(APPLICATION_JSON));
         JsonAssert.with(request.getGatewayOrder().payload())
                 .assertThat("$.merchantAccount", is(MERCHANT_ID))
                 .assertThat("$.reference", is(REFUND_EXTERNAL_ID))

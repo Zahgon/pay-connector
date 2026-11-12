@@ -48,7 +48,7 @@ public class CollectFeesForFailedPaymentsTaskHandlerIT {
         app.getStripeMockClient().mockGet3DSAuthenticatedPaymentIntent(paymentIntentId);
         app.getStripeMockClient().mockTransferSuccess();
 
-        CollectFeesForFailedPaymentsTaskHandler taskHandler = app.getInstanceFromGuiceContainer(CollectFeesForFailedPaymentsTaskHandler.class);
+        CollectFeesForFailedPaymentsTaskHandler taskHandler = app.getBean(CollectFeesForFailedPaymentsTaskHandler.class);
         taskHandler.collectAndPersistFees(paymentTaskData);
 
         List<Map<String, Object>> fees = app.getDatabaseTestHelper().getFeesByChargeId(chargeId);

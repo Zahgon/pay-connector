@@ -5,7 +5,9 @@ import uk.gov.pay.connector.common.model.domain.Address;
 import jakarta.inject.Inject;
 import java.util.Locale;
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
+@Component
 public class NorthAmericanRegionMapper {
 
     private final UsZipCodeToStateMapper usZipCodeToStateMapper;

@@ -1,7 +1,9 @@
 package uk.gov.pay.connector.charge.resource;
 
-import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
-import io.dropwizard.testing.junit5.ResourceExtension;
+import uk.gov.pay.connector.rules.ResourceTestExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import uk.gov.pay.connector.rules.ResourceTestResponse;
+import uk.gov.pay.connector.rules.ResourceTestEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.gov.pay.connector.agreement.service.AgreementService;
@@ -10,10 +12,7 @@ import uk.gov.pay.connector.charge.dao.ChargeDao;
 import uk.gov.pay.connector.charge.service.ChargeService;
 import uk.gov.pay.connector.charge.service.Worldpay3dsFlexJwtService;
 import uk.gov.pay.connector.common.model.api.ExternalTransactionStateFactory;
-import uk.gov.pay.connector.rules.ResourceTestRuleWithCustomExceptionMappersBuilder;
 
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.Response;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +22,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.mock;
 
-@ExtendWith(DropwizardExtensionsSupport.class)
 class ChargesFrontendResourceTest {
     private static final ChargeService CHARGE_SERVICE = mock(ChargeService.class);
     private static final ChargeDao CHARGE_DAO = mock(ChargeDao.class);
@@ -32,18 +30,15 @@ class ChargesFrontendResourceTest {
     private static final AgreementService AGREEMENT_SERVICE = mock(AgreementService.class);
     private static final ExternalTransactionStateFactory EXTERNAL_TRANSACTION_STATE_FACTORY = mock(ExternalTransactionStateFactory.class);
 
-    private static final ResourceExtension resources = ResourceTestRuleWithCustomExceptionMappersBuilder
-            .getBuilder()
-            .addResource(new ChargesFrontendResource(CHARGE_DAO, CHARGE_SERVICE, CARD_TYPE_DAO,
-                    WORLDPAY_3DS_FLEX_JWT_SERVICE, AGREEMENT_SERVICE, EXTERNAL_TRANSACTION_STATE_FACTORY))
-            .build();
+    @RegisterExtension
+    private static final ResourceTestExtension resources = ResourceTestExtension.withResources(new ChargesFrontendResource(CHARGE_DAO, CHARGE_SERVICE, CARD_TYPE_DAO,
+                    WORLDPAY_3DS_FLEX_JWT_SERVICE, AGREEMENT_SERVICE, EXTERNAL_TRANSACTION_STATE_FACTORY));
 
     @Test
     void shouldReturn400_whenPutToChargeStatus_emptyPayload() {
-        Response response = resources.client()
-                .target("/v1/frontend/charges/irrelevant_charge_id/status")
+        ResourceTestResponse response = resources.target("/v1/frontend/charges/irrelevant_charge_id/status")
                 .request()
-                .put(Entity.json(""));
+                .put(ResourceTestEntity.json(""));
 
         assertThat(response.getStatus(), is(422));
         
@@ -54,10 +49,9 @@ class ChargesFrontendResourceTest {
 
     @Test
     void shouldReturn422_whenPutToChargeStatus_emptyNewStatus() {
-        Response response = resources.client()
-                .target("/v1/frontend/charges/irrelevant_charge_id/status")
+        ResourceTestResponse response = resources.target("/v1/frontend/charges/irrelevant_charge_id/status")
                 .request()
-                .put(Entity.json(Collections.singletonMap("new_status", "")));
+                .put(ResourceTestEntity.json(Collections.singletonMap("new_status", "")));
 
         assertThat(response.getStatus(), is(422));
         
@@ -70,10 +64,9 @@ class ChargesFrontendResourceTest {
 
     @Test
     void shouldReturn422_whenPutToChargeStatus_invalidNewStatus() {
-        Response response = resources.client()
-                .target("/v1/frontend/charges/irrelevant_charge_id/status")
+        ResourceTestResponse response = resources.target("/v1/frontend/charges/irrelevant_charge_id/status")
                 .request()
-                .put(Entity.json(Collections.singletonMap("new_status", "invalid_status")));
+                .put(ResourceTestEntity.json(Collections.singletonMap("new_status", "invalid_status")));
 
         assertThat(response.getStatus(), is(422));
 

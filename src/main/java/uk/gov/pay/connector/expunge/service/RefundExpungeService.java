@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.expunge.service;
 
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.inject.Inject;
 import jakarta.persistence.OptimisticLockException;
 import org.slf4j.Logger;
@@ -21,6 +21,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 import static java.lang.String.format;
 import static java.time.ZoneOffset.UTC;
@@ -33,6 +34,7 @@ import static uk.gov.pay.connector.refund.model.domain.RefundStatus.REFUND_SUBMI
 import static uk.gov.service.payments.logging.LoggingKeys.MDC_REQUEST_ID_KEY;
 import static uk.gov.service.payments.logging.LoggingKeys.REFUND_EXTERNAL_ID;
 
+@Service
 public class RefundExpungeService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());

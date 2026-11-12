@@ -18,8 +18,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 import static io.restassured.http.ContentType.JSON;
-import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
-import static jakarta.ws.rs.core.Response.Status.OK;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.OK;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.Matchers.contains;
@@ -153,7 +153,7 @@ public class ChargeEventsResourceIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s/charges/%s/events", SERVICE_ID, GatewayAccountType.TEST, CHARGE_EXTERNAL_ID))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("charge_id", is(testCharge.getExternalChargeId()))
                     .body("events.size()", equalTo(7))
                     .body("events[0]", new TransactionEventMatcher("PAYMENT", withState("created", "false"), "100", createdDate))
@@ -171,7 +171,7 @@ public class ChargeEventsResourceIT {
                     .get(format("/v1/api/service/%s/account/%s/charges/%s/events", "incorrect-service-id", GatewayAccountType.TEST, CHARGE_EXTERNAL_ID))
                     .then()
                     .contentType(JSON)
-                    .statusCode(NOT_FOUND.getStatusCode())
+                    .statusCode(NOT_FOUND.value())
                     .body("message", contains("Charge with id [external-charge-id] not found."))
                     .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
         }
@@ -182,7 +182,7 @@ public class ChargeEventsResourceIT {
                     .get(format("/v1/api/service/%s/account/%s/charges/%s/events", SERVICE_ID, GatewayAccountType.TEST, "non-existent-charge"))
                     .then()
                     .contentType(JSON)
-                    .statusCode(NOT_FOUND.getStatusCode())
+                    .statusCode(NOT_FOUND.value())
                     .body("message", contains("Charge with id [non-existent-charge] not found."))
                     .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
         }
@@ -256,7 +256,7 @@ public class ChargeEventsResourceIT {
             app.givenSetup()
                     .get(format("/v1/api/accounts/%s/charges/%s/events", gatewayAccountId, CHARGE_EXTERNAL_ID))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("charge_id", is(testCharge.getExternalChargeId()))
                     .body("events.size()", equalTo(7))
                     .body("events[0]", new TransactionEventMatcher("PAYMENT", withState("created", "false"), "100", createdDate))
@@ -274,7 +274,7 @@ public class ChargeEventsResourceIT {
                     .get(format("/v1/api/accounts/%s/charges/%s/events", "invalid-account-id", CHARGE_EXTERNAL_ID))
                     .then()
                     .contentType(JSON)
-                    .statusCode(NOT_FOUND.getStatusCode())
+                    .statusCode(NOT_FOUND.value())
                     .body("code", is(404))
                     .body("message", is("HTTP 404 Not Found"));
         }
@@ -285,7 +285,7 @@ public class ChargeEventsResourceIT {
                     .get(format("/v1/api/accounts/%s/charges/%s/events", gatewayAccountId, "non-existent-charge"))
                     .then()
                     .contentType(JSON)
-                    .statusCode(NOT_FOUND.getStatusCode())
+                    .statusCode(NOT_FOUND.value())
                     .body("message", contains("Charge with id [non-existent-charge] not found."))
                     .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
         }

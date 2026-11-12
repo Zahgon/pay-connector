@@ -1,8 +1,7 @@
 package uk.gov.pay.connector.app.config;
 
-import io.dropwizard.core.Configuration;
 
-public class AuthorisationConfig extends Configuration {
+public class AuthorisationConfig {
     private int asynchronousAuthTimeoutInMilliseconds;
     private int synchronousAuthTimeoutInMilliseconds;
 

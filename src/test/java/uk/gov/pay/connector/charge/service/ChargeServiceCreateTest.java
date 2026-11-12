@@ -3,7 +3,7 @@ package uk.gov.pay.connector.charge.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.netmikey.logunit.api.LogCapturer;
-import jakarta.ws.rs.core.UriInfo;
+import uk.gov.pay.connector.web.BaseUri;
 import org.exparity.hamcrest.date.ZonedDateTimeMatchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -90,9 +90,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static jakarta.ws.rs.HttpMethod.GET;
-import static jakarta.ws.rs.HttpMethod.POST;
-import static jakarta.ws.rs.core.UriBuilder.fromUri;
+import static org.springframework.web.util.UriComponentsBuilder.fromUriString;
 import static java.time.ZonedDateTime.now;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -168,7 +166,7 @@ class ChargeServiceCreateTest {
     private ConnectorConfiguration mockedConfig;
 
     @Mock
-    private UriInfo mockedUriInfo;
+    private BaseUri mockedBaseUri;
 
     @Mock
     private LinksConfig mockedLinksConfig;
@@ -368,7 +366,7 @@ class ChargeServiceCreateTest {
 
     @Test
     void shouldCreateAChargeWithDefaults() {
-        doAnswer(_ -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(_ -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedLinksConfig.getFrontendUrl()).thenReturn("http://frontend.test");
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
@@ -376,7 +374,7 @@ class ChargeServiceCreateTest {
         when(mockGatewayAccountCredentialsService.getCurrentOrActiveCredential(gatewayAccount)).thenReturn(gatewayAccountCredentialsEntity);
         populateChargeEntity();
 
-        chargeService.create(requestBuilder.build(), GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+        chargeService.create(requestBuilder.build(), GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
 
@@ -405,7 +403,7 @@ class ChargeServiceCreateTest {
 
     @Test
     void shouldCreateAChargeWithBlankEmailAddress() {
-        doAnswer(_ -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(_ -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedLinksConfig.getFrontendUrl()).thenReturn("http://frontend.test");
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
@@ -413,7 +411,7 @@ class ChargeServiceCreateTest {
         when(mockGatewayAccountCredentialsService.getCurrentOrActiveCredential(gatewayAccount)).thenReturn(gatewayAccountCredentialsEntity);
 
         final ChargeCreateRequest request = requestBuilder.withEmail("").build();
-        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
 
@@ -423,7 +421,7 @@ class ChargeServiceCreateTest {
 
     @Test
     void shouldCreateAChargeWithDelayedCaptureTrue() {
-        doAnswer(_ -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(_ -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedLinksConfig.getFrontendUrl()).thenReturn("http://frontend.test");
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
@@ -431,14 +429,14 @@ class ChargeServiceCreateTest {
         when(mockGatewayAccountCredentialsService.getCurrentOrActiveCredential(gatewayAccount)).thenReturn(gatewayAccountCredentialsEntity);
 
         final ChargeCreateRequest request = requestBuilder.withDelayedCapture(true).build();
-        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
     }
 
     @Test
     void shouldCreateAChargeWithDelayedCaptureFalse() {
-        doAnswer(_ -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(_ -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedLinksConfig.getFrontendUrl()).thenReturn("http://frontend.test");
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
@@ -446,14 +444,14 @@ class ChargeServiceCreateTest {
         when(mockGatewayAccountCredentialsService.getCurrentOrActiveCredential(gatewayAccount)).thenReturn(gatewayAccountCredentialsEntity);
 
         final ChargeCreateRequest request = requestBuilder.withDelayedCapture(false).build();
-        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
     }
 
     @Test
     void shouldCreateAChargeWithExternalMetadata() {
-        doAnswer(_ -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(_ -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedLinksConfig.getFrontendUrl()).thenReturn("http://frontend.test");
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
@@ -467,7 +465,7 @@ class ChargeServiceCreateTest {
                 "key4", 1.23);
         final ChargeCreateRequest request = requestBuilder.withExternalMetadata(new ExternalMetadata(metadata)).build();
 
-        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
         assertThat(chargeEntityArgumentCaptor.getValue().getExternalMetadata().get().getMetadata(), equalTo(metadata));
@@ -475,7 +473,7 @@ class ChargeServiceCreateTest {
 
     @Test
     void shouldCreateAChargeWithNonDefaultLanguage() {
-        doAnswer(_ -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(_ -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedLinksConfig.getFrontendUrl()).thenReturn("http://frontend.test");
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
@@ -484,7 +482,7 @@ class ChargeServiceCreateTest {
 
         final ChargeCreateRequest request = requestBuilder.withLanguage(SupportedLanguage.WELSH).build();
 
-        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
 
@@ -494,7 +492,7 @@ class ChargeServiceCreateTest {
 
     @Test
     void shouldCreateChargeWithZeroAmountIfGatewayAccountAllowsIt() {
-        doAnswer(_ -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(_ -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedLinksConfig.getFrontendUrl()).thenReturn("http://frontend.test");
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
@@ -505,7 +503,7 @@ class ChargeServiceCreateTest {
 
         final ChargeCreateRequest request = requestBuilder.withAmount(0).build();
 
-        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
 
@@ -519,13 +517,13 @@ class ChargeServiceCreateTest {
         when(mockedGatewayAccountDao.findById(GATEWAY_ACCOUNT_ID)).thenReturn(Optional.of(gatewayAccount));
         when(mockGatewayAccountCredentialsService.getCurrentOrActiveCredential(gatewayAccount)).thenReturn(gatewayAccountCredentialsEntity);
 
-        assertThrows(ZeroAmountNotAllowedForGatewayAccountException.class, () -> chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null));
+        assertThrows(ZeroAmountNotAllowedForGatewayAccountException.class, () -> chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null));
         verify(mockedChargeDao, never()).persist(any(ChargeEntity.class));
     }
 
     @Test
     void shouldCreateMotoChargeIfGatewayAccountAllowsIt() {
-        doAnswer(_ -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(_ -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedLinksConfig.getFrontendUrl()).thenReturn("http://frontend.test");
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
@@ -534,7 +532,7 @@ class ChargeServiceCreateTest {
 
         gatewayAccount.setAllowMoto(true);
         ChargeCreateRequest request = requestBuilder.withMoto(true).build();
-        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
 
@@ -548,14 +546,14 @@ class ChargeServiceCreateTest {
 
         when(mockedGatewayAccountDao.findById(GATEWAY_ACCOUNT_ID)).thenReturn(Optional.of(gatewayAccount));
 
-        assertThrows(ChargeException.class, () -> chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null));
+        assertThrows(ChargeException.class, () -> chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null));
 
         verify(mockedChargeDao, never()).persist(any(ChargeEntity.class));
     }
 
     @Test
     void shouldCreateAChargeWithSource() {
-        doAnswer(_ -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(_ -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedLinksConfig.getFrontendUrl()).thenReturn("http://frontend.test");
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
@@ -564,7 +562,7 @@ class ChargeServiceCreateTest {
 
         final ChargeCreateRequest request = requestBuilder.
                 withSource(CARD_API).build();
-        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
         assertThat(chargeEntityArgumentCaptor.getValue().getSource(), equalTo(CARD_API));
@@ -572,7 +570,7 @@ class ChargeServiceCreateTest {
 
     @Test
     void shouldCreateAChargeWhenGatewayAccountCredentialsHasOneEntry() {
-        doAnswer(_ -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(_ -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedLinksConfig.getFrontendUrl()).thenReturn("http://frontend.test");
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
@@ -581,7 +579,7 @@ class ChargeServiceCreateTest {
 
         final ChargeCreateRequest request = requestBuilder.
                 withSource(CARD_API).build();
-        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
         ChargeEntity createdChargeEntity = chargeEntityArgumentCaptor.getValue();
@@ -591,7 +589,7 @@ class ChargeServiceCreateTest {
 
     @Test
     void shouldCreateAChargeWhenCredentialEntityFoundForCredentialExternalId() {
-        doAnswer(_ -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(_ -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedLinksConfig.getFrontendUrl()).thenReturn("http://frontend.test");
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
@@ -601,7 +599,7 @@ class ChargeServiceCreateTest {
                 .thenReturn(gatewayAccountCredentialsEntity);
 
         final ChargeCreateRequest request = requestBuilder.withCredentialId(CREDENTIALS_EXTERNAL_ID).build();
-        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
         ChargeEntity createdChargeEntity = chargeEntityArgumentCaptor.getValue();
@@ -611,7 +609,7 @@ class ChargeServiceCreateTest {
 
     @Test
     void shouldCreateAResponse() throws Exception {
-        doAnswer(_ -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(_ -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedLinksConfig.getFrontendUrl()).thenReturn("http://frontend.test");
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
@@ -620,7 +618,7 @@ class ChargeServiceCreateTest {
         when(mockExternalTransactionStateFactory.newExternalTransactionState(any(ChargeEntity.class))).thenReturn(externalTransactionState);
         populateChargeEntity();
 
-        ChargeResponse response = chargeService.create(requestBuilder.build(), GATEWAY_ACCOUNT_ID, mockedUriInfo, null).get();
+        ChargeResponse response = chargeService.create(requestBuilder.build(), GATEWAY_ACCOUNT_ID, mockedBaseUri, null).get();
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
         verify(mockedTokenDao).persist(tokenEntityArgumentCaptor.capture());
@@ -631,10 +629,10 @@ class ChargeServiceCreateTest {
         // Then - expected response is returned
         ChargeResponse.ChargeResponseBuilder expectedChargeResponse = chargeResponseBuilderOf(createdChargeEntity);
 
-        expectedChargeResponse.withLink("self", GET, new URI(SERVICE_HOST + "/v1/api/accounts/10/charges/" + EXTERNAL_CHARGE_ID[0]));
-        expectedChargeResponse.withLink("refunds", GET, new URI(SERVICE_HOST + "/v1/api/accounts/10/charges/" + EXTERNAL_CHARGE_ID[0] + "/refunds"));
-        expectedChargeResponse.withLink("next_url", GET, new URI("http://frontend.test/secure/" + tokenEntity.getToken()));
-        expectedChargeResponse.withLink("next_url_post", POST, new URI("http://frontend.test/secure"), "application/x-www-form-urlencoded", new HashMap<>() {{
+        expectedChargeResponse.withLink("self", "GET", new URI(SERVICE_HOST + "/v1/api/accounts/10/charges/" + EXTERNAL_CHARGE_ID[0]));
+        expectedChargeResponse.withLink("refunds", "GET", new URI(SERVICE_HOST + "/v1/api/accounts/10/charges/" + EXTERNAL_CHARGE_ID[0] + "/refunds"));
+        expectedChargeResponse.withLink("next_url", "GET", new URI("http://frontend.test/secure/" + tokenEntity.getToken()));
+        expectedChargeResponse.withLink("next_url_post", "POST", new URI("http://frontend.test/secure"), "application/x-www-form-urlencoded", new HashMap<>() {{
             put("chargeTokenId", tokenEntity.getToken());
         }});
 
@@ -643,7 +641,7 @@ class ChargeServiceCreateTest {
 
     @Test
     void shouldCreateACharge_whenAuthorisationApiEnabled_andMotoDisabled() throws Exception {
-        doAnswer(_ -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(_ -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
         when(mockedGatewayAccountDao.findById(GATEWAY_ACCOUNT_ID)).thenReturn(Optional.of(gatewayAccount));
@@ -661,7 +659,7 @@ class ChargeServiceCreateTest {
                 .withAuthorisationMode(AuthorisationMode.MOTO_API)
                 .build();
 
-        ChargeResponse response = chargeService.create(chargeCreateRequest, GATEWAY_ACCOUNT_ID, mockedUriInfo, null).get();
+        ChargeResponse response = chargeService.create(chargeCreateRequest, GATEWAY_ACCOUNT_ID, mockedBaseUri, null).get();
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
         verify(mockedTokenDao).persist(tokenEntityArgumentCaptor.capture());
@@ -671,9 +669,9 @@ class ChargeServiceCreateTest {
 
         ChargeResponse.ChargeResponseBuilder expectedChargeResponse = chargeResponseBuilderOf(createdChargeEntity);
 
-        expectedChargeResponse.withLink("self", GET, new URI(SERVICE_HOST + "/v1/api/accounts/10/charges/" + EXTERNAL_CHARGE_ID[0]));
-        expectedChargeResponse.withLink("refunds", GET, new URI(SERVICE_HOST + "/v1/api/accounts/10/charges/" + EXTERNAL_CHARGE_ID[0] + "/refunds"));
-        expectedChargeResponse.withLink("auth_url_post", POST, new URI(SERVICE_HOST + "/v1/api/charges/authorise"), "application/json", new HashMap<>() {{
+        expectedChargeResponse.withLink("self", "GET", new URI(SERVICE_HOST + "/v1/api/accounts/10/charges/" + EXTERNAL_CHARGE_ID[0]));
+        expectedChargeResponse.withLink("refunds", "GET", new URI(SERVICE_HOST + "/v1/api/accounts/10/charges/" + EXTERNAL_CHARGE_ID[0] + "/refunds"));
+        expectedChargeResponse.withLink("auth_url_post", "POST", new URI(SERVICE_HOST + "/v1/api/charges/authorise"), "application/json", new HashMap<>() {{
             put("one_time_token", tokenEntity.getToken());
         }});
 
@@ -687,14 +685,14 @@ class ChargeServiceCreateTest {
 
         when(mockedGatewayAccountDao.findById(GATEWAY_ACCOUNT_ID)).thenReturn(Optional.of(gatewayAccount));
 
-        assertThrows(AuthorisationApiNotAllowedForGatewayAccountException.class, () -> chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null));
+        assertThrows(AuthorisationApiNotAllowedForGatewayAccountException.class, () -> chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null));
 
         verify(mockedChargeDao, never()).persist(any(ChargeEntity.class));
     }
 
     @Test
     void shouldCreateAToken() {
-        doAnswer(_ -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(_ -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedLinksConfig.getFrontendUrl()).thenReturn("http://frontend.test");
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
@@ -702,7 +700,7 @@ class ChargeServiceCreateTest {
         when(mockGatewayAccountCredentialsService.getCurrentOrActiveCredential(gatewayAccount)).thenReturn(gatewayAccountCredentialsEntity);
         populateChargeEntity();
 
-        chargeService.create(requestBuilder.build(), GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+        chargeService.create(requestBuilder.build(), GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
         verify(mockedTokenDao).persist(tokenEntityArgumentCaptor.capture());
 
@@ -719,7 +717,7 @@ class ChargeServiceCreateTest {
 
         when(mockedGatewayAccountDao.findById(GATEWAY_ACCOUNT_ID)).thenReturn(Optional.of(gatewayAccount));
 
-        assertThrows(GatewayAccountDisabledException.class, () -> chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null));
+        assertThrows(GatewayAccountDisabledException.class, () -> chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null));
 
         verify(mockedChargeDao, never()).persist(any(ChargeEntity.class));
     }
@@ -740,7 +738,7 @@ class ChargeServiceCreateTest {
                 .build();
         when(mockedGatewayAccountDao.findById(GATEWAY_ACCOUNT_ID)).thenReturn(Optional.of(gatewayAccount));
         when(mockGatewayAccountCredentialsService.getCurrentOrActiveCredential(gatewayAccount)).thenReturn(stripeGatewayAccountCredentialsEntity);
-        var chargeException = assertThrows(ChargeException.class, () -> chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null));
+        var chargeException = assertThrows(ChargeException.class, () -> chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null));
         assertThat(chargeException.getErrorIdentifier(), is(ErrorIdentifier.AMOUNT_BELOW_MINIMUM_FOR_STRIPE));
         verify(mockedChargeDao, never()).persist(any(ChargeEntity.class));
     }
@@ -761,7 +759,7 @@ class ChargeServiceCreateTest {
                 .build();
         when(mockedGatewayAccountDao.findById(GATEWAY_ACCOUNT_ID)).thenReturn(Optional.of(gatewayAccount));
         when(mockGatewayAccountCredentialsService.getCurrentOrActiveCredential(gatewayAccount)).thenReturn(stripeGatewayAccountCredentialsEntity);
-        var chargeException = assertThrows(ChargeException.class, () -> chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null));
+        var chargeException = assertThrows(ChargeException.class, () -> chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null));
         assertThat(chargeException.getErrorIdentifier(), is(ErrorIdentifier.AMOUNT_BELOW_MINIMUM_FOR_ADYEN));
         verify(mockedChargeDao, never()).persist(any(ChargeEntity.class));
     }
@@ -790,7 +788,7 @@ class ChargeServiceCreateTest {
         Map<String, Object> requestBody = mapper.convertValue(chargeCreateRequest, new TypeReference<>() {
         });
 
-        doAnswer(_ -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(_ -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
         when(mockedGatewayAccountDao.findById(GATEWAY_ACCOUNT_ID)).thenReturn(Optional.of(gatewayAccount));
@@ -799,7 +797,7 @@ class ChargeServiceCreateTest {
         when(mockExternalTransactionStateFactory.newExternalTransactionState(any(ChargeEntity.class))).thenReturn(externalTransactionState);
         populateChargeEntity();
 
-        ChargeResponse response = chargeService.create(chargeCreateRequest, GATEWAY_ACCOUNT_ID, mockedUriInfo, idempotencyKey).get();
+        ChargeResponse response = chargeService.create(chargeCreateRequest, GATEWAY_ACCOUNT_ID, mockedBaseUri, idempotencyKey).get();
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
         verify(mockIdempotencyDao).persist(idempotencyEntityArgumentCaptor.capture());
@@ -810,8 +808,8 @@ class ChargeServiceCreateTest {
         ChargeEntity createdChargeEntity = chargeEntityArgumentCaptor.getValue();
         ChargeResponse.ChargeResponseBuilder expectedChargeResponse = chargeResponseBuilderOf(createdChargeEntity);
 
-        expectedChargeResponse.withLink("self", GET, new URI(SERVICE_HOST + "/v1/api/accounts/10/charges/" + EXTERNAL_CHARGE_ID[0]));
-        expectedChargeResponse.withLink("refunds", GET, new URI(SERVICE_HOST + "/v1/api/accounts/10/charges/" + EXTERNAL_CHARGE_ID[0] + "/refunds"));
+        expectedChargeResponse.withLink("self", "GET", new URI(SERVICE_HOST + "/v1/api/accounts/10/charges/" + EXTERNAL_CHARGE_ID[0]));
+        expectedChargeResponse.withLink("refunds", "GET", new URI(SERVICE_HOST + "/v1/api/accounts/10/charges/" + EXTERNAL_CHARGE_ID[0] + "/refunds"));
 
         assertThat(response, is(expectedChargeResponse.build()));
     }
@@ -871,7 +869,7 @@ class ChargeServiceCreateTest {
                     .withSource(CARD_API)
                     .withReference(VALID_CARD_NUMBER)
                     .build();
-            chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+            chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
             verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
             assertThat(chargeEntityArgumentCaptor.getValue().getSource(), equalTo(CARD_API));
@@ -889,7 +887,7 @@ class ChargeServiceCreateTest {
                     .build();
 
             chargeService = getNewChargeService();
-            chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+            chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
             verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
             assertThat(chargeEntityArgumentCaptor.getValue().getSource(), equalTo(CARD_API));
@@ -908,7 +906,7 @@ class ChargeServiceCreateTest {
                     .build();
 
             chargeService = getNewChargeService();
-            chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+            chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
             verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
             assertThat(chargeEntityArgumentCaptor.getValue().getSource().name(), equalTo(source));
@@ -927,7 +925,7 @@ class ChargeServiceCreateTest {
                     .build();
 
             chargeService = getNewChargeService();
-            chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+            chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
             verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
             assertThat(chargeEntityArgumentCaptor.getValue().getSource(), equalTo(CARD_PAYMENT_LINK));
@@ -946,7 +944,7 @@ class ChargeServiceCreateTest {
                     .build();
 
             chargeService = getNewChargeService();
-            chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+            chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
             verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
             assertThat(chargeEntityArgumentCaptor.getValue().getSource(), equalTo(CARD_PAYMENT_LINK));
@@ -971,7 +969,7 @@ class ChargeServiceCreateTest {
             chargeService = getNewChargeService();
 
             var exception = assertThrows(ChargeException.class,
-                    () -> chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null));
+                    () -> chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null));
 
             verifyNoInteractions(mockedChargeDao);
             assertThat(exception.getMessage(), equalTo("Card number entered in a payment link reference"));
@@ -989,7 +987,7 @@ class ChargeServiceCreateTest {
         }
 
         private void setupMocksToCreateACharge() {
-            doAnswer(_ -> fromUri(SERVICE_HOST)).when(mockedUriInfo).getBaseUriBuilder();
+            doAnswer(_ -> fromUriString(SERVICE_HOST)).when(mockedBaseUri).getBaseUriBuilder();
             when(mockedLinksConfig.getFrontendUrl()).thenReturn("http://frontend.test");
             when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
             when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);

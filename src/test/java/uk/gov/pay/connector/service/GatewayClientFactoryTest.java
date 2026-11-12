@@ -30,6 +30,6 @@ class GatewayClientFactoryTest {
         GatewayClient gatewayClient = gatewayClientFactory.createGatewayClient(PaymentGatewayName.WORLDPAY, AUTHORISE, mockMetricRegistry);
 
         assertNotNull(gatewayClient);
-        verify(mockClientFactory).createWithDropwizardClient(PaymentGatewayName.WORLDPAY, AUTHORISE, mockMetricRegistry);
+        verify(mockClientFactory).createHttpClient(PaymentGatewayName.WORLDPAY, AUTHORISE, mockMetricRegistry);
     }
 }

@@ -7,7 +7,7 @@ import uk.gov.pay.connector.gatewayaccount.model.GatewayAccountType;
 import uk.gov.pay.connector.usernotification.model.domain.EmailNotificationEntity;
 import uk.gov.pay.connector.usernotification.model.domain.EmailNotificationType;
 
-import jakarta.ws.rs.core.UriInfo;
+import uk.gov.pay.connector.web.BaseUri;
 import java.net.URI;
 
 import static uk.gov.pay.connector.util.RandomIdGenerator.randomUuid;
@@ -40,7 +40,7 @@ public class GatewayAccountObjectConverter {
         return gatewayAccountEntity;
     }
 
-    public static CreateGatewayAccountResponse createResponseFrom(GatewayAccountEntity entity, UriInfo uriInfo) {
+    public static CreateGatewayAccountResponse createResponseFrom(GatewayAccountEntity entity, BaseUri uriInfo) {
         
         URI uri = uriInfo.getBaseUriBuilder().path("/v1/api/accounts/{accountId}").build(entity.getId());
 

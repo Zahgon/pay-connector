@@ -47,8 +47,8 @@ public class ChargeEventDaoIT {
 
     @BeforeEach
     void setUp() {
-        chargeDao = app.getInstanceFromGuiceContainer(ChargeDao.class);
-        chargeEventDao = app.getInstanceFromGuiceContainer(ChargeEventDao.class);
+        chargeDao = app.getBean(ChargeDao.class);
+        chargeEventDao = app.getBean(ChargeEventDao.class);
         this.defaultTestAccount = app.getDatabaseFixtures()
                 .aTestAccount()
                 .insert();

@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.webhook.resource;
 
-import jakarta.ws.rs.core.Response;
+import org.springframework.http.ResponseEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -30,8 +30,9 @@ class NotificationResourceTest {
         String forwardedIpAddress = "10.20.30.40";
         when(adyenNotificationService.handleNotificationFor(anyString(), eq(forwardedIpAddress), eq(null))).thenReturn(true);
 
-        try (Response response = notificationResource.authoriseAdyenNotifications(rawNotification, forwardedIpAddress, null)) {
-            assertThat(response.getStatus(), is(200));
+        {
+            ResponseEntity<?> response = notificationResource.authoriseAdyenNotifications(rawNotification, forwardedIpAddress, null);
+            assertThat(response.getStatusCode().value(), is(200));
         }
     }
 
@@ -42,8 +43,9 @@ class NotificationResourceTest {
         
         when(adyenNotificationService.handleNotificationFor(anyString(), eq(forwardedIpAddress), eq(null))).thenReturn(false);
 
-        try (Response response = notificationResource.authoriseAdyenNotifications(rawNotification,  forwardedIpAddress, null)) {
-            assertThat(response.getStatus(), is(403));
+        {
+            ResponseEntity<?> response = notificationResource.authoriseAdyenNotifications(rawNotification,  forwardedIpAddress, null);
+            assertThat(response.getStatusCode().value(), is(403));
         }
     }
 
@@ -54,8 +56,9 @@ class NotificationResourceTest {
         String hmacSignature = "sha256=test-signature";
         when(adyenNotificationService.handleNotificationFor(rawNotification, forwardedIpAddress, hmacSignature)).thenReturn(true);
 
-        try (Response response = notificationResource.authoriseAdyenNotifications(rawNotification, forwardedIpAddress, hmacSignature)) {
-            assertThat(response.getStatus(), is(200));
+        {
+            ResponseEntity<?> response = notificationResource.authoriseAdyenNotifications(rawNotification, forwardedIpAddress, hmacSignature);
+            assertThat(response.getStatusCode().value(), is(200));
         }
 
         verify(adyenNotificationService).handleNotificationFor(rawNotification, forwardedIpAddress, hmacSignature);
@@ -68,8 +71,9 @@ class NotificationResourceTest {
         String hmacSignature = "sha256=test-signature";
         when(adyenNotificationService.handleNotificationFor(rawNotification, forwardedIpAddress, hmacSignature)).thenReturn(false);
 
-        try (Response response = notificationResource.authoriseAdyenNotifications(rawNotification, forwardedIpAddress, hmacSignature)) {
-            assertThat(response.getStatus(), is(403));
+        {
+            ResponseEntity<?> response = notificationResource.authoriseAdyenNotifications(rawNotification, forwardedIpAddress, hmacSignature);
+            assertThat(response.getStatusCode().value(), is(403));
         }
     }
 }

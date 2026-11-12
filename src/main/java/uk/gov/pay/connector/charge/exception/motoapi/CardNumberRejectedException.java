@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.charge.exception.motoapi;
 
-import jakarta.ws.rs.WebApplicationException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 
 public class CardNumberRejectedException extends WebApplicationException {
     public CardNumberRejectedException(String message) {

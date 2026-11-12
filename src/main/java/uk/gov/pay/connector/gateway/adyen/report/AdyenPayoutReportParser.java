@@ -15,10 +15,12 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.springframework.stereotype.Component;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static uk.gov.pay.connector.gateway.adyen.report.AdyenReportDateConverter.convertToInstant;
 
+@Component
 public class AdyenPayoutReportParser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AdyenPayoutReportParser.class);

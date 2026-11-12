@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.gatewayaccount.service;
 
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +14,6 @@ import uk.gov.pay.connector.gatewayaccountcredentials.model.GatewayAccountCreden
 import uk.gov.pay.connector.gatewayaccountcredentials.model.GatewayAccountCredentialsEntity;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.BadRequestException;
-import jakarta.ws.rs.NotFoundException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,6 +21,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
+import org.springframework.http.HttpStatus;
 
 import static java.lang.String.format;
 import static net.logstash.logback.argument.StructuredArguments.kv;
@@ -35,6 +36,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.GATEWAY_ACCOUNT_TYPE;
 import static uk.gov.service.payments.logging.LoggingKeys.PROVIDER;
 import static uk.gov.service.payments.logging.LoggingKeys.USER_EXTERNAL_ID;
 
+@Service
 public class GatewayAccountSwitchPaymentProviderService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GatewayAccountSwitchPaymentProviderService.class);
@@ -55,14 +57,14 @@ public class GatewayAccountSwitchPaymentProviderService {
         List<GatewayAccountCredentialsEntity> credentials = gatewayAccountEntity.getGatewayAccountCredentials();
 
         if (credentials.size() < 2) {
-            throw new BadRequestException("Account has no credential to switch to/from");
+            throw new WebApplicationException("Account has no credential to switch to/from", HttpStatus.BAD_REQUEST);
         }
 
         var activeCredentialEntity = findSingleCredentialEntityByState(credentials, ACTIVE);
         var switchingCredentialEntity = findSingleCredentialEntityByState(credentials, VERIFIED_WITH_LIVE_PAYMENT);
 
         if (!request.getGatewayAccountCredentialExternalId().equals(switchingCredentialEntity.getExternalId())) {
-            throw new NotFoundException(format("Credential with external id [%s] not found", request.getGatewayAccountCredentialExternalId()));
+            throw new WebApplicationException(format("Credential with external id [%s] not found", request.getGatewayAccountCredentialExternalId()), HttpStatus.NOT_FOUND);
         }
 
         switchingCredentialEntity.setLastUpdatedByUserExternalId(request.getUserExternalId());
@@ -107,8 +109,8 @@ public class GatewayAccountSwitchPaymentProviderService {
                 .collect(Collectors.toCollection(ArrayList::new));
         
         if (activeStripeCredentialEntities.isEmpty()) {
-            throw new BadRequestException(format("Stripe credential with ACTIVE state not found for account [gateway account id: %s]",
-                    gatewayAccountEntity.getId()));
+            throw new WebApplicationException(format("Stripe credential with ACTIVE state not found for account [gateway account id: %s]",
+                    gatewayAccountEntity.getId()), HttpStatus.BAD_REQUEST);
         }
 
         activeStripeCredentialEntities.forEach(cred -> {
@@ -164,8 +166,8 @@ public class GatewayAccountSwitchPaymentProviderService {
                 .collect(Collectors.toCollection(ArrayList::new));
 
         if (activeStripeCredentialEntities.isEmpty()) {
-            throw new BadRequestException(format("Stripe credential with ACTIVE state not found for account [gateway account id: %s]",
-                    gatewayAccountEntity.getId()));
+            throw new WebApplicationException(format("Stripe credential with ACTIVE state not found for account [gateway account id: %s]",
+                    gatewayAccountEntity.getId()), HttpStatus.BAD_REQUEST);
         }
         
         var activeStripeCredential = findSingleCredentialEntityByState(activeStripeCredentialEntities, ACTIVE);
@@ -222,10 +224,10 @@ public class GatewayAccountSwitchPaymentProviderService {
                         Collectors.toList(),
                         list -> {
                             if (list.isEmpty()) {
-                                throw new BadRequestException(format("Credential with %s state not found", credentialState.toString()));
+                                throw new WebApplicationException(format("Credential with %s state not found", credentialState.toString()), HttpStatus.BAD_REQUEST);
                             }
                             if (list.size() > 1) {
-                                throw new BadRequestException(format("Multiple %s credentials found", credentialState.toString()));
+                                throw new WebApplicationException(format("Multiple %s credentials found", credentialState.toString()), HttpStatus.BAD_REQUEST);
                             }
                             return list.getFirst();
                         }

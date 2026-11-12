@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.common.dao;
 
-import com.google.inject.Provider;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Provider;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
 
 import java.util.Collection;

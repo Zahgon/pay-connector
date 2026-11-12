@@ -8,7 +8,9 @@ import uk.gov.pay.connector.gateway.adyen.utils.AdyenMerchantAccountHelper;
 import uk.gov.pay.connector.gateway.model.request.records.AdyenApplePayAuthorisePayload;
 import uk.gov.pay.connector.gateway.util.ChargeFrontendUrlHelper;
 import uk.gov.pay.connector.wallets.applepay.ApplePayAuthorisationGatewayRequest;
+import org.springframework.stereotype.Component;
 
+@Component
 public class AdyenApplePayAuthorisePayloadFactory {
 
     private final ChargeFrontendUrlHelper chargeFrontendUrlHelper;

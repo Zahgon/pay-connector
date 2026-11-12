@@ -1,10 +1,9 @@
 package uk.gov.pay.connector.app;
 
-import io.dropwizard.core.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NotifyConfiguration extends Configuration {
+public class NotifyConfiguration {
 
     private String emailTemplateId;
     private String refundIssuedEmailTemplateId;

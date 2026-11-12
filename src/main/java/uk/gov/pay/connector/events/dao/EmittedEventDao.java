@@ -1,8 +1,8 @@
 package uk.gov.pay.connector.events.dao;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import org.springframework.transaction.annotation.Transactional;
 import uk.gov.pay.connector.common.dao.JpaDao;
 import uk.gov.pay.connector.events.EmittedEventEntity;
 import uk.gov.pay.connector.events.model.Event;
@@ -14,8 +14,10 @@ import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
 @Transactional
+@Repository
 public class EmittedEventDao extends JpaDao<EmittedEventEntity> {
 
     @Inject

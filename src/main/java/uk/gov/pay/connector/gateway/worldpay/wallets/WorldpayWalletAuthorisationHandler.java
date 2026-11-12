@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.gateway.worldpay.wallets;
 
-import com.google.inject.name.Named;
+import jakarta.inject.Named;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +28,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.WORLDPAY;
 import static uk.gov.pay.connector.gateway.util.AuthUtil.getWorldpayAuthHeader;
@@ -35,6 +36,7 @@ import static uk.gov.pay.connector.gateway.worldpay.WorldpayOrderRequestBuilder.
 import static uk.gov.pay.connector.gateway.worldpay.WorldpayOrderRequestBuilder.aWorldpayAuthoriseGooglePayOrderRequestBuilder;
 
 
+@Component
 public class WorldpayWalletAuthorisationHandler implements WorldpayGatewayResponseGenerator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WorldpayWalletAuthorisationHandler.class);

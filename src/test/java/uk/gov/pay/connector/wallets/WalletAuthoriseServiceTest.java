@@ -1,8 +1,8 @@
 package uk.gov.pay.connector.wallets;
 
+import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Counter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.dropwizard.core.setup.Environment;
 import io.github.netmikey.logunit.api.LogCapturer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hamcrest.Matchers;
@@ -135,8 +135,6 @@ class WalletAuthoriseServiceTest extends CardServiceTest {
     @Mock
     private CardExecutorService mockExecutorService;
 
-    @Mock
-    private Environment mockEnvironment;
 
     @Mock
     private Counter mockCounter;
@@ -207,7 +205,6 @@ class WalletAuthoriseServiceTest extends CardServiceTest {
         lenient().when(mockedProviders.byName(any())).thenReturn(mockedPaymentProvider);
         lenient().when(mockedPaymentProvider.generateTransactionId()).thenReturn(Optional.of(TRANSACTION_ID));
         lenient().when(mockMetricRegistry.counter(anyString())).thenReturn(mockCounter);
-        lenient().when(mockEnvironment.metrics()).thenReturn(mockMetricRegistry);
         lenient().when(mockedChargeDao.findByExternalId(charge.getExternalId())).thenReturn(Optional.of(charge));
         lenient().when(mockWalletPaymentInfoToAuthCardDetailsConverter.convert(any(WalletPaymentInfo.class), nullable(CardExpiryDate.class))).thenReturn(mockAuthCardDetails);
         lenient().when(mockAuthCardDetailsToCardDetailsEntityConverter.convert(mockAuthCardDetails)).thenReturn(mockCardDetailsEntity);
@@ -217,7 +214,7 @@ class WalletAuthoriseServiceTest extends CardServiceTest {
         lenient().when(mockConfiguration.getAuthorisationConfig()).thenReturn(mockAuthorisationConfig);
         lenient().when(mockAuthorisationConfig.getAsynchronousAuthTimeoutInMilliseconds()).thenReturn(1000);
 
-        AuthorisationService authorisationService = new AuthorisationService(mockExecutorService, mockEnvironment, mockConfiguration);
+        AuthorisationService authorisationService = new AuthorisationService(mockExecutorService, mockMetricRegistry, mockConfiguration);
         ChargeService chargeService = spy(new ChargeService(null, mockedChargeDao, mockedChargeEventDao,
                 null, null, null, mockConfiguration, null, mockStateTransitionService,
                 ledgerService, mockRefundService, mockEventService, mockPaymentInstrumentService, mockGatewayAccountCredentialsService,
@@ -231,7 +228,7 @@ class WalletAuthoriseServiceTest extends CardServiceTest {
                 mockGooglePayAuthoriseRequestFactory,
                 mockWalletPaymentInfoToAuthCardDetailsConverter,
                 new AuthorisationLogger(new AuthorisationRequestSummaryStringifier(), new AuthorisationRequestSummaryStructuredLogging(), new AdyenAuthoriseRequestLogGenerator(), new WorldpayAuthoriseRequestLogGenerator()),
-                mockEnvironment);
+                mockMetricRegistry);
     }
 
     @Test
@@ -599,7 +596,7 @@ class WalletAuthoriseServiceTest extends CardServiceTest {
             walletAuthoriseService.authorise(charge.getExternalId(), validApplePayDetails);
             fail("Exception not thrown.");
         } catch (OperationAlreadyInProgressRuntimeException e) {
-            ErrorResponse response = (ErrorResponse) e.getResponse().getEntity();
+            ErrorResponse response = (ErrorResponse) e.getResponse().getBody();
             assertThat(response.messages(), contains(format("Authorisation for charge already in progress, %s", charge.getExternalId())));
         }
 

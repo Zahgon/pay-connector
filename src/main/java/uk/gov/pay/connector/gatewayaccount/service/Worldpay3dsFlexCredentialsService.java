@@ -1,15 +1,17 @@
 package uk.gov.pay.connector.gatewayaccount.service;
 
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import uk.gov.pay.connector.gatewayaccount.dao.Worldpay3dsFlexCredentialsDao;
 import uk.gov.pay.connector.gatewayaccount.model.GatewayAccountEntity;
 import uk.gov.pay.connector.gatewayaccount.model.Worldpay3dsFlexCredentialsRequest;
 import uk.gov.pay.connector.gatewayaccountcredentials.service.GatewayAccountCredentialsService;
 
 import jakarta.inject.Inject;
+import org.springframework.stereotype.Service;
 
 import static uk.gov.pay.connector.gatewayaccount.model.Worldpay3dsFlexCredentialsEntity.Worldpay3dsFlexCredentialsEntityBuilder.aWorldpay3dsFlexCredentialsEntity;
 
+@Service
 public class Worldpay3dsFlexCredentialsService {
 
     private Worldpay3dsFlexCredentialsDao worldpay3dsFlexCredentialsDao;

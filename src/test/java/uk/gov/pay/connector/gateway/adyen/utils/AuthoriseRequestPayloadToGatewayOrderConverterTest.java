@@ -14,7 +14,7 @@ import uk.gov.pay.connector.gateway.adyen.request.json.PaymentMethod;
 import uk.gov.pay.connector.gateway.adyen.response.json.AdyenBrowserInfo;
 import uk.gov.pay.connector.util.JsonObjectMapper;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static uk.gov.pay.connector.gateway.model.OrderRequestType.AUTHORISE;
@@ -29,7 +29,7 @@ class AuthoriseRequestPayloadToGatewayOrderConverterTest {
         GatewayOrder gatewayOrder = factory.convert(makePaymentRequestWithFullBillingAddress());
 
         assertThat(gatewayOrder.orderRequestType(), is(AUTHORISE));
-        assertThat(gatewayOrder.mediaType(), is(APPLICATION_JSON_TYPE));
+        assertThat(gatewayOrder.mediaType(), is(APPLICATION_JSON));
         JsonAssert.with(gatewayOrder.payload())
                 .assertThat("$.amount.value", is(1000))
                 .assertThat("$.amount.currency", is("GBP"))

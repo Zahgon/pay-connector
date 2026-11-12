@@ -44,9 +44,9 @@ public class ChargeDaoCardDetailsIT {
 
     @BeforeEach
     void setUp() {
-        chargeDao = app.getInstanceFromGuiceContainer(ChargeDao.class);
-        gatewayAccountDao = app.getInstanceFromGuiceContainer(GatewayAccountDao.class);
-        gatewayAccountCredentialsDao = app.getInstanceFromGuiceContainer(GatewayAccountCredentialsDao.class);
+        chargeDao = app.getBean(ChargeDao.class);
+        gatewayAccountDao = app.getBean(GatewayAccountDao.class);
+        gatewayAccountCredentialsDao = app.getBean(GatewayAccountCredentialsDao.class);
     }
 
     private void createChargeWithIdAndDetails(long chargeId, DatabaseFixtures.TestCardDetails testCardDetails) {

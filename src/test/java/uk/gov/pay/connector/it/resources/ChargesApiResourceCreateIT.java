@@ -1,10 +1,10 @@
 package uk.gov.pay.connector.it.resources;
 
+import org.springframework.http.HttpStatus;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.restassured.response.ValidatableResponse;
-import jakarta.ws.rs.core.Response.Status;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -42,11 +42,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static io.dropwizard.testing.ConfigOverride.config;
+import static uk.gov.pay.connector.app.ConfigOverride.config;
 import static io.restassured.http.ContentType.JSON;
-import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
-import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
-import static jakarta.ws.rs.core.Response.Status.OK;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.OK;
 import static java.lang.String.format;
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -139,7 +139,7 @@ public class ChargesApiResourceCreateIT {
                     ))
                     .post(format("/v1/api/accounts/%s/charges", testGatewayAccountId))
                     .then()
-                    .statusCode(Status.CREATED.getStatusCode())
+                    .statusCode(HttpStatus.CREATED.value())
                     .body("charge_id", is(notNullValue()))
                     .body("amount", isNumber(6234L))
                     .body("reference", is("Test reference"))
@@ -185,7 +185,7 @@ public class ChargesApiResourceCreateIT {
             ValidatableResponse getChargeResponse = app.givenSetup()
                     .get(format("/v1/api/accounts/%s/charges/%s", testGatewayAccountId, testChargeId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("charge_id", is(notNullValue()))
                     .body("amount", isNumber(6234L))
@@ -234,7 +234,7 @@ public class ChargesApiResourceCreateIT {
                     .body(toJson(Map.of("op", "replace", "path", "allow_authorisation_api", "value", true)))
                     .patch(format("/v1/api/accounts/%s", testGatewayAccountId))
                     .then()
-                    .statusCode(Status.OK.getStatusCode());
+                    .statusCode(HttpStatus.OK.value());
 
             String testChargeId = app.givenSetup()
                     .body(toJson(Map.of(
@@ -252,7 +252,7 @@ public class ChargesApiResourceCreateIT {
             ValidatableResponse getChargeResponse = app.givenSetup()
                     .get(format("/v1/api/accounts/%s/charges/%s", testGatewayAccountId, testChargeId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("language", is("en"))
                     .body("authorisation_mode", is("moto_api"))
@@ -277,7 +277,7 @@ public class ChargesApiResourceCreateIT {
                     )))
                     .post(format("/v1/api/accounts/%s/charges", testGatewayAccountId))
                     .then()
-                    .statusCode(Status.CREATED.getStatusCode())
+                    .statusCode(HttpStatus.CREATED.value())
                     .body("charge_id", is(notNullValue()))
                     .body("email", is(nullValue()))
                     .contentType(JSON);
@@ -298,7 +298,7 @@ public class ChargesApiResourceCreateIT {
                     )))
                     .post(format("/v1/api/accounts/%s/charges", testGatewayAccountId))
                     .then()
-                    .statusCode(Status.CREATED.getStatusCode())
+                    .statusCode(HttpStatus.CREATED.value())
                     .body("reference", is(VALID_CARD_NUMBER))
                     .contentType(JSON);
         }
@@ -340,7 +340,7 @@ public class ChargesApiResourceCreateIT {
                     .body(toJson(payloadMap))
                     .post(format("/v1/api/accounts/%s/charges", testGatewayAccountId))
                     .then()
-                    .statusCode(Status.CREATED.getStatusCode())
+                    .statusCode(HttpStatus.CREATED.value())
                     .body("charge_id", is(notNullValue()))
                     .body("amount", isNumber(6234L))
                     .body("reference", is("Test reference"))
@@ -360,7 +360,7 @@ public class ChargesApiResourceCreateIT {
             app.givenSetup()
                     .get(format("/v1/api/accounts/%s/charges/%s", testGatewayAccountId, testChargeId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("charge_id", is(notNullValue()))
                     .body("amount", isNumber(6234L))
@@ -395,7 +395,7 @@ public class ChargesApiResourceCreateIT {
                         .post(format("/v1/api/accounts/%s/charges", testGatewayAccountId))
                         .then()
                         .contentType(JSON)
-                        .statusCode(BAD_REQUEST.getStatusCode())
+                        .statusCode(BAD_REQUEST.value())
                         .body("error_identifier", is(CARD_NUMBER_IN_PAYMENT_LINK_REFERENCE_REJECTED.toString()))
                         .body("message[0]", is("Card number entered in a payment link reference"));
             }
@@ -533,7 +533,7 @@ public class ChargesApiResourceCreateIT {
                     )))
                     .post(format("/v1/api/accounts/%s/charges", testGatewayAccountId))
                     .then()
-                    .statusCode(Status.CREATED.getStatusCode())
+                    .statusCode(HttpStatus.CREATED.value())
                     .contentType(JSON)
                     .body("metadata.key1", is("string"))
                     .body("metadata.key2", is(true))
@@ -544,7 +544,7 @@ public class ChargesApiResourceCreateIT {
             app.givenSetup()
                     .get(format("/v1/api/accounts/%s/charges/%s", testGatewayAccountId, chargeExternalId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("metadata.key1", is("string"))
                     .body("metadata.key2", is(true))
                     .body("metadata.key3", is(123))
@@ -565,7 +565,7 @@ public class ChargesApiResourceCreateIT {
                     .body(toJson(payload))
                     .post(format("/v1/api/accounts/%s/charges", testGatewayAccountId))
                     .then()
-                    .statusCode(Status.CREATED.getStatusCode())
+                    .statusCode(HttpStatus.CREATED.value())
                     .body("reference", is("Test reference"));
         }
 
@@ -581,7 +581,7 @@ public class ChargesApiResourceCreateIT {
                     .body(toJson(payload))
                     .patch("/v1/api/accounts/" + testGatewayAccountId)
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .body(toJson(Map.of(
@@ -609,7 +609,7 @@ public class ChargesApiResourceCreateIT {
                     .body(toJson(payload))
                     .patch("/v1/api/accounts/" + testGatewayAccountId)
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .body(toJson(Map.of(
@@ -637,7 +637,7 @@ public class ChargesApiResourceCreateIT {
                             "return_url", "http://service.local/success-page/")))
                     .post(format("/v1/api/accounts/%s/charges", nonExistentGatewayAccount))
                     .then()
-                    .statusCode(NOT_FOUND.getStatusCode())
+                    .statusCode(NOT_FOUND.value())
                     .contentType(JSON)
                     .header("Location", is(nullValue()))
                     .body("charge_id", is(nullValue()))
@@ -651,7 +651,7 @@ public class ChargesApiResourceCreateIT {
                     .body(toJson(Map.of("op", "replace", "path", "disabled", "value", true)))
                     .patch(format("/v1/api/accounts/%s", testGatewayAccountId))
                     .then()
-                    .statusCode(Status.OK.getStatusCode());
+                    .statusCode(HttpStatus.OK.value());
 
             app.givenSetup()
                     .body(toJson(Map.of(
@@ -686,7 +686,7 @@ public class ChargesApiResourceCreateIT {
                     ))
                     .post(format("/v1/api/service/%s/account/%s/charges", VALID_SERVICE_ID, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(Status.CREATED.getStatusCode())
+                    .statusCode(HttpStatus.CREATED.value())
                     .body("charge_id", is(notNullValue()))
                     .body("amount", isNumber(6234L))
                     .body("reference", is("Test reference"))
@@ -732,7 +732,7 @@ public class ChargesApiResourceCreateIT {
                 ValidatableResponse getChargeResponse = app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s/charges/%s", VALID_SERVICE_ID, GatewayAccountType.TEST, testChargeId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("charge_id", is(notNullValue()))
                     .body("amount", isNumber(6234L))
@@ -780,7 +780,7 @@ public class ChargesApiResourceCreateIT {
                     .body(toJson(Map.of("op", "replace", "path", "allow_authorisation_api", "value", true)))
                     .patch(format("/v1/api/service/%s/account/%s", VALID_SERVICE_ID, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(Status.OK.getStatusCode());
+                    .statusCode(HttpStatus.OK.value());
 
             String testChargeId = app.givenSetup()
                     .body(toJson(Map.of(
@@ -798,7 +798,7 @@ public class ChargesApiResourceCreateIT {
             ValidatableResponse getChargeResponse = app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s/charges/%s", VALID_SERVICE_ID, GatewayAccountType.TEST, testChargeId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("authorisation_mode", is("moto_api"))
                     .body("return_url", is(nullValue()));
@@ -822,7 +822,7 @@ public class ChargesApiResourceCreateIT {
                     )))
                     .post(format("/v1/api/service/%s/account/%s/charges", VALID_SERVICE_ID, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(Status.CREATED.getStatusCode())
+                    .statusCode(HttpStatus.CREATED.value())
                     .body("charge_id", is(notNullValue()))
                     .contentType(JSON);
 
@@ -843,7 +843,7 @@ public class ChargesApiResourceCreateIT {
                     )))
                     .post(format("/v1/api/service/%s/account/%s/charges", VALID_SERVICE_ID, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(Status.CREATED.getStatusCode())
+                    .statusCode(HttpStatus.CREATED.value())
                     .body("reference", is(VALID_CARD_NUMBER))
                     .contentType(JSON);
         }
@@ -864,7 +864,7 @@ public class ChargesApiResourceCreateIT {
                     .post(format("/v1/api/service/%s/account/%s/charges", VALID_SERVICE_ID, GatewayAccountType.TEST))
                     .then()
                     .contentType(JSON)
-                    .statusCode(BAD_REQUEST.getStatusCode())
+                    .statusCode(BAD_REQUEST.value())
                     .body("error_identifier", is(CARD_NUMBER_IN_PAYMENT_LINK_REFERENCE_REJECTED.toString()))
                     .body("message[0]", is("Card number entered in a payment link reference"));
         }
@@ -886,7 +886,7 @@ public class ChargesApiResourceCreateIT {
                     )))
                     .post(format("/v1/api/service/%s/account/%s/charges", VALID_SERVICE_ID, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(Status.CREATED.getStatusCode())
+                    .statusCode(HttpStatus.CREATED.value())
                     .contentType(JSON)
                     .body("metadata.key1", is("string"))
                     .body("metadata.key2", is(true))
@@ -897,7 +897,7 @@ public class ChargesApiResourceCreateIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s/charges/%s", VALID_SERVICE_ID, GatewayAccountType.TEST, chargeExternalId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("metadata.key1", is("string"))
                     .body("metadata.key2", is(true))
                     .body("metadata.key3", is(123))
@@ -917,7 +917,7 @@ public class ChargesApiResourceCreateIT {
                     .body(toJson(payload))
                     .post(format("/v1/api/service/%s/account/%s/charges", VALID_SERVICE_ID, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(Status.CREATED.getStatusCode())
+                    .statusCode(HttpStatus.CREATED.value())
                     .body("reference", is("Test reference"));
         }
 
@@ -932,7 +932,7 @@ public class ChargesApiResourceCreateIT {
                     .body(toJson(payload))
                     .patch(format("/v1/api/service/%s/account/%s/", VALID_SERVICE_ID, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .body(toJson(Map.of(
@@ -1077,7 +1077,7 @@ public class ChargesApiResourceCreateIT {
                     .body(toJson(payload))
                     .patch(format("/v1/api/service/%s/account/%s/", VALID_SERVICE_ID, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .body(toJson(Map.of(
@@ -1104,7 +1104,7 @@ public class ChargesApiResourceCreateIT {
                     )))
                     .post(format("/v1/api/service/%s/account/%s/charges", "non-existent-service-id", GatewayAccountType.TEST))
                     .then()
-                    .statusCode(NOT_FOUND.getStatusCode())
+                    .statusCode(NOT_FOUND.value())
                     .body("message[0]", CoreMatchers.is("Gateway account not found for service external id [non-existent-service-id] and account type [test]"));
         }
 
@@ -1119,7 +1119,7 @@ public class ChargesApiResourceCreateIT {
                     )))
                     .post(format("/v1/api/service/%s/account/%s/charges", VALID_SERVICE_ID, GatewayAccountType.LIVE))
                     .then()
-                    .statusCode(NOT_FOUND.getStatusCode())
+                    .statusCode(NOT_FOUND.value())
                     .body("message[0]", CoreMatchers.is("Gateway account not found for service external id [valid-service-id] and account type [live]"));
         }
 
@@ -1129,7 +1129,7 @@ public class ChargesApiResourceCreateIT {
                     .body(toJson(Map.of("op", "replace", "path", "disabled", "value", true)))
                     .patch(format("/v1/api/service/%s/account/%s", VALID_SERVICE_ID, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(Status.OK.getStatusCode());
+                    .statusCode(HttpStatus.OK.value());
 
             app.givenSetup()
                     .body(toJson(Map.of(
@@ -1189,7 +1189,7 @@ by moving it back an hour which results in the assertion failing as it is now 1 
     }
 
     private List<Message> readMessagesFromEventQueue() {
-        SqsClient sqsClient = app.getInstanceFromGuiceContainer(SqsClient.class);
+        SqsClient sqsClient = app.getBean(SqsClient.class);
 
         ReceiveMessageRequest receiveMessageRequest = ReceiveMessageRequest.builder()
                 .queueUrl(app.getEventQueueUrl())

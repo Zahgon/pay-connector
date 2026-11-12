@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.gateway.processor;
 
-import com.google.inject.Inject;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.charge.model.domain.Charge;
@@ -13,6 +13,7 @@ import uk.gov.pay.connector.usernotification.service.UserNotificationService;
 
 import java.time.Instant;
 import java.time.InstantSource;
+import org.springframework.stereotype.Component;
 
 import static uk.gov.pay.connector.refund.model.domain.RefundStatus.REFUNDED;
 import static uk.gov.pay.connector.refund.model.domain.RefundStatus.REFUND_ERROR;
@@ -22,6 +23,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.PROVIDER;
 import static uk.gov.service.payments.logging.LoggingKeys.REFUND_EXTERNAL_ID;
 
+@Component
 public class RefundNotificationProcessor {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());

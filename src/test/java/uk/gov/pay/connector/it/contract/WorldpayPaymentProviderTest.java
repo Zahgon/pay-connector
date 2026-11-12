@@ -3,8 +3,9 @@ package uk.gov.pay.connector.it.contract;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
-import io.dropwizard.core.setup.Environment;
-import jakarta.ws.rs.client.ClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -109,6 +110,13 @@ import static uk.gov.pay.connector.util.SystemUtils.envOrThrow;
 @Disabled("Ignoring as this test is failing in Jenkins because it's failing to locate the certificates - PP-1707")
 class WorldpayPaymentProviderTest {
 
+    private final CloseableHttpClient httpClient = HttpClients.createDefault();
+
+    @AfterEach
+    void closeHttpClient() throws IOException {
+        httpClient.close();
+    }
+
     private static final String MAGIC_CARDHOLDER_NAME_THAT_MAKES_WORLDPAY_TEST_REQUIRE_3DS = "3D";
     private static final String MAGIC_CARDHOLDER_NAME_FOR_3DS_FLEX_CHALLENGE_REQUIRED_RESPONSE = "3DS_V2_CHALLENGE_IDENTIFIED";
 
@@ -125,7 +133,6 @@ class WorldpayPaymentProviderTest {
     private MetricRegistry mockMetricRegistry;
     private Histogram mockHistogram;
     private Counter mockCounter;
-    private Environment mockEnvironment;
     private CardExecutorService mockCardExecutorService = mock(CardExecutorService.class);
     private ConnectorConfiguration mockConnectorConfiguration = mock(ConnectorConfiguration.class);
     private AuthorisationConfig mockAuthorisationConfig = mock(AuthorisationConfig.class);
@@ -182,8 +189,6 @@ class WorldpayPaymentProviderTest {
         mockCounter = mock(Counter.class);
         when(mockMetricRegistry.histogram(anyString())).thenReturn(mockHistogram);
         when(mockMetricRegistry.counter(anyString())).thenReturn(mockCounter);
-        mockEnvironment = mock(Environment.class);
-        when(mockEnvironment.metrics()).thenReturn(mockMetricRegistry);
         when(mockConnectorConfiguration.getAuthorisationConfig()).thenReturn(mockAuthorisationConfig);
         when(mockAuthorisationConfig.getAsynchronousAuthTimeoutInMilliseconds()).thenReturn(1000);
 
@@ -663,7 +668,7 @@ class WorldpayPaymentProviderTest {
     }
 
     private WorldpayPaymentProvider getValidWorldpayPaymentProvider() {
-        GatewayClient gatewayClient = new GatewayClient(ClientBuilder.newClient(), mockMetricRegistry);
+        GatewayClient gatewayClient = new GatewayClient(httpClient, mockMetricRegistry);
 
         GatewayClientFactory gatewayClientFactory = mock(GatewayClientFactory.class);
         when(gatewayClientFactory.createGatewayClient(
@@ -682,7 +687,7 @@ class WorldpayPaymentProviderTest {
                 new WorldpayCaptureHandler(gatewayClient, gatewayUrlMap()),
                 new WorldpayRefundHandler(gatewayClient, gatewayUrlMap()),
                 new WorldpayRefundEntityFactory(),
-                new AuthorisationService(mockCardExecutorService, mockEnvironment, mockConnectorConfiguration),
+                new AuthorisationService(mockCardExecutorService, mockMetricRegistry, mockConnectorConfiguration),
                 new AuthorisationLogger(new AuthorisationRequestSummaryStringifier(), new AuthorisationRequestSummaryStructuredLogging(), new AdyenAuthoriseRequestLogGenerator(), new WorldpayAuthoriseRequestLogGenerator()),
                 mock(ChargeDao.class),
                 mock(EventService.class),

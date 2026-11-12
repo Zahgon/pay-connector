@@ -44,7 +44,7 @@ import com.adyen.model.management.UpdateStoreRequest;
 import com.adyen.service.exception.ApiException;
 import com.adyen.service.legalentitymanagement.LegalEntitiesApi;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.app.ConnectorConfiguration;
@@ -58,6 +58,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.springframework.stereotype.Service;
 
 import static com.adyen.model.balanceplatform.CreateSweepConfigurationV2.CategoryEnum.BANK;
 import static com.adyen.model.balanceplatform.CreateSweepConfigurationV2.PrioritiesEnum.FAST;
@@ -77,6 +78,7 @@ import static com.adyen.model.management.PaymentMethodSetupInfo.TypeEnum.VISA;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static org.apache.hc.core5.http.HttpStatus.SC_BAD_GATEWAY;
 
+@Service
 public class AdyenTestAccountService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AdyenTestAccountService.class);

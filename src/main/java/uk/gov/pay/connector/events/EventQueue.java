@@ -7,7 +7,9 @@ import uk.gov.service.payments.commons.queue.exception.QueueException;
 import uk.gov.service.payments.commons.queue.sqs.SqsQueueService;
 
 import jakarta.inject.Inject;
+import org.springframework.stereotype.Component;
 
+@Component
 public class EventQueue {
 
     private final SqsQueueService sqsQueueService;

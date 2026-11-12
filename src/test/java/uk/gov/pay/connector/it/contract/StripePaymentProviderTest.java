@@ -27,7 +27,7 @@ import uk.gov.pay.connector.gatewayaccountcredentials.model.GatewayAccountCreden
 import uk.gov.pay.connector.model.domain.AuthCardDetailsFixture;
 import uk.gov.pay.connector.paymentinstrument.model.PaymentInstrumentEntity;
 import uk.gov.pay.connector.refund.model.domain.RefundEntity;
-import uk.gov.pay.connector.rules.DropwizardAppWithPostgresRule;
+import uk.gov.pay.connector.rules.AppWithPostgresRule;
 import uk.gov.service.payments.commons.model.AuthorisationMode;
 import uk.gov.service.payments.commons.model.CardExpiryDate;
 
@@ -71,7 +71,7 @@ public class StripePaymentProviderTest {
     private static final Long chargeAmount = 500L;
 
     @Rule
-    public DropwizardAppWithPostgresRule app = new DropwizardAppWithPostgresRule(false);
+    public AppWithPostgresRule app = new AppWithPostgresRule(false);
 
     private StripePaymentProvider stripePaymentProvider;
 
@@ -84,7 +84,7 @@ public class StripePaymentProviderTest {
     public void setup() {
         String stripeConnectAccountId = envOrThrow("TEST_STRIPE_CONNECT_ACCOUNT_ID");
 
-        stripePaymentProvider = app.getInstanceFromGuiceContainer(StripePaymentProvider.class);
+        stripePaymentProvider = app.getBean(StripePaymentProvider.class);
         gatewayAccountEntity = new GatewayAccountEntity();
         gatewayAccountCredentialsEntity = aGatewayAccountCredentialsEntity()
                 .withCredentials(Map.of("stripe_account_id", stripeConnectAccountId))

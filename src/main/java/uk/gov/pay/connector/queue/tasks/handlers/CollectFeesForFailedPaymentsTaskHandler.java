@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.queue.tasks.handlers;
 
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.charge.model.domain.ChargeEntity;
@@ -18,10 +18,12 @@ import jakarta.inject.Inject;
 import java.time.Instant;
 import java.time.InstantSource;
 import java.util.List;
+import org.springframework.stereotype.Component;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static uk.gov.service.payments.logging.LoggingKeys.LEDGER_EVENT_TYPE;
 
+@Component
 public class CollectFeesForFailedPaymentsTaskHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CollectFeesForFailedPaymentsTaskHandler.class);

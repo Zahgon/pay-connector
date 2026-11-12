@@ -18,6 +18,7 @@ import jakarta.inject.Inject;
 import jakarta.persistence.OptimisticLockException;
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import org.springframework.stereotype.Component;
 
 import static java.lang.String.format;
 import static net.logstash.logback.argument.StructuredArguments.kv;
@@ -26,6 +27,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.PROVIDER;
 import static uk.gov.service.payments.logging.LoggingKeys.PROVIDER_PAYMENT_ID;
 
+@Component
 public class ChargeNotificationProcessor {
 
     private final ChargeService chargeService;

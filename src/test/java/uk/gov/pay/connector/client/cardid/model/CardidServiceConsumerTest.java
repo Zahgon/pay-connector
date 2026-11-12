@@ -6,7 +6,8 @@ import au.com.dius.pact.consumer.junit.PactProviderRule;
 import au.com.dius.pact.consumer.junit.PactVerification;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
-import jakarta.ws.rs.client.Client;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -21,6 +22,8 @@ import uk.gov.pay.connector.gateway.model.PayersCardPrepaidStatus;
 
 import java.util.Map;
 import java.util.Optional;
+
+import java.io.IOException;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -40,10 +43,18 @@ public class CardidServiceConsumerTest {
 
     private CardidService cardidService;
 
+
+    private CloseableHttpClient client;
+
+    @After
+    public void closeClient() throws IOException {
+        client.close();
+    }
+
     @Before
     public void setUp() {
         when(configuration.getCardidBaseUrl()).thenReturn(mockProvider.getUrl());
-        Client client = RestClientFactory.buildClient(new RestClientConfig(), null);
+        client = RestClientFactory.buildClient(new RestClientConfig(), null);
         cardidService = new CardidService(client, configuration);
     }
 

@@ -7,7 +7,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import uk.gov.pay.connector.extension.AppWithPostgresAndSqsExtension;
 import uk.gov.pay.connector.it.base.ITestBaseExtension;
 import uk.gov.pay.connector.it.dao.DatabaseFixtures;
-import uk.gov.pay.connector.util.ConnectorAppWithCustomInjector;
+import uk.gov.pay.connector.util.MockedReverseDnsLookupConfiguration;
 import uk.gov.pay.connector.util.DnsPointerResourceRecord;
 import uk.gov.pay.connector.util.RandomIdGenerator;
 import uk.gov.pay.connector.util.TestTemplateResourceLoader;
@@ -17,10 +17,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static io.dropwizard.testing.ConfigOverride.config;
+import static uk.gov.pay.connector.app.ConfigOverride.config;
 import static io.restassured.RestAssured.given;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
-import static jakarta.ws.rs.core.MediaType.TEXT_XML;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.TEXT_XML_VALUE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.CAPTURED;
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.CAPTURE_SUBMITTED;
 import static uk.gov.pay.connector.refund.model.domain.RefundStatus.REFUND_SUBMITTED;
-import static uk.gov.pay.connector.util.ConnectorModuleWithOverrides.reverseDnsLookup;
+import static uk.gov.pay.connector.util.MockedReverseDnsLookupConfiguration.reverseDnsLookup;
 import static uk.gov.pay.connector.util.RandomTestDataGeneratorUtils.randomAlphanumeric;
 import static uk.gov.pay.connector.util.RandomTestDataGeneratorUtils.secureRandomLong;
 import static uk.gov.pay.connector.util.TestTemplateResourceLoader.WORLDPAY_NOTIFICATION;
@@ -37,7 +37,7 @@ public class WorldpayNotificationResourceIT {
 
     // App must be instantiated after mock is set
     @RegisterExtension
-    public static AppWithPostgresAndSqsExtension app = new AppWithPostgresAndSqsExtension(ConnectorAppWithCustomInjector.class, config("worldpay.notificationDomain", ".worldpay.com"));
+    public static AppWithPostgresAndSqsExtension app = new AppWithPostgresAndSqsExtension(MockedReverseDnsLookupConfiguration.class, config("worldpay.notificationDomain", ".worldpay.com"));
     @RegisterExtension
     public static ITestBaseExtension testBaseExtension = new ITestBaseExtension("worldpay", app.getLocalPort(), app.getDatabaseTestHelper());
 
@@ -184,7 +184,7 @@ public class WorldpayNotificationResourceIT {
         given().port(app.getLocalPort())
                 .body(notificationPayloadForTransaction("any", "WHATEVER"))
                 .header("X-Forwarded-For", UNEXPECTED_IP_ADDRESS)
-                .contentType(TEXT_XML)
+                .contentType(TEXT_XML_VALUE)
                 .post(NOTIFICATION_PATH)
                 .then()
                 .statusCode(403);
@@ -194,7 +194,7 @@ public class WorldpayNotificationResourceIT {
     void shouldReturnForbiddenIfXForwardedForHeaderIsMissing() {
         given().port(app.getLocalPort())
                 .body(notificationPayloadForTransaction("any", "WHATEVER"))
-                .contentType(TEXT_XML)
+                .contentType(TEXT_XML_VALUE)
                 .post(NOTIFICATION_PATH)
                 .then()
                 .statusCode(403);
@@ -204,7 +204,7 @@ public class WorldpayNotificationResourceIT {
     void shouldFailWhenUnexpectedContentType() {
         given().port(app.getLocalPort())
                 .body(notificationPayloadForTransaction("any", "WHATEVER"))
-                .contentType(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON_VALUE)
                 .post(NOTIFICATION_PATH)
                 .then()
                 .statusCode(415);
@@ -222,7 +222,7 @@ public class WorldpayNotificationResourceIT {
         return given().port(app.getLocalPort())
                 .body(payload)
                 .header("X-Forwarded-For", WORLDPAY_IP_ADDRESS)
-                .contentType(TEXT_XML)
+                .contentType(TEXT_XML_VALUE)
                 .post(NOTIFICATION_PATH)
                 .then();
     }

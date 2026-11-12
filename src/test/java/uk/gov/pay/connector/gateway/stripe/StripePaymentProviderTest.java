@@ -3,7 +3,6 @@ package uk.gov.pay.connector.gateway.stripe;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.exception.StripeException;
-import io.dropwizard.core.setup.Environment;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -84,8 +83,6 @@ class StripePaymentProviderTest {
     @Mock
     private GatewayClientFactory gatewayClientFactory;
     @Mock
-    private Environment environment;
-    @Mock
     private MetricRegistry metricRegistry;
     @Mock
     private ConnectorConfiguration configuration;
@@ -114,9 +111,8 @@ class StripePaymentProviderTest {
         when(configuration.getLinks()).thenReturn(linksConfig);
         when(linksConfig.getFrontendUrl()).thenReturn("http://frontendUrl");
         when(gatewayClientFactory.createGatewayClient(eq(STRIPE), any(MetricRegistry.class))).thenReturn(gatewayClient);
-        when(environment.metrics()).thenReturn(metricRegistry);
 
-        provider = new StripePaymentProvider(gatewayClientFactory, configuration, objectMapper, environment, refundEntityFactory, stripeSDKClient);
+        provider = new StripePaymentProvider(gatewayClientFactory, configuration, objectMapper, metricRegistry, refundEntityFactory, stripeSDKClient);
     }
 
     @Test

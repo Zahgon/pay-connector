@@ -7,7 +7,7 @@ import au.com.dius.pact.provider.junitsupport.target.TestTarget;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.Stripe;
-import io.dropwizard.testing.ConfigOverride;
+import uk.gov.pay.connector.app.ConfigOverride;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -49,7 +49,7 @@ import java.util.Optional;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
-import static jakarta.ws.rs.core.Response.Status.OK;
+import static org.springframework.http.HttpStatus.OK;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static uk.gov.pay.connector.cardtype.model.domain.CardType.DEBIT;
@@ -300,7 +300,7 @@ public class ContractTest {
                 .body(toJson(Map.of("op", "replace", "path", "disabled", "value", true)))
                 .patch("/v1/api/accounts/" + params.get("gateway_account_id"))
                 .then()
-                .statusCode(OK.getStatusCode());
+                .statusCode(OK.value());
     }
 
     @State("a gateway account has authorisation_api enabled")
@@ -310,7 +310,7 @@ public class ContractTest {
                 .body(toJson(Map.of("op", "replace", "path", "allow_authorisation_api", "value", true)))
                 .patch("/v1/api/accounts/" + params.get("gateway_account_id"))
                 .then()
-                .statusCode(OK.getStatusCode());
+                .statusCode(OK.value());
     }
 
     @State("a gateway account has moto payments enabled")
@@ -320,7 +320,7 @@ public class ContractTest {
                 .body(toJson(Map.of("op", "replace", "path", "allow_moto", "value", true)))
                 .patch("/v1/api/accounts/" + params.get("gateway_account_id"))
                 .then()
-                .statusCode(OK.getStatusCode());
+                .statusCode(OK.value());
     }
 
     @State("a gateway account has telephone payment notifications enabled")
@@ -330,7 +330,7 @@ public class ContractTest {
                 .body(toJson(Map.of("op", "replace", "path", "allow_telephone_payment_notifications", "value", true)))
                 .patch("/v1/api/accounts/" + params.get("gateway_account_id"))
                 .then()
-                .statusCode(OK.getStatusCode());
+                .statusCode(OK.value());
     }
 
     @State("a charge with fee and net_amount exists")

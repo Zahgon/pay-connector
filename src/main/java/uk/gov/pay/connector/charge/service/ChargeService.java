@@ -2,11 +2,12 @@ package uk.gov.pay.connector.charge.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.inject.Inject;
 import jakarta.persistence.RollbackException;
-import jakarta.ws.rs.core.UriBuilder;
-import jakarta.ws.rs.core.UriInfo;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.util.UriComponentsBuilder;
+import uk.gov.pay.connector.web.BaseUri;
 import org.apache.hc.core5.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,12 +120,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.springframework.stereotype.Service;
 
 import static com.google.common.collect.Lists.newArrayList;
-import static jakarta.ws.rs.HttpMethod.GET;
-import static jakarta.ws.rs.HttpMethod.POST;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static java.lang.String.format;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -163,9 +163,12 @@ import static uk.gov.service.payments.commons.model.Source.CARD_AGENT_INITIATED_
 import static uk.gov.service.payments.commons.model.Source.CARD_EXTERNAL_TELEPHONE;
 import static uk.gov.service.payments.commons.model.Source.CARD_PAYMENT_LINK;
 
+@Service
 public class ChargeService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ChargeService.class);
+    private static final String GET = HttpMethod.GET.name();
+    private static final String POST = HttpMethod.POST.name();
     private static final List<ChargeStatus> CURRENT_STATUSES_ALLOWING_UPDATE_TO_NEW_STATUS = newArrayList(CREATED, ENTERING_CARD_DETAILS);
     public static final int MINIMUM_STRIPE_PAYMENT_AMOUNT_IN_PENCE = 30;
     public static final int MINIMUM_ADYEN_PAYMENT_AMOUNT_IN_PENCE = 21;
@@ -307,7 +310,7 @@ public class ChargeService {
         }
     }
 
-    public Optional<ChargeResponse> create(ChargeCreateRequest chargeRequest, Long accountId, UriInfo uriInfo, String idempotencyKey) {
+    public Optional<ChargeResponse> create(ChargeCreateRequest chargeRequest, Long accountId, BaseUri uriInfo, String idempotencyKey) {
         try {
             return createCharge(chargeRequest, accountId, idempotencyKey)
                     .map(charge ->
@@ -472,7 +475,7 @@ public class ChargeService {
     public Optional<ChargeResponse> checkForChargeCreatedWithIdempotencyKey(ChargeCreateRequest chargeRequest,
                                                                             Long gatewayAccountId,
                                                                             String idempotencyKey,
-                                                                            UriInfo uriInfo) {
+                                                                            BaseUri uriInfo) {
         return idempotencyDao.findByGatewayAccountIdAndKey(gatewayAccountId, idempotencyKey).map(idempotencyEntity -> {
             Map<String, Object> chargeRequestMap = objectMapper.convertValue(chargeRequest, new TypeReference<>() {
             });
@@ -504,21 +507,21 @@ public class ChargeService {
     }
 
     @Transactional
-    public Optional<ChargeResponse> findChargeForAccount(String chargeId, Long accountId, UriInfo uriInfo) {
+    public Optional<ChargeResponse> findChargeForAccount(String chargeId, Long accountId, BaseUri uriInfo) {
         return chargeDao
                 .findByExternalIdAndGatewayAccount(chargeId, accountId)
                 .map(chargeEntity -> populateResponseBuilderWith(aChargeResponseBuilder(), uriInfo, chargeEntity).build());
     }
 
     @Transactional
-    public Optional<ChargeResponse> findChargeForServiceIdAndAccountType(String chargeId, String serviceId, GatewayAccountType accountType, UriInfo uriInfo) {
+    public Optional<ChargeResponse> findChargeForServiceIdAndAccountType(String chargeId, String serviceId, GatewayAccountType accountType, BaseUri uriInfo) {
         return chargeDao
                 .findByExternalIdAndServiceIdAndAccountType(chargeId, serviceId, accountType)
                 .map(chargeEntity -> populateResponseBuilderWith(aChargeResponseBuilder(), uriInfo, chargeEntity).build());
     }
 
     @Transactional
-    public Optional<ChargeResponse> findChargeByGatewayTransactionId(String gatewayTransactionId, UriInfo uriInfo) {
+    public Optional<ChargeResponse> findChargeByGatewayTransactionId(String gatewayTransactionId, BaseUri uriInfo) {
         return chargeDao
                 .findByGatewayTransactionId(gatewayTransactionId)
                 .map(chargeEntity -> populateResponseBuilderWith(aChargeResponseBuilder(), uriInfo, chargeEntity).build());
@@ -665,7 +668,7 @@ public class ChargeService {
 
     public <T extends AbstractChargeResponseBuilder<T, R>, R> AbstractChargeResponseBuilder<T, R> populateResponseBuilderWith(
             AbstractChargeResponseBuilder<T, R> responseBuilder,
-            UriInfo uriInfo,
+            BaseUri uriInfo,
             ChargeEntity chargeEntity) {
         String chargeId = chargeEntity.getExternalId();
         PersistedCard persistedCard = null;
@@ -733,13 +736,13 @@ public class ChargeService {
             if (chargeEntity.getAuthorisationMode() == MOTO_API) {
                 params.put("one_time_token", token.getToken());
                 return builderOfResponse
-                        .withLink("auth_url_post", POST, nextAuthUrl(uriInfo), APPLICATION_JSON, params);
+                        .withLink("auth_url_post", POST, nextAuthUrl(uriInfo), APPLICATION_JSON_VALUE, params);
             } else {
                 params.put("chargeTokenId", token.getToken());
 
                 return builderOfResponse
                         .withLink("next_url", GET, nextUrl(token.getToken()))
-                        .withLink("next_url_post", POST, nextUrl(), APPLICATION_FORM_URLENCODED, params);
+                        .withLink("next_url_post", POST, nextUrl(), APPLICATION_FORM_URLENCODED_VALUE, params);
             }
         } else {
             return builderOfResponse;
@@ -838,7 +841,7 @@ public class ChargeService {
         return chargeEntity;
     }
 
-    // cannot be private: Guice requires @Transactional methods to be public
+    // public: the authorisation services call it as one transaction of its own
     @Transactional
     public ChargeEntity updateChargePostAuthorisation(String chargeExternalId,
                                                       ChargeStatus newStatus,
@@ -1160,41 +1163,43 @@ public class ChargeService {
         return settlement;
     }
 
-    private URI selfUriFor(UriInfo uriInfo, Long accountId, String chargeId) {
+    private URI selfUriFor(BaseUri uriInfo, Long accountId, String chargeId) {
         return uriInfo.getBaseUriBuilder()
                 .path("/v1/api/accounts/{accountId}/charges/{chargeId}")
                 .build(accountId, chargeId);
     }
 
-    private URI refundsUriFor(UriInfo uriInfo, Long accountId, String chargeId) {
+    private URI refundsUriFor(BaseUri uriInfo, Long accountId, String chargeId) {
         return uriInfo.getBaseUriBuilder()
                 .path("/v1/api/accounts/{accountId}/charges/{chargeId}/refunds")
                 .build(accountId, chargeId);
     }
 
-    private URI captureUriFor(UriInfo uriInfo, Long accountId, String chargeId) {
+    private URI captureUriFor(BaseUri uriInfo, Long accountId, String chargeId) {
         return uriInfo.getBaseUriBuilder()
                 .path("/v1/api/accounts/{accountId}/charges/{chargeId}/capture")
                 .build(accountId, chargeId);
     }
 
     private URI nextUrl(String tokenId) {
-        return UriBuilder.fromUri(linksConfig.getFrontendUrl())
-                .path("secure")
-                .path(tokenId)
-                .build();
+        return UriComponentsBuilder.fromUriString(linksConfig.getFrontendUrl())
+                .pathSegment("secure", tokenId)
+                .build()
+                .toUri();
     }
 
     private URI nextUrl() {
-        return UriBuilder.fromUri(linksConfig.getFrontendUrl())
-                .path("secure")
-                .build();
+        return UriComponentsBuilder.fromUriString(linksConfig.getFrontendUrl())
+                .pathSegment("secure")
+                .build()
+                .toUri();
     }
 
-    private URI nextAuthUrl(UriInfo uriInfo) {
+    private URI nextAuthUrl(BaseUri uriInfo) {
         return uriInfo.getBaseUriBuilder()
                 .path("/v1/api/charges/authorise")
-                .build();
+                .build()
+                .toUri();
     }
 
     private boolean chargeIsInLockedStatus(OperationType operationType, ChargeEntity chargeEntity) {
@@ -1378,7 +1383,7 @@ public class ChargeService {
         );
     }
 
-    public FrontendChargeResponse buildChargeResponse(UriInfo uriInfo, ChargeEntity charge) {
+    public FrontendChargeResponse buildChargeResponse(BaseUri uriInfo, ChargeEntity charge) {
         String chargeId = charge.getExternalId();
         FrontendChargeResponse.FrontendChargeResponseBuilder responseBuilder = aFrontendChargeResponse()
                 .withStatus(charge, externalTransactionStateFactory)
@@ -1443,7 +1448,7 @@ public class ChargeService {
         return responseBuilder.build();
     }
 
-    private URI locationUriFor(String path, UriInfo uriInfo, String chargeId) {
+    private URI locationUriFor(String path, BaseUri uriInfo, String chargeId) {
         return uriInfo.getBaseUriBuilder()
                 .path(path)
                 .build(chargeId);

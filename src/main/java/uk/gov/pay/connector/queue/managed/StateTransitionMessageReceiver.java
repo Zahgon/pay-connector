@@ -1,9 +1,8 @@
 package uk.gov.pay.connector.queue.managed;
 
-import io.dropwizard.lifecycle.Managed;
-import io.dropwizard.core.setup.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.SmartLifecycle;
 import uk.gov.pay.connector.app.ConnectorConfiguration;
 import uk.gov.pay.connector.events.StateTransitionEmitterProcess;
 
@@ -11,7 +10,7 @@ import jakarta.inject.Inject;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class StateTransitionMessageReceiver implements Managed {
+public class StateTransitionMessageReceiver implements SmartLifecycle {
 
     private static final int MAX_NUMBER_OF_SHUTDOWN_READINESS_CHECKS = 5;
     private static final int DELAY_BETWEEN_SHUTDOWN_CHECKS_IN_MILLISECONDS = 1000;
@@ -21,24 +20,21 @@ public class StateTransitionMessageReceiver implements Managed {
     private final int paymentStateTransitionPollerNumberOfThreads;
     private final StateTransitionEmitterProcess stateTransitionEmitterProcess;
     private ScheduledExecutorService stateTransitionMessageExecutorService;
+    private volatile boolean running;
 
     @Inject
-    public StateTransitionMessageReceiver(StateTransitionEmitterProcess stateTransitionEmitterProcess,
-                                          Environment environment, ConnectorConfiguration connectorConfiguration) {
+    public StateTransitionMessageReceiver(StateTransitionEmitterProcess stateTransitionEmitterProcess, ConnectorConfiguration connectorConfiguration) {
         this.stateTransitionEmitterProcess = stateTransitionEmitterProcess;
 
         this.paymentStateTransitionPollerNumberOfThreads = connectorConfiguration.getEventQueueConfig()
                 .getPaymentStateTransitionPollerNumberOfThreads();
 
-        stateTransitionMessageExecutorService = environment
-                .lifecycle()
-                .scheduledExecutorService("payment-state-transition-message-poller-%d")
-                .threads(paymentStateTransitionPollerNumberOfThreads)
-                .build();
+        stateTransitionMessageExecutorService = ScheduledExecutors.create("payment-state-transition-message-poller-%d", paymentStateTransitionPollerNumberOfThreads);
     }
 
     @Override
     public void start() {
+        running = true;
         for (int i = 0; i < this.paymentStateTransitionPollerNumberOfThreads; i++) {
             stateTransitionMessageExecutorService.scheduleWithFixedDelay(
                     this::stateTransitionMessageReceiver, 1, 1, TimeUnit.MILLISECONDS);
@@ -46,7 +42,13 @@ public class StateTransitionMessageReceiver implements Managed {
     }
 
     @Override
+    public boolean isRunning() {
+        return running;
+    }
+
+    @Override
     public void stop() {
+        running = false;
         stopStateTransitionExecutor();
     }
 

@@ -1,11 +1,12 @@
 package uk.gov.pay.connector.fee.dao;
 
-import com.google.inject.persist.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.postgresql.util.PSQLException;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import uk.gov.pay.connector.charge.model.domain.FeeProcessingLockEntity;
 import uk.gov.pay.connector.extension.AppWithPostgresAndSqsExtension;
 import uk.gov.pay.connector.it.dao.DatabaseFixtures;
@@ -40,8 +41,8 @@ class FeeProcessingLockDaoIT {
 
     @BeforeEach
     void setUp() {
-        feeProcessingLockDao = app.getInstanceFromGuiceContainer(FeeProcessingLockDao.class);
-        testTransactionalRunner = app.getInstanceFromGuiceContainer(TestTransactionalRunner.class);
+        feeProcessingLockDao = app.getBean(FeeProcessingLockDao.class);
+        testTransactionalRunner = new TestTransactionalRunner(app.getBean(PlatformTransactionManager.class));
 
         defaultTestAccount = app.getDatabaseFixtures()
                 .aTestAccount()
@@ -231,9 +232,30 @@ class FeeProcessingLockDaoIT {
     }
 
     public static class TestTransactionalRunner {
-        @Transactional
+        private final TransactionTemplate transactionTemplate;
+
+        TestTransactionalRunner(PlatformTransactionManager transactionManager) {
+            this.transactionTemplate = new TransactionTemplate(transactionManager);
+        }
+
         public <T> T run(Callable<T> work) throws Exception {
-            return work.call();
+            try {
+                return transactionTemplate.execute(status -> {
+                    try {
+                        return work.call();
+                    } catch (Exception e) {
+                        throw new WorkFailedException(e);
+                    }
+                });
+            } catch (WorkFailedException e) {
+                throw (Exception) e.getCause();
+            }
+        }
+    }
+
+    private static class WorkFailedException extends RuntimeException {
+        WorkFailedException(Exception cause) {
+            super(cause);
         }
     }
 }

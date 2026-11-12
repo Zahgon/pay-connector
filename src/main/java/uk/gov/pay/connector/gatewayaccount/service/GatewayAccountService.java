@@ -1,10 +1,10 @@
 package uk.gov.pay.connector.gatewayaccount.service;
 
-import com.google.inject.persist.Transactional;
-import com.google.inject.persist.UnitOfWork;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.cardtype.dao.CardTypeDao;
+import uk.gov.pay.connector.common.dao.UnitOfWork;
 import uk.gov.pay.connector.gateway.PaymentGatewayName;
 import uk.gov.pay.connector.gatewayaccount.dao.GatewayAccountDao;
 import uk.gov.pay.connector.gatewayaccount.exception.GatewayAccountWithoutAnActiveCredentialException;
@@ -31,13 +31,14 @@ import uk.gov.pay.connector.gatewayaccountcredentials.service.GatewayAccountCred
 import uk.gov.service.payments.commons.model.jsonpatch.JsonPatchRequest;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.UriInfo;
+import uk.gov.pay.connector.web.BaseUri;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
 
 import static java.lang.String.format;
 import static java.util.Map.entry;
@@ -78,6 +79,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.GATEWAY_ACCOUNT_TYPE;
 import static uk.gov.service.payments.logging.LoggingKeys.PROVIDER;
 import static uk.gov.service.payments.logging.LoggingKeys.SERVICE_EXTERNAL_ID;
 
+@Service
 public class GatewayAccountService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GatewayAccountService.class);
@@ -87,7 +89,7 @@ public class GatewayAccountService {
     private final GatewayAccountCredentialsService gatewayAccountCredentialsService;
     private final GatewayAccountCredentialsHistoryDao gatewayAccountCredentialsHistoryDao;
     private final GatewayAccountCredentialsDao gatewayAccountCredentialsDao;
-    private UnitOfWork unitOfWork;
+    private final UnitOfWork unitOfWork;
 
     @Inject
     public GatewayAccountService(GatewayAccountDao gatewayAccountDao, CardTypeDao cardTypeDao,
@@ -145,7 +147,7 @@ public class GatewayAccountService {
     }
 
     public GatewayAccountEntity createGatewayAccount(GatewayAccountRequest gatewayAccountRequest) {
-        unitOfWork.begin();
+        boolean opened = unitOfWork.begin();
         try {
             GatewayAccountEntity gatewayAccountEntity = GatewayAccountObjectConverter.createEntityFrom(gatewayAccountRequest);
 
@@ -175,11 +177,11 @@ public class GatewayAccountService {
             gatewayAccountDao.forceRefresh(gatewayAccountEntity);
             return gatewayAccountEntity;
         } finally {
-            unitOfWork.end();
+            unitOfWork.end(opened);
         }
     }
 
-    public CreateGatewayAccountResponse createGatewayAccount(GatewayAccountRequest gatewayAccountRequest, UriInfo uriInfo) {
+    public CreateGatewayAccountResponse createGatewayAccount(GatewayAccountRequest gatewayAccountRequest, BaseUri uriInfo) {
         GatewayAccountEntity gatewayAccount = createGatewayAccount(gatewayAccountRequest);
         return GatewayAccountObjectConverter.createResponseFrom(gatewayAccount, uriInfo);
     }

@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.tasks.service;
 
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.inject.Inject;
 import org.apache.commons.lang3.RandomUtils;
 import org.slf4j.Logger;
@@ -20,6 +20,7 @@ import uk.gov.pay.connector.tasks.HistoricalEventEmitter;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -28,6 +29,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.MDC_REQUEST_ID_KEY;
 import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.REFUND_EXTERNAL_ID;
 
+@Service
 public class ParityCheckerService {
     private static final int PAGE_SIZE = 100;
     private static final Logger logger = LoggerFactory.getLogger(ParityCheckerService.class);

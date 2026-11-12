@@ -1,13 +1,12 @@
 package uk.gov.pay.connector.app;
 
-import io.dropwizard.core.Configuration;
 import uk.gov.pay.connector.app.validator.ValidSqsConfig;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
 
 @ValidSqsConfig
-public class SqsConfig extends Configuration {
+public class SqsConfig {
 
     @NotNull
     private boolean nonStandardServiceEndpoint;

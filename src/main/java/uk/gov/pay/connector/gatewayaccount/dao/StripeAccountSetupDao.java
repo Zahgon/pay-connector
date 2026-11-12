@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.gatewayaccount.dao;
 
-import com.google.inject.Provider;
+import jakarta.inject.Provider;
 import uk.gov.pay.connector.common.dao.JpaDao;
 import uk.gov.pay.connector.gatewayaccount.model.StripeAccountSetupTask;
 import uk.gov.pay.connector.gatewayaccount.model.StripeAccountSetupTaskEntity;
@@ -8,7 +8,9 @@ import uk.gov.pay.connector.gatewayaccount.model.StripeAccountSetupTaskEntity;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import java.util.List;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public class StripeAccountSetupDao extends JpaDao<StripeAccountSetupTaskEntity> {
 
     @Inject

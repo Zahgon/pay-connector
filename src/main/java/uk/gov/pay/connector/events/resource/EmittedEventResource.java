@@ -9,24 +9,24 @@ import uk.gov.pay.connector.events.HistoricalEventEmitterService;
 import uk.gov.pay.connector.tasks.RecordType;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.Response;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
-import static jakarta.ws.rs.core.Response.Status.OK;
-import static jakarta.ws.rs.core.Response.status;
-import static uk.gov.pay.connector.tasks.RecordType.CHARGE;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+import uk.gov.pay.connector.web.QueryParam;
+import uk.gov.pay.connector.web.MediaTypes;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 
-@Path("/")
+import static uk.gov.pay.connector.tasks.RecordType.CHARGE;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 @Tag(name = "Tasks")
+@RestController
 public class EmittedEventResource {
 
     private final EmittedEventsBackfillService emittedEventsBackfillService;
@@ -39,8 +39,8 @@ public class EmittedEventResource {
         this.historicalEventEmitterService = historicalEventEmitterService;
     }
 
-    @POST
-    @Path("/v1/tasks/emitted-events-sweep")
+    @PostMapping("/v1/tasks/emitted-events-sweep")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Sweep emitted events",
             description = "During the state transition event connector puts an event in an in-memory queue (and database) " +
@@ -52,15 +52,13 @@ public class EmittedEventResource {
                     @ApiResponse(responseCode = "200", description = "OK")
             }
     )
-    @Produces(APPLICATION_JSON)
-    public Response expireCharges() {
+    public ResponseEntity<?> expireCharges() {
         emittedEventsBackfillService.backfillNotEmittedEvents();
-        return status(OK).build();
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
-    @POST
-    @Path("/v1/tasks/historical-event-emitter")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/tasks/historical-event-emitter")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Emit events for charges or refunds",
             description = "Task to emit payment or refunds events for a given start_id and max_id range.<br>" +
@@ -71,7 +69,7 @@ public class EmittedEventResource {
                     @ApiResponse(responseCode = "200", description = "OK")
             }
     )
-    public Response emitHistoricEvents(@Parameter(example = "1", description = "Charge/Refund ID (from database) to start with to emit events. Defaults to 0")
+    public ResponseEntity<?> emitHistoricEvents(@Parameter(example = "1", description = "Charge/Refund ID (from database) to start with to emit events. Defaults to 0")
                                        @QueryParam("start_id") Long startId,
                                        @Parameter(example = "100", description = "Charge/Refund ID until which events to be emitted. If not provided, this is set to maximum ID available.")
                                        @QueryParam("max_id") Long maybeMaxId,
@@ -91,12 +89,11 @@ public class EmittedEventResource {
                     OptionalLong.of(maybeMaxId),
                     doNotRetryEmitUntilDuration));
         }
-        return status(OK).build();
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
-    @POST
-    @Path("/v1/tasks/historical-event-emitter-by-date")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/tasks/historical-event-emitter-by-date")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Emit events for charges or refunds by date",
             description = "Task to emit payment and refunds events for a given start_date and end_date range.<br>" +
@@ -107,7 +104,7 @@ public class EmittedEventResource {
                     @ApiResponse(responseCode = "200", description = "OK")
             }
     )
-    public Response emitHistoricEventsByDate(@Parameter(example = "2016-01-25T13:23:55Z", required = true, description = "Start date of charge events or refund history events for which events to be emitted")
+    public ResponseEntity<?> emitHistoricEventsByDate(@Parameter(example = "2016-01-25T13:23:55Z", required = true, description = "Start date of charge events or refund history events for which events to be emitted")
                                              @QueryParam("start_date") String startDate,
                                              @Parameter(example = "2016-01-25T13:23:55Z", required = true, description = "Date until which the events to be emitted")
                                              @QueryParam("end_date") String endDate,
@@ -118,7 +115,7 @@ public class EmittedEventResource {
         executor.execute(() -> historicalEventEmitterService.emitHistoricEventsByDate(ZonedDateTime.parse(startDate),
                 ZonedDateTime.parse(endDate),
                 doNotRetryEmitUntilDuration));
-        return status(OK).build();
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
 }

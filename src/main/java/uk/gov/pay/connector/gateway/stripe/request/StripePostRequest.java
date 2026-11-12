@@ -22,7 +22,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED_TYPE;
+import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.STRIPE;
 
 public abstract class StripePostRequest implements GatewayClientPostRequest {
@@ -96,7 +96,7 @@ public abstract class StripePostRequest implements GatewayClientPostRequest {
         
         String payload = WWWFormCodec.format(result, UTF_8);
 
-        return new GatewayOrder(orderRequestType(), payload, APPLICATION_FORM_URLENCODED_TYPE);
+        return new GatewayOrder(orderRequestType(), payload, APPLICATION_FORM_URLENCODED);
     }
     
     protected Map<String, String> headers() {

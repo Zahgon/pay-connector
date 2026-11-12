@@ -10,7 +10,9 @@ import uk.gov.service.payments.commons.queue.exception.QueueException;
 import jakarta.inject.Inject;
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import org.springframework.stereotype.Service;
 
+@Service
 public class EventService {
     private static final Logger logger = LoggerFactory.getLogger(EventService.class);
 

@@ -3,6 +3,7 @@ package uk.gov.pay.connector.northamericaregion;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import org.springframework.stereotype.Component;
 
 import static java.util.Map.entry;
 import static uk.gov.pay.connector.northamericaregion.CanadaProvinceOrTerritory.ALBERTA;
@@ -19,6 +20,7 @@ import static uk.gov.pay.connector.northamericaregion.CanadaProvinceOrTerritory.
 import static uk.gov.pay.connector.northamericaregion.CanadaProvinceOrTerritory.SASKATCHEWAN;
 import static uk.gov.pay.connector.northamericaregion.CanadaProvinceOrTerritory.YUKON;
 
+@Component
 public class CanadaPostalcodeToProvinceOrTerritoryMapper {
 
     private static final Pattern WELL_FORMED_POSTAL_CODE = Pattern.compile("([A-Z])[0-9][A-Z][0-9][A-Z][0-9]");

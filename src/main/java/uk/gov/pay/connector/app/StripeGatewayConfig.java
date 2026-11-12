@@ -1,6 +1,5 @@
 package uk.gov.pay.connector.app;
 
-import io.dropwizard.core.Configuration;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -9,7 +8,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class StripeGatewayConfig extends Configuration {
+public class StripeGatewayConfig {
 
     @Valid
     @NotNull

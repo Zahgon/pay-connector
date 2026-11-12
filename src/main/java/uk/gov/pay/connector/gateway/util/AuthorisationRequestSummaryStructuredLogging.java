@@ -9,10 +9,12 @@ import uk.gov.service.payments.commons.model.AgreementPaymentType;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+@Component
 public class AuthorisationRequestSummaryStructuredLogging {
     
     public static final String BILLING_ADDRESS = "billing_address";

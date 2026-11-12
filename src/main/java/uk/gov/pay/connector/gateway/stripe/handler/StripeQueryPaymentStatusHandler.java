@@ -20,8 +20,8 @@ import uk.gov.pay.connector.util.JsonObjectMapper;
 import java.util.List;
 
 import static java.lang.String.format;
-import static jakarta.ws.rs.core.Response.Status.Family.CLIENT_ERROR;
-import static jakarta.ws.rs.core.Response.Status.Family.SERVER_ERROR;
+import static uk.gov.pay.connector.gateway.GatewayException.Family.CLIENT_ERROR;
+import static uk.gov.pay.connector.gateway.GatewayException.Family.SERVER_ERROR;
 import static org.apache.hc.core5.http.HttpStatus.SC_UNAUTHORIZED;
 
 public class StripeQueryPaymentStatusHandler {

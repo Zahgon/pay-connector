@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.util;
 
 import com.google.common.io.ByteStreams;
-import io.dropwizard.util.Resources;
+import com.google.common.io.Resources;
 
 import java.io.IOException;
 import java.io.InputStream;

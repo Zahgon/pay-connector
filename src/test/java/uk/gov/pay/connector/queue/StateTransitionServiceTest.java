@@ -3,7 +3,6 @@ package uk.gov.pay.connector.queue;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import io.dropwizard.core.setup.Environment;
 import io.prometheus.client.CollectorRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,8 +63,6 @@ class StateTransitionServiceTest {
     @Mock
     EventService mockEventService;
     @Mock
-    Environment environment;
-    @Mock
     MetricRegistry metricRegistry;
     @Mock
     Counter counter;
@@ -74,8 +71,7 @@ class StateTransitionServiceTest {
 
     @BeforeEach
     void setUp() {
-        when(environment.metrics()).thenReturn(metricRegistry);
-        stateTransitionService = new StateTransitionService(mockStateTransitionQueue, mockEventService, environment);
+        stateTransitionService = new StateTransitionService(mockStateTransitionQueue, mockEventService, metricRegistry);
     }
 
     @Test

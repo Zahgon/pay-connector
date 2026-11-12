@@ -4,7 +4,9 @@ import uk.gov.pay.connector.app.ConnectorConfiguration;
 import uk.gov.pay.connector.app.config.ExpungeConfig;
 
 import jakarta.inject.Inject;
+import org.springframework.stereotype.Service;
 
+@Service
 public class ExpungeService {
 
     private ChargeExpungeService chargeExpungeService;

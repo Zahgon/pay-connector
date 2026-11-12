@@ -1,17 +1,19 @@
 package uk.gov.pay.connector.gatewayaccountcredentials.dao;
 
-import com.google.inject.Provider;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Provider;
+import org.springframework.transaction.annotation.Transactional;
 import uk.gov.pay.connector.common.dao.JpaDao;
 import uk.gov.pay.connector.gatewayaccountcredentials.model.GatewayAccountCredentialsEntity;
 
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
 import static uk.gov.pay.connector.gatewayaccountcredentials.model.GatewayAccountCredentialState.ACTIVE;
 
 @Transactional
+@Repository
 public class GatewayAccountCredentialsDao extends JpaDao<GatewayAccountCredentialsEntity> {
 
     @Inject

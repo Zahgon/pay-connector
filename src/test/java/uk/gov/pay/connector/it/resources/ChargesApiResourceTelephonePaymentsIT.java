@@ -16,7 +16,7 @@ import java.util.Map;
 
 import static io.restassured.http.ContentType.JSON;
 import static java.lang.String.format;
-import static jakarta.ws.rs.core.Response.Status.OK;
+import static org.springframework.http.HttpStatus.OK;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
@@ -62,7 +62,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
                             "value", true)))
                     .patch("/v1/api/accounts/" + gatewayAccountId)
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
         }
         
         @Test
@@ -119,7 +119,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
             app.givenSetup()
                     .get(format("/v1/api/accounts/%s/charges/%s", gatewayAccountId, chargeExternalId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("amount", isNumber(12000))
                     .body("reference", is("MRPC12345"))
@@ -145,7 +145,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
             app.givenSetup()
                     .get(format("/v1/api/accounts/%s/charges/%s/events", gatewayAccountId, chargeExternalId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("events", hasSize(2))
                     .body("events[0].state.status", is("created"))
                     .body("events[1].state.status", is("success"));
@@ -172,7 +172,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
             app.givenSetup()
                     .get(format("/v1/api/accounts/%s/charges/%s", gatewayAccountId, chargeExternalId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("amount", isNumber(12000))
                     .body("reference", is("MRPC12345"))
@@ -190,7 +190,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
             app.givenSetup()
                     .get(format("/v1/api/accounts/%s/charges/%s/events", gatewayAccountId, chargeExternalId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("events", hasSize(2))
                     .body("events[0].state.status", is("created"))
                     .body("events[1].state.status", is("success"));
@@ -223,7 +223,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
             app.givenSetup()
                     .get(format("/v1/api/accounts/%s/charges/%s", gatewayAccountId, chargeExternalId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("amount", isNumber(12000))
                     .body("reference", is("MRPC12345"))
                     .body("description", is("New passport application"))
@@ -276,7 +276,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
             app.givenSetup()
                     .get(format("/v1/api/accounts/%s/charges/%s", gatewayAccountId, chargeExternalId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("amount", isNumber(12000))
                     .body("reference", is("MRPC12345"))
                     .body("description", is("New passport application"))
@@ -327,7 +327,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
             app.givenSetup()
                     .get(format("/v1/api/accounts/%s/charges/%s", gatewayAccountId, chargeExternalId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("amount", isNumber(12000))
                     .body("reference", is("MRPC12345"))
                     .body("description", is("New passport application"))
@@ -374,7 +374,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
             app.givenSetup()
                     .get(format("/v1/api/accounts/%s/charges/%s", gatewayAccountId, chargeExternalId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("metadata.telephone_number", is(stringOf50Characters))
                     .body("metadata.processor_id", is(stringOf50Characters))
                     .body("metadata.auth_code", is(stringOf50Characters))
@@ -433,7 +433,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
                             "value", false)))
                     .patch("/v1/api/accounts/" + gatewayAccountId)
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             var payload = Map.of("amount", 12000,
                     "reference", "MRPC12345",
@@ -465,7 +465,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
                             "value", true)))
                     .patch(format("/v1/api/service/%s/account/%s", VALID_SERVICE_ID, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
         }
 
         @Test
@@ -526,7 +526,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s/charges/%s", VALID_SERVICE_ID, GatewayAccountType.TEST, chargeExternalId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("amount", isNumber(12000))
                     .body("reference", is("MRPC12345"))
@@ -552,7 +552,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s/charges/%s/events", VALID_SERVICE_ID, GatewayAccountType.TEST, chargeExternalId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("events", hasSize(2))
                     .body("events[0].state.status", is("created"))
                     .body("events[1].state.status", is("success"));
@@ -579,7 +579,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s/charges/%s", VALID_SERVICE_ID, GatewayAccountType.TEST, chargeExternalId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("amount", isNumber(12000))
                     .body("reference", is("MRPC12345"))
@@ -597,7 +597,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s/charges/%s/events", VALID_SERVICE_ID, GatewayAccountType.TEST, chargeExternalId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("events", hasSize(2))
                     .body("events[0].state.status", is("created"))
                     .body("events[1].state.status", is("success"));
@@ -630,7 +630,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s/charges/%s", VALID_SERVICE_ID, GatewayAccountType.TEST, chargeExternalId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("amount", isNumber(12000))
                     .body("reference", is("MRPC12345"))
                     .body("description", is("New passport application"))
@@ -683,7 +683,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s/charges/%s", VALID_SERVICE_ID, GatewayAccountType.TEST, chargeExternalId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("amount", isNumber(12000))
                     .body("reference", is("MRPC12345"))
                     .body("description", is("New passport application"))
@@ -734,7 +734,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s/charges/%s", VALID_SERVICE_ID, GatewayAccountType.TEST, chargeExternalId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("amount", isNumber(12000))
                     .body("reference", is("MRPC12345"))
                     .body("description", is("New passport application"))
@@ -781,7 +781,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s/charges/%s", VALID_SERVICE_ID, GatewayAccountType.TEST, chargeExternalId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("metadata.telephone_number", is(stringOf50Characters))
                     .body("metadata.processor_id", is(stringOf50Characters))
                     .body("metadata.auth_code", is(stringOf50Characters))
@@ -840,7 +840,7 @@ public class ChargesApiResourceTelephonePaymentsIT {
                             "value", false)))
                     .patch(format("/v1/api/service/%s/account/%s", VALID_SERVICE_ID, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             var payload = Map.of("amount", 12000,
                     "reference", "MRPC12345",

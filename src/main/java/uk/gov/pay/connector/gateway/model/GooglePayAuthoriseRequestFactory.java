@@ -7,7 +7,9 @@ import uk.gov.pay.connector.gateway.model.request.records.AdyenGooglePayAuthoris
 import uk.gov.pay.connector.wallets.googlepay.GooglePayAuthorisationGatewayRequest;
 
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
+@Component
 public class GooglePayAuthoriseRequestFactory {
 
     private final AdyenGooglePayAuthorisePayloadFactory adyenGooglePayAuthorisePayloadFactory;

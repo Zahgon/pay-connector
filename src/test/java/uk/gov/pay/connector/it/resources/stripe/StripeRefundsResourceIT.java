@@ -21,7 +21,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static java.lang.String.format;
 import static org.eclipse.jetty.http.HttpStatus.ACCEPTED_202;
 import static org.hamcrest.CoreMatchers.is;
@@ -170,7 +170,7 @@ public class StripeRefundsResourceIT {
                                 .replace("{accountId}", accountId)
                                 .replace("{chargeId}", externalChargeId))
                         .then()
-                        .statusCode(INTERNAL_SERVER_ERROR.getStatusCode());
+                        .statusCode(INTERNAL_SERVER_ERROR.value());
 
                 List<Map<String, Object>> refundsFoundByChargeExternalId = app.getDatabaseTestHelper().getRefundsByChargeExternalId(defaultTestCharge.getExternalChargeId());
                 assertThat(refundsFoundByChargeExternalId.size(), is(1));
@@ -194,7 +194,7 @@ public class StripeRefundsResourceIT {
                                 .replace("{accountId}", accountId)
                                 .replace("{chargeId}", externalChargeId))
                         .then()
-                        .statusCode(INTERNAL_SERVER_ERROR.getStatusCode())
+                        .statusCode(INTERNAL_SERVER_ERROR.value())
                         .body("message", contains("Stripe refund response (error code: expired_card, error: Your card has expired.)"))
                         .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
 
@@ -320,7 +320,7 @@ public class StripeRefundsResourceIT {
                         )))
                         .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
                         .then()
-                        .statusCode(INTERNAL_SERVER_ERROR.getStatusCode());
+                        .statusCode(INTERNAL_SERVER_ERROR.value());
 
                 // Verify refund exists in database
                 List<Map<String, Object>> refundsFoundByChargeExternalId = app.getDatabaseTestHelper().getRefundsByChargeExternalId(defaultTestCharge.getExternalChargeId());
@@ -351,7 +351,7 @@ public class StripeRefundsResourceIT {
                         )))
                         .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
                         .then()
-                        .statusCode(INTERNAL_SERVER_ERROR.getStatusCode())
+                        .statusCode(INTERNAL_SERVER_ERROR.value())
                         .body("message", contains("Stripe refund response (error code: expired_card, error: Your card has expired.)"))
                         .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
 

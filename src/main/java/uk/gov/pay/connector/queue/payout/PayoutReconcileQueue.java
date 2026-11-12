@@ -15,7 +15,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
 
+@Component
 public class PayoutReconcileQueue extends AbstractQueue {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());

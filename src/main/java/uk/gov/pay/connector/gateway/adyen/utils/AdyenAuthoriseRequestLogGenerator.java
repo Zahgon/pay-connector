@@ -11,12 +11,14 @@ import uk.gov.pay.connector.wallets.WalletType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
+import org.springframework.stereotype.Component;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static uk.gov.pay.connector.gateway.util.AuthorisationRequestSummaryStructuredLogging.BILLING_ADDRESS;
 import static uk.gov.pay.connector.gateway.util.AuthorisationRequestSummaryStructuredLogging.EMAIL;
 import static uk.gov.service.payments.logging.LoggingKeys.WALLET;
 
+@Component
 public class AdyenAuthoriseRequestLogGenerator {
 
     public static String GATEWAY_REQUEST_RECORD = "gateway_request_record";

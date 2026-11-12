@@ -3,15 +3,15 @@ package uk.gov.pay.connector.client;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import org.junit.jupiter.api.Test;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.junit.jupiter.api.Disabled;
-import uk.gov.service.payments.commons.testing.port.PortFactory;
+import org.junit.jupiter.api.Test;
 
-import jakarta.ws.rs.ProcessingException;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.Response;
+import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
@@ -20,39 +20,40 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_XML;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static uk.gov.pay.connector.util.TestClientFactory.createClientWithApacheConnectorAndTimeout;
-import static uk.gov.pay.connector.util.TestClientFactory.createJerseyClient;
+import static uk.gov.pay.connector.util.TestClientFactory.createHttpClient;
 
 @Disabled //this should be run manually
 public class GatewayClientExploratoryTest {
 
     @Test
-    public void connectionToInvalidUrlUsingDefaultJerseyConnectorProvider() {
-        Client client = ClientBuilder.newClient();
-        String gatewayUrl = "http://invalidone.invalid";
-        var ex = assertThrows(ProcessingException.class, () -> postXMLRequestFor(client, gatewayUrl, "<request/>"));
-        assertThat(UnknownHostException.class, is(ex.getCause().getClass()));
+    public void connectionToInvalidUrlUsingDefaultHttpClient() throws IOException {
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
+            String gatewayUrl = "http://invalidone.invalid";
+            var ex = assertThrows(IOException.class, () -> postXMLRequestFor(client, gatewayUrl, "<request/>"));
+            assertThat(UnknownHostException.class, is(ex.getClass()));
+        }
     }
 
     @Test
-    public void connectionToInvalidUrlUsingApacheConnectorProvider() {
-        Client client = createJerseyClient();
-        String gatewayUrl = "http://invalidone.invalid";
-        var ex = assertThrows(ProcessingException.class, () -> postXMLRequestFor(client, gatewayUrl, "<request/>"));
-        assertThat(UnknownHostException.class, is(ex.getCause().getClass()));
+    public void connectionToInvalidUrlUsingPooledHttpClient() throws IOException {
+        try (CloseableHttpClient client = createHttpClient()) {
+            String gatewayUrl = "http://invalidone.invalid";
+            var ex = assertThrows(IOException.class, () -> postXMLRequestFor(client, gatewayUrl, "<request/>"));
+            assertThat(UnknownHostException.class, is(ex.getClass()));
+        }
     }
 
     @Test
-    public void connectionReadTimeoutTest() {
-        int port = PortFactory.findFreePort();
-        WireMockConfiguration wireMockConfig = wireMockConfig().port(port);
+    public void connectionReadTimeoutTest() throws IOException {
+        WireMockConfiguration wireMockConfig = wireMockConfig().dynamicPort();
         WireMockServer wireMockServer = new WireMockServer(wireMockConfig);
 
         wireMockServer.start();
+        int port = wireMockServer.port();
 
         WireMock.configureFor("localhost", port);
         int delay = 10000;
@@ -66,17 +67,17 @@ public class GatewayClientExploratoryTest {
 
         String gatewayUrl = "http://localhost:" + port + "/pal/servlet/soap/Payment";
 
-        Client client = createClientWithApacheConnectorAndTimeout(500);
+        try (CloseableHttpClient client = createClientWithApacheConnectorAndTimeout(500)) {
+            var ex = assertThrows(IOException.class, () -> postXMLRequestFor(client, gatewayUrl, "<request/>"));
+            assertThat(SocketTimeoutException.class, is(ex.getClass()));
+        }
 
-        var ex = assertThrows(ProcessingException.class, () -> postXMLRequestFor(client, gatewayUrl, "<request/>"));
-        assertThat(SocketTimeoutException.class, is(ex.getCause().getClass()));
-        
         wireMockServer.stop();
     }
 
-    public Response postXMLRequestFor(Client client, String gatewayUrl, String requestBody) {
-        return client.target(gatewayUrl)
-                .request(APPLICATION_XML)
-                .post(Entity.xml(requestBody));
+    public int postXMLRequestFor(CloseableHttpClient client, String gatewayUrl, String requestBody) throws IOException {
+        HttpPost request = new HttpPost(gatewayUrl);
+        request.setEntity(new StringEntity(requestBody, ContentType.APPLICATION_XML));
+        return client.execute(request, response -> response.getCode());
     }
 }

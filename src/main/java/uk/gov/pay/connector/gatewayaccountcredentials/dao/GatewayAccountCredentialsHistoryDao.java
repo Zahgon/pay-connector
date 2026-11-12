@@ -1,12 +1,14 @@
 package uk.gov.pay.connector.gatewayaccountcredentials.dao;
 
-import com.google.inject.Provider;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Provider;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
+import org.springframework.stereotype.Repository;
 
 @Transactional
+@Repository
 public class GatewayAccountCredentialsHistoryDao {
 
     protected final Provider<EntityManager> entityManager;

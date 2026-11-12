@@ -8,10 +8,12 @@ import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.gateway.stripe.response.StripeNotification;
 
 import jakarta.inject.Inject;
+import org.springframework.stereotype.Component;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.STRIPE;
 
+@Component
 public class StripeRefundUpdatedHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StripeRefundUpdatedHandler.class);

@@ -1,7 +1,6 @@
 package uk.gov.pay.connector.gateway.adyen;
 
 import com.codahale.metrics.MetricRegistry;
-import io.dropwizard.core.setup.Environment;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,8 +38,6 @@ class AdyenPaymentProviderTest {
     @Mock
     private GatewayClient gatewayClient;
     @Mock
-    private Environment environment;
-    @Mock
     private RefundEntityFactory refundEntityFactory;
     @Mock
     private AdyenGatewayConfig adyenGatewayConfig;
@@ -55,9 +52,8 @@ class AdyenPaymentProviderTest {
     void setUp() {
         when(configuration.getAdyenGatewayConfig()).thenReturn(adyenGatewayConfig);
         when(gatewayClientFactory.createGatewayClient(eq(ADYEN), any(MetricRegistry.class))).thenReturn(gatewayClient);
-        when(environment.metrics()).thenReturn(metricRegistry);
 
-        this.provider = new AdyenPaymentProvider(configuration, environment, gatewayClientFactory, refundEntityFactory,
+        this.provider = new AdyenPaymentProvider(configuration, metricRegistry, gatewayClientFactory, refundEntityFactory,
                 adyenAuthoriseRequestToGatewayOrderConverter, jsonObjectMapper);
     }
 

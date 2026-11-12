@@ -10,10 +10,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
-import static jakarta.ws.rs.core.HttpHeaders.CONTENT_TYPE;
-import static jakarta.ws.rs.core.HttpHeaders.COOKIE;
-import static jakarta.ws.rs.core.HttpHeaders.SET_COOKIE;
-import static jakarta.ws.rs.core.MediaType.TEXT_XML;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+import static org.springframework.http.HttpHeaders.COOKIE;
+import static org.springframework.http.HttpHeaders.SET_COOKIE;
+import static org.springframework.http.MediaType.TEXT_XML_VALUE;
 import static uk.gov.pay.connector.util.TestTemplateResourceLoader.WORLDPAY_3DS_RESPONSE;
 import static uk.gov.pay.connector.util.TestTemplateResourceLoader.WORLDPAY_AUTHORISATION_CREATE_TOKEN_SUCCESS_RESPONSE_WITH_TRANSACTION_IDENTIFIER;
 import static uk.gov.pay.connector.util.TestTemplateResourceLoader.WORLDPAY_AUTHORISATION_CREATE_TOKEN_SUCCESS_RESPONSE_WITH_TRANSACTION_IDENTIFIER_AND_SUPPLEMENTARY_ID;
@@ -173,7 +173,7 @@ public class WorldpayMockClient {
                 post(urlPathEqualTo(WORLDPAY_URL))
                         .willReturn(
                                 aResponse()
-                                        .withHeader(CONTENT_TYPE, TEXT_XML)
+                                        .withHeader(CONTENT_TYPE, TEXT_XML_VALUE)
                                         .withStatus(200)
                                         .withBody(responseBody)
                         )
@@ -186,7 +186,7 @@ public class WorldpayMockClient {
                         .withHeader(COOKIE, matching("machine=" + cookie))
                         .willReturn(
                                 aResponse()
-                                        .withHeader(CONTENT_TYPE, TEXT_XML)
+                                        .withHeader(CONTENT_TYPE, TEXT_XML_VALUE)
                                         .withStatus(200)
                                         .withBody(responseBody)
                         )
@@ -198,7 +198,7 @@ public class WorldpayMockClient {
                 post(urlPathEqualTo(WORLDPAY_URL))
                         .willReturn(
                                 aResponse()
-                                        .withHeader(CONTENT_TYPE, TEXT_XML)
+                                        .withHeader(CONTENT_TYPE, TEXT_XML_VALUE)
                                         .withHeader(SET_COOKIE, "machine=" + cookie)
                                         .withStatus(200)
                                         .withBody(responseBody)
@@ -212,7 +212,7 @@ public class WorldpayMockClient {
                         .withRequestBody(matchingXPath(xpathContent))
                         .willReturn(
                                 aResponse()
-                                        .withHeader(CONTENT_TYPE, TEXT_XML)
+                                        .withHeader(CONTENT_TYPE, TEXT_XML_VALUE)
                                         .withStatus(200)
                                         .withBody(responseBody)
                         )

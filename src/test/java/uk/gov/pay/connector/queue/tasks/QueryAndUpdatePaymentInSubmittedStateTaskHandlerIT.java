@@ -47,7 +47,7 @@ class QueryAndUpdatePaymentInSubmittedStateTaskHandlerIT {
         app.getWorldpayMockClient().mockInquiryCaptured();
 
         QueryAndUpdatePaymentInSubmittedStateTaskHandler taskHandler =
-                app.getInstanceFromGuiceContainer(QueryAndUpdatePaymentInSubmittedStateTaskHandler.class);
+                app.getBean(QueryAndUpdatePaymentInSubmittedStateTaskHandler.class);
         taskHandler.process(paymentTaskData);
 
         Map<String, Object> charge = app.getDatabaseTestHelper().getChargeByExternalId(chargeExternalId);

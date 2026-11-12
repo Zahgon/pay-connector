@@ -9,7 +9,9 @@ import uk.gov.pay.connector.gateway.model.request.records.AdyenGooglePayAuthoris
 import uk.gov.pay.connector.gateway.util.ChargeFrontendUrlHelper;
 import uk.gov.pay.connector.wallets.googlepay.GooglePayAuthorisationGatewayRequest;
 import uk.gov.pay.connector.wallets.googlepay.api.AdyenGooglePayAuthRequest;
+import org.springframework.stereotype.Component;
 
+@Component
 public class AdyenGooglePayAuthorisePayloadFactory {
 
     private final ChargeFrontendUrlHelper chargeFrontendUrlHelper;

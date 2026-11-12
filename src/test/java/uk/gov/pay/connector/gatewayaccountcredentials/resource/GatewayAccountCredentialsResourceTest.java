@@ -1,8 +1,11 @@
 package uk.gov.pay.connector.gatewayaccountcredentials.resource;
 
+import uk.gov.pay.connector.rules.ResourceTestExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import uk.gov.pay.connector.rules.ResourceTestResponse;
+import uk.gov.pay.connector.rules.ResourceTestEntity;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
-import io.dropwizard.testing.junit5.ResourceExtension;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,9 +25,6 @@ import uk.gov.pay.connector.gatewayaccountcredentials.dao.GatewayAccountCredenti
 import uk.gov.pay.connector.gatewayaccountcredentials.model.GatewayAccountCredentialsEntity;
 import uk.gov.pay.connector.gatewayaccountcredentials.service.GatewayAccountCredentialsService;
 
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.GenericType;
-import jakarta.ws.rs.core.Response;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +42,6 @@ import static uk.gov.pay.connector.gatewayaccount.model.GatewayAccountEntityFixt
 import static uk.gov.pay.connector.gatewayaccountcredentials.model.GatewayAccountCredentialState.CREATED;
 import static uk.gov.pay.connector.gatewayaccountcredentials.model.GatewayAccountCredentialsEntityFixture.aGatewayAccountCredentialsEntity;
 
-@ExtendWith(DropwizardExtensionsSupport.class)
 public class GatewayAccountCredentialsResourceTest {
 
     private static final GatewayAccountService gatewayAccountService = mock(GatewayAccountService.class);
@@ -52,19 +51,15 @@ public class GatewayAccountCredentialsResourceTest {
     private static final GatewayAccountCredentialsRequestValidator gatewayAccountCredentialsRequestValidator = mock(GatewayAccountCredentialsRequestValidator.class);
     private static final GatewayAccountCredentialsDao credentialDao = mock(GatewayAccountCredentialsDao.class);
 
-    public static ResourceExtension resources = ResourceExtension.builder()
-            .addResource(new GatewayAccountCredentialsResource(
+    @RegisterExtension
+    public static ResourceTestExtension resources = ResourceTestExtension.withResources(new GatewayAccountCredentialsResource(
                     gatewayAccountService,
                     new GatewayAccountCredentialsService(credentialDao, new ObjectMapper()),
                     worldpay3dsFlexCredentialsService,
                     worldpay3dsFlexCredentialsValidationService,
                     worldpayCredentialsValidationService,
                     gatewayAccountCredentialsRequestValidator
-            ))
-            .setRegisterDefaultExceptionMappers(false)
-            .addProvider(ConstraintViolationExceptionMapper.class)
-            .addProvider(ValidationExceptionMapper.class)
-            .build();
+            ));
 
     private static final String VALID_ISSUER = "53f0917f101a4428b69d5fb0"; // pragma: allowlist secret`
     private static final String VALID_ORG_UNIT_ID = "57992a087a0c4849895ab8a2"; // pragma: allowlist secret`
@@ -109,10 +104,10 @@ public class GatewayAccountCredentialsResourceTest {
 
                 var payload = valid3dsFlexCredentialsPayload;
 
-                Response response = resources
+                ResourceTestResponse response = resources
                         .target(format("/v1/api/accounts/%s/worldpay/check-3ds-flex-config", accountId))
                         .request()
-                        .post(Entity.json(payload));
+                        .post(ResourceTestEntity.json(payload));
 
                 assertThat(response.getStatus(), is(404));
                 assertThat(extractErrorMessagesFromResponse(response).getFirst(), is("Gateway Account with id [111] not found."));
@@ -193,10 +188,10 @@ public class GatewayAccountCredentialsResourceTest {
                 payload.remove(key);
 
                 when(gatewayAccountService.getGatewayAccount(accountId)).thenReturn(Optional.of(gatewayAccountEntity));
-                Response response = resources
+                ResourceTestResponse response = resources
                         .target(format("/v1/api/accounts/%s/3ds-flex-credentials", accountId))
                         .request()
-                        .post(Entity.json(payload));
+                        .post(ResourceTestEntity.json(payload));
 
                 assertThat(response.getStatus(), is(422));
                 assertThat(extractErrorMessagesFromResponse(response).getFirst(), is(expectedErrorMessage));
@@ -205,10 +200,10 @@ public class GatewayAccountCredentialsResourceTest {
             @Test
             void nonExistentGatewayAccountReturns404() {
                 when(gatewayAccountService.getGatewayAccount(accountId)).thenReturn(Optional.empty());
-                Response response = resources
+                ResourceTestResponse response = resources
                         .target(format("/v1/api/accounts/%s/3ds-flex-credentials", accountId))
                         .request()
-                        .post(Entity.json(valid3dsFlexCredentialsPayload));
+                        .post(ResourceTestEntity.json(valid3dsFlexCredentialsPayload));
 
                 assertThat(response.getStatus(), is(404));
                 assertThat(extractErrorMessagesFromResponse(response).getFirst(), is("Not a Worldpay gateway account"));
@@ -217,10 +212,10 @@ public class GatewayAccountCredentialsResourceTest {
             @Test
             void nonWorldpayGatewayAccountReturns404() {
                 when(gatewayAccountService.getGatewayAccount(accountId)).thenReturn(Optional.of(stripeGatewayAccountEntity));
-                Response response = resources
+                ResourceTestResponse response = resources
                         .target(format("/v1/api/accounts/%s/3ds-flex-credentials", accountId))
                         .request()
-                        .post(Entity.json(valid3dsFlexCredentialsPayload));
+                        .post(ResourceTestEntity.json(valid3dsFlexCredentialsPayload));
 
                 assertThat(response.getStatus(), is(404));
                 assertThat(extractErrorMessagesFromResponse(response).getFirst(), is("Not a Worldpay gateway account"));
@@ -232,10 +227,10 @@ public class GatewayAccountCredentialsResourceTest {
             @Test
             void nonExistentGatewayAccountReturns404() {
                 when(gatewayAccountService.getGatewayAccount(accountId)).thenReturn(Optional.empty());
-                Response response = resources
+                ResourceTestResponse response = resources
                         .target(format("/v1/api/accounts/%s/worldpay/check-credentials", accountId))
                         .request()
-                        .post(Entity.json(validCheckWorldpayCredentialsPayload));
+                        .post(ResourceTestEntity.json(validCheckWorldpayCredentialsPayload));
 
                 assertThat(response.getStatus(), is(404));
                 assertThat(extractErrorMessagesFromResponse(response).getFirst(), is(format("Gateway Account with id [%s] not found.", accountId)));
@@ -249,10 +244,10 @@ public class GatewayAccountCredentialsResourceTest {
                         "merchant_id", "valid-merchant-id"
                 );
 
-                Response response = resources
+                ResourceTestResponse response = resources
                         .target(format("/v1/api/accounts/%s/worldpay/check-credentials", accountId))
                         .request()
-                        .post(Entity.json(payload));
+                        .post(ResourceTestEntity.json(payload));
 
                 assertThat(response.getStatus(), is(422));
                 assertThat(extractErrorMessagesFromResponse(response).getFirst(), is("Field [username] is required"));
@@ -266,10 +261,10 @@ public class GatewayAccountCredentialsResourceTest {
                         "merchant_id", "valid-merchant-id"
                 );
 
-                Response response = resources
+                ResourceTestResponse response = resources
                         .target(format("/v1/api/accounts/%s/worldpay/check-credentials", accountId))
                         .request()
-                        .post(Entity.json(payload));
+                        .post(ResourceTestEntity.json(payload));
 
                 assertThat(response.getStatus(), is(422));
                 assertThat(extractErrorMessagesFromResponse(response).getFirst(), is("Field [password] is required"));
@@ -283,10 +278,10 @@ public class GatewayAccountCredentialsResourceTest {
                         "merchant_id", ""
                 );
 
-                Response response = resources
+                ResourceTestResponse response = resources
                         .target(format("/v1/api/accounts/%s/worldpay/check-credentials", accountId))
                         .request()
-                        .post(Entity.json(payload));
+                        .post(ResourceTestEntity.json(payload));
 
                 assertThat(response.getStatus(), is(422));
                 assertThat(extractErrorMessagesFromResponse(response).getFirst(), is("One of fields [merchant_id, merchant_code] is required"));
@@ -302,15 +297,15 @@ public class GatewayAccountCredentialsResourceTest {
                 when(gatewayAccountService.getGatewayAccount(accountId)).thenReturn(Optional.of(gatewayAccountEntity));
                 when(worldpayCredentialsValidationService.validateCredentials(gatewayAccountEntity, worldpayValidatableCredentials)).thenReturn(true);
 
-                Response response = resources
+                ResourceTestResponse response = resources
                         .target(format("/v1/api/accounts/%s/worldpay/check-credentials", accountId))
                         .request()
-                        .post(Entity.json(validCheckWorldpayCredentialsPayload));
+                        .post(ResourceTestEntity.json(validCheckWorldpayCredentialsPayload));
 
                 verify(worldpayCredentialsValidationService).validateCredentials(gatewayAccountEntity, worldpayValidatableCredentials);
 
                 assertThat(response.getStatus(), is(200));
-                Map<String, Object> responseBody = response.readEntity(new GenericType<HashMap>() {
+                Map<String, Object> responseBody = response.readEntity(new TypeReference<HashMap>() {
                 });
                 assertThat(responseBody, hasEntry("result", "valid"));
             }
@@ -325,15 +320,15 @@ public class GatewayAccountCredentialsResourceTest {
                 when(gatewayAccountService.getGatewayAccount(accountId)).thenReturn(Optional.of(gatewayAccountEntity));
                 when(worldpayCredentialsValidationService.validateCredentials(gatewayAccountEntity, worldpayValidatableCredentials)).thenReturn(false);
 
-                Response response = resources
+                ResourceTestResponse response = resources
                         .target(format("/v1/api/accounts/%s/worldpay/check-credentials", accountId))
                         .request()
-                        .post(Entity.json(validCheckWorldpayCredentialsPayload));
+                        .post(ResourceTestEntity.json(validCheckWorldpayCredentialsPayload));
 
                 verify(worldpayCredentialsValidationService).validateCredentials(gatewayAccountEntity, worldpayValidatableCredentials);
 
                 assertThat(response.getStatus(), is(200));
-                Map<String, Object> responseBody = response.readEntity(new GenericType<HashMap>() {
+                Map<String, Object> responseBody = response.readEntity(new TypeReference<HashMap>() {
                 });
                 assertThat(responseBody, hasEntry("result", "invalid"));
             }
@@ -346,10 +341,10 @@ public class GatewayAccountCredentialsResourceTest {
             void gatewayAccountNotFound_shouldReturn404() {
                 when(gatewayAccountService.getGatewayAccount(accountId)).thenReturn(Optional.empty());
 
-                Response response = resources
+                ResourceTestResponse response = resources
                         .target(format("/v1/api/accounts/%s/credentials", accountId))
                         .request()
-                        .post(Entity.json(Map.of("payment_provider", "worldpay")));
+                        .post(ResourceTestEntity.json(Map.of("payment_provider", "worldpay")));
 
                 assertThat(response.getStatus(), is(404));
                 assertThat(extractErrorMessagesFromResponse(response).getFirst(), is("Gateway Account with id [111] not found."));
@@ -359,7 +354,7 @@ public class GatewayAccountCredentialsResourceTest {
             void missingBody_shouldReturn422() {
                 when(gatewayAccountService.getGatewayAccount(accountId)).thenReturn(Optional.of(gatewayAccountEntity));
 
-                Response response = resources
+                ResourceTestResponse response = resources
                         .target(format("/v1/api/accounts/%s/credentials", accountId))
                         .request()
                         .post(null);
@@ -380,10 +375,10 @@ public class GatewayAccountCredentialsResourceTest {
                                 "path", "last_updated_by_user_external_id",
                                 "value", "a-user-id")
                 );
-                Response response = resources
+                ResourceTestResponse response = resources
                         .target(format("/v1/api/accounts/%s/credentials/222", accountId))
                         .request()
-                        .method("PATCH", Entity.json(payload));
+                        .method("PATCH", ResourceTestEntity.json(payload));
 
                 assertThat(response.getStatus(), is(404));
                 assertThat(extractErrorMessagesFromResponse(response).getFirst(), is("Gateway Account with id [111] not found."));
@@ -398,7 +393,7 @@ public class GatewayAccountCredentialsResourceTest {
         class CreateGatewayAccountCredentials {
             @Test
             void missingBody_shouldReturn422() {
-                Response response = resources
+                ResourceTestResponse response = resources
                         .target(format("/v1/api/service/%s/account/%s/credentials", VALID_SERVICE_ID, GatewayAccountType.TEST))
                         .request()
                         .post(null);
@@ -423,10 +418,10 @@ public class GatewayAccountCredentialsResourceTest {
                 payload.put("jwt_mac_key", VALID_JWT_MAC_KEY);
                 payload.remove(key);
 
-                Response response = resources
+                ResourceTestResponse response = resources
                         .target(format("/v1/api/service/%s/account/%s/3ds-flex-credentials", VALID_SERVICE_ID, GatewayAccountType.TEST))
                         .request()
-                        .put(Entity.json(payload));
+                        .put(ResourceTestEntity.json(payload));
 
                 assertThat(response.getStatus(), is(422));
                 assertThat(extractErrorMessagesFromResponse(response).getFirst(), is(expectedErrorMessage));
@@ -521,10 +516,10 @@ public class GatewayAccountCredentialsResourceTest {
                                 "path", "last_updated_by_user_external_id",
                                 "value", "a-user-id")
                 );
-                Response response = resources
+                ResourceTestResponse response = resources
                         .target(format("/v1/api/service/%s/account/%s/credentials/222", VALID_SERVICE_ID, GatewayAccountType.TEST))
                         .request()
-                        .method("PATCH", Entity.json(payload));
+                        .method("PATCH", ResourceTestEntity.json(payload));
 
                 assertThat(response.getStatus(), is(404));
                 assertThat(extractErrorMessagesFromResponse(response).getFirst(), is("Gateway account not found for service external id [a-valid-service-id] and account type [test]"));
@@ -543,10 +538,10 @@ public class GatewayAccountCredentialsResourceTest {
                 payload.put("merchant_id", "valid-merchant-id");
                 payload.remove(fieldName);
 
-                Response response = resources
+                ResourceTestResponse response = resources
                         .target(format("/v1/api/service/%s/account/%s/worldpay/check-credentials", VALID_SERVICE_ID, GatewayAccountType.TEST))
                         .request()
-                        .post(Entity.json(payload));
+                        .post(ResourceTestEntity.json(payload));
 
                 assertThat(response.getStatus(), is(422));
                 assertThat(extractErrorMessagesFromResponse(response).getFirst(), is(format("Field [%s] is required", fieldName)));
@@ -559,10 +554,10 @@ public class GatewayAccountCredentialsResourceTest {
                         "password", "valid-password"
                 );
 
-                Response response = resources
+                ResourceTestResponse response = resources
                         .target(format("/v1/api/service/%s/account/%s/worldpay/check-credentials", VALID_SERVICE_ID, GatewayAccountType.TEST))
                         .request()
-                        .post(Entity.json(payload));
+                        .post(ResourceTestEntity.json(payload));
 
                 assertThat(response.getStatus(), is(422));
                 assertThat(extractErrorMessagesFromResponse(response).getFirst(), is("One of fields [merchant_id, merchant_code] is required"));
@@ -573,10 +568,10 @@ public class GatewayAccountCredentialsResourceTest {
     private void verifyCheckWorldpay3dsCredentialsValidationError_byServiceIdAndAccountType(Map<String, String> payload, String expectedErrorMessage) {
         when(gatewayAccountService.getGatewayAccountByServiceIdAndAccountType("a-valid-service-id", GatewayAccountType.TEST))
                 .thenReturn(Optional.of(gatewayAccountEntity));
-        Response response = resources
+        ResourceTestResponse response = resources
                 .target("/v1/api/service/a-valid-service-id/account/test/worldpay/check-3ds-flex-config")
                 .request()
-                .post(Entity.json(payload));
+                .post(ResourceTestEntity.json(payload));
 
         assertThat(response.getStatus(), is(422));
         assertThat(extractErrorMessagesFromResponse(response).getFirst(), is(expectedErrorMessage));
@@ -584,17 +579,17 @@ public class GatewayAccountCredentialsResourceTest {
 
     private void verifyCheckWorldpay3dsCredentialsValidationError(Map<String, String> payload, String expectedErrorMessage) {
         when(gatewayAccountService.getGatewayAccount(accountId)).thenReturn(Optional.of(gatewayAccountEntity));
-        Response response = resources
+        ResourceTestResponse response = resources
                 .target(format("/v1/api/accounts/%s/worldpay/check-3ds-flex-config", accountId))
                 .request()
-                .post(Entity.json(payload));
+                .post(ResourceTestEntity.json(payload));
 
         assertThat(response.getStatus(), is(422));
         assertThat(extractErrorMessagesFromResponse(response).getFirst(), is(expectedErrorMessage));
     }
 
-    private List extractErrorMessagesFromResponse(Response response) {
-        var responseBody = response.readEntity(new GenericType<HashMap>() {
+    private List extractErrorMessagesFromResponse(ResourceTestResponse response) {
+        var responseBody = response.readEntity(new TypeReference<HashMap>() {
         });
         return (List) responseBody.get("message");
     }

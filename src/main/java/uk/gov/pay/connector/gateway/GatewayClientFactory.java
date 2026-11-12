@@ -3,8 +3,10 @@ package uk.gov.pay.connector.gateway;
 import com.codahale.metrics.MetricRegistry;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.client.Client;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.springframework.stereotype.Component;
 
+@Component
 public class GatewayClientFactory {
 
     private final ClientFactory clientFactory;
@@ -17,13 +19,13 @@ public class GatewayClientFactory {
     public GatewayClient createGatewayClient(PaymentGatewayName gateway,
                                              GatewayOperation operation,
                                              MetricRegistry metricRegistry) {
-        Client client = clientFactory.createWithDropwizardClient(gateway, operation, metricRegistry);
+        CloseableHttpClient client = clientFactory.createHttpClient(gateway, operation, metricRegistry);
         return new GatewayClient(client, metricRegistry);
     }
 
     public GatewayClient createGatewayClient(PaymentGatewayName gateway,
                                              MetricRegistry metricRegistry) {
-        Client client = clientFactory.createWithDropwizardClient(gateway, metricRegistry);
+        CloseableHttpClient client = clientFactory.createHttpClient(gateway, metricRegistry);
         return new GatewayClient(client, metricRegistry);
     }
 }

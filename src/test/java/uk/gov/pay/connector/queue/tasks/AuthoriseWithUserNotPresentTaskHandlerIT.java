@@ -60,7 +60,7 @@ public class AuthoriseWithUserNotPresentTaskHandlerIT {
 
     @Test
     void shouldProcess_ACorrectlyConfiguredAuthorisationModeAgreementCharge_AndMarkForCapture() {
-        AuthoriseWithUserNotPresentHandler taskHandler = app.getInstanceFromGuiceContainer(AuthoriseWithUserNotPresentHandler.class);
+        AuthoriseWithUserNotPresentHandler taskHandler = app.getBean(AuthoriseWithUserNotPresentHandler.class);
         String SUCCESS_LAST_FOUR_DIGITS = "4242";
         String SUCCESS_FIRST_SIX_DIGITS = "424242";
 
@@ -76,7 +76,7 @@ public class AuthoriseWithUserNotPresentTaskHandlerIT {
 
     @Test
     void shouldProcess_AndMarkComplete_AnAuthorisationModeAgreementChargeThatWillDecline_AndNotMarkForCapture() {
-        AuthoriseWithUserNotPresentHandler taskHandler = app.getInstanceFromGuiceContainer(AuthoriseWithUserNotPresentHandler.class);
+        AuthoriseWithUserNotPresentHandler taskHandler = app.getBean(AuthoriseWithUserNotPresentHandler.class);
         String DECLINE_LAST_FOUR_DIGITS = "0002";
         String DECLINE_FIRST_SIX_DIGITS = "400000";
 
@@ -91,7 +91,7 @@ public class AuthoriseWithUserNotPresentTaskHandlerIT {
 
     @Test
     void shouldProcess_AndMarkComplete_AnAuthorisationModeAgreementChargeThatWillGatewayError_AndNotMarkForCapture() {
-        AuthoriseWithUserNotPresentHandler taskHandler = app.getInstanceFromGuiceContainer(AuthoriseWithUserNotPresentHandler.class);
+        AuthoriseWithUserNotPresentHandler taskHandler = app.getBean(AuthoriseWithUserNotPresentHandler.class);
         String GATEWAY_ERROR_LAST_FOUR_DIGITS = "0119";
         String GATEWAY_ERROR_FIRST_SIX_DIGITS = "400000";
 

@@ -41,7 +41,7 @@ import uk.gov.pay.connector.queue.tasks.TaskQueueService;
 import uk.gov.pay.connector.refund.service.RefundService;
 import uk.gov.pay.connector.token.dao.TokenDao;
 
-import jakarta.ws.rs.core.UriInfo;
+import uk.gov.pay.connector.web.BaseUri;
 import java.time.Instant;
 import java.time.InstantSource;
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static jakarta.ws.rs.core.UriBuilder.fromUri;
+import static org.springframework.web.util.UriComponentsBuilder.fromUriString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -96,7 +96,7 @@ class ChargeServiceCreatePrefilledCardholderDetailsTest {
     private ConnectorConfiguration mockedConfig;
 
     @Mock
-    private UriInfo mockedUriInfo;
+    private BaseUri mockedBaseUri;
 
     @Mock
     private LinksConfig mockedLinksConfig;
@@ -183,7 +183,7 @@ class ChargeServiceCreatePrefilledCardholderDetailsTest {
 
     @Test
     void shouldCreateAChargeWithAllPrefilledCardHolderDetails() {
-        doAnswer(invocation -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(invocation -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
         when(mockedGatewayAccountDao.findById(GATEWAY_ACCOUNT_ID)).thenReturn(Optional.of(gatewayAccount));
@@ -194,7 +194,7 @@ class ChargeServiceCreatePrefilledCardholderDetailsTest {
         var address = new PrefilledAddress("Line1", "Line2", "AB1 CD2", "London", null, "GB");
         cardHolderDetails.setAddress(address);
         final ChargeCreateRequest request = requestBuilder.withPrefilledCardHolderDetails(cardHolderDetails).build();
-        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
         ChargeEntity createdChargeEntity = chargeEntityArgumentCaptor.getValue();
@@ -212,7 +212,7 @@ class ChargeServiceCreatePrefilledCardholderDetailsTest {
 
     @Test
     void shouldCreateAChargeWithPrefilledCardHolderDetailsAndSomeAddressMissing() {
-        doAnswer(invocation -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(invocation -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
         when(mockedGatewayAccountDao.findById(GATEWAY_ACCOUNT_ID)).thenReturn(Optional.of(gatewayAccount));
@@ -225,7 +225,7 @@ class ChargeServiceCreatePrefilledCardholderDetailsTest {
 
 
         ChargeCreateRequest request = requestBuilder.withPrefilledCardHolderDetails(cardHolderDetails).build();
-        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
         ChargeEntity createdChargeEntity = chargeEntityArgumentCaptor.getValue();
@@ -244,7 +244,7 @@ class ChargeServiceCreatePrefilledCardholderDetailsTest {
 
     @Test
     void shouldCreateAChargeWithNoCountryWhenPrefilledAddressCountryIsMoreThanTwoCharacters() {
-        doAnswer(invocation -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(invocation -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
         when(mockedGatewayAccountDao.findById(GATEWAY_ACCOUNT_ID)).thenReturn(Optional.of(gatewayAccount));
@@ -256,7 +256,7 @@ class ChargeServiceCreatePrefilledCardholderDetailsTest {
         cardHolderDetails.setAddress(address);
 
         ChargeCreateRequest request = requestBuilder.withPrefilledCardHolderDetails(cardHolderDetails).build();
-        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
         ChargeEntity createdChargeEntity = chargeEntityArgumentCaptor.getValue();
@@ -275,7 +275,7 @@ class ChargeServiceCreatePrefilledCardholderDetailsTest {
 
     @Test
     void shouldCreateAChargeWithPrefilledCardHolderDetailsCardholderNameOnly() {
-        doAnswer(invocation -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(invocation -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
         when(mockedGatewayAccountDao.findById(GATEWAY_ACCOUNT_ID)).thenReturn(Optional.of(gatewayAccount));
@@ -285,7 +285,7 @@ class ChargeServiceCreatePrefilledCardholderDetailsTest {
         cardHolderDetails.setCardHolderName("Joe Bogs");
 
         ChargeCreateRequest request = requestBuilder.withPrefilledCardHolderDetails(cardHolderDetails).build();
-        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
         ChargeEntity createdChargeEntity = chargeEntityArgumentCaptor.getValue();
@@ -297,7 +297,7 @@ class ChargeServiceCreatePrefilledCardholderDetailsTest {
 
     @Test
     void shouldCreateAChargeWhenPrefilledCardHolderDetailsCardholderNameAndSomeAddressNotPresent() {
-        doAnswer(invocation -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(invocation -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
         when(mockedGatewayAccountDao.findById(GATEWAY_ACCOUNT_ID)).thenReturn(Optional.of(gatewayAccount));
@@ -308,7 +308,7 @@ class ChargeServiceCreatePrefilledCardholderDetailsTest {
         cardHolderDetails.setAddress(address);
 
         ChargeCreateRequest request = requestBuilder.withPrefilledCardHolderDetails(cardHolderDetails).build();
-        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
         ChargeEntity createdChargeEntity = chargeEntityArgumentCaptor.getValue();
@@ -327,14 +327,14 @@ class ChargeServiceCreatePrefilledCardholderDetailsTest {
 
     @Test
     void shouldCreateAChargeWhenPrefilledCardHolderDetailsAreNotPresent() {
-        doAnswer(invocation -> fromUri(SERVICE_HOST)).when(this.mockedUriInfo).getBaseUriBuilder();
+        doAnswer(invocation -> fromUriString(SERVICE_HOST)).when(this.mockedBaseUri).getBaseUriBuilder();
         when(mockedProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockedPaymentProvider);
         when(mockedPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
         when(mockedGatewayAccountDao.findById(GATEWAY_ACCOUNT_ID)).thenReturn(Optional.of(gatewayAccount));
         when(mockGatewayAccountCredentialsService.getCurrentOrActiveCredential(gatewayAccount)).thenReturn(gatewayAccountCredentialsEntity);
 
         ChargeCreateRequest request = requestBuilder.build();
-        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedUriInfo, null);
+        chargeService.create(request, GATEWAY_ACCOUNT_ID, mockedBaseUri, null);
 
         verify(mockedChargeDao).persist(chargeEntityArgumentCaptor.capture());
         ChargeEntity createdChargeEntity = chargeEntityArgumentCaptor.getValue();

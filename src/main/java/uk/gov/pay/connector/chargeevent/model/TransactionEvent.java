@@ -3,7 +3,8 @@ package uk.gov.pay.connector.chargeevent.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.dropwizard.jackson.JsonSnakeCase;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import io.swagger.v3.oas.annotations.media.Schema;
 import uk.gov.pay.connector.common.model.api.ExternalChargeState;
 import uk.gov.pay.connector.common.model.api.ExternalRefundStatus;
@@ -12,7 +13,7 @@ import java.time.Instant;
 
 import static uk.gov.service.payments.commons.model.CommonDateTimeFormatters.ISO_INSTANT_MILLISECOND_PRECISION;
 
-@JsonSnakeCase
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record TransactionEvent (
         @JsonProperty("type")
         @Schema(example = "PAYMENT")
@@ -39,7 +40,7 @@ public record TransactionEvent (
 ) implements Comparable<TransactionEvent> {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonSnakeCase
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public record State (
             @Schema(example = "cancelled")
             String status,

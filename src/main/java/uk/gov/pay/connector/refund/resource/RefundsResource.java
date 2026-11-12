@@ -19,34 +19,33 @@ import uk.gov.pay.connector.gatewayaccount.service.GatewayAccountService;
 import uk.gov.pay.connector.refund.exception.RefundException;
 import uk.gov.pay.connector.refund.model.RefundRequest;
 import uk.gov.pay.connector.refund.model.RefundResponse;
-import uk.gov.pay.connector.refund.model.RefundsResponse;
-import uk.gov.pay.connector.refund.model.domain.RefundEntity;
 import uk.gov.pay.connector.refund.service.ChargeRefundResponse;
 import uk.gov.pay.connector.refund.service.RefundService;
 
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.UriInfo;
-import java.util.List;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import uk.gov.pay.connector.web.MediaTypes;
+import uk.gov.pay.connector.web.BaseUri;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.RequestBody;
+
 import static uk.gov.pay.connector.charge.resource.ChargesApiResource.MAX_AMOUNT;
 import static uk.gov.pay.connector.charge.resource.ChargesApiResource.MIN_AMOUNT;
 import static uk.gov.pay.connector.refund.exception.RefundException.ErrorCode.NOT_SUFFICIENT_AMOUNT_AVAILABLE;
 import static uk.gov.pay.connector.util.ResponseUtil.responseWithChargeNotFound;
 import static uk.gov.pay.connector.util.ResponseUtil.responseWithRefundNotFound;
 import static uk.gov.pay.connector.util.ResponseUtil.serviceErrorResponse;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-@Path("/")
 @Tag(name = "Refunds")
+@RestController
 public class RefundsResource {
 
     private final RefundService refundService;
@@ -62,10 +61,8 @@ public class RefundsResource {
         this.chargeDao = chargeDao;
     }
 
-    @POST
-    @Path("/v1/api/accounts/{accountId}/charges/{chargeId}/refunds")
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/accounts/{accountId}/charges/{chargeId}/refunds")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Refund a charge",
             responses = {
@@ -87,11 +84,11 @@ public class RefundsResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response submitRefund(@Parameter(example = "1", description = "Gateway account ID")
-                                 @PathParam("accountId") Long accountId,
+    public ResponseEntity<?> submitRefund(@Parameter(example = "1", description = "Gateway account ID")
+                                 @PathVariable("accountId") Long accountId,
                                  @Parameter(example = "2c6vtn9pth38ppbmnt20d57t49", description = "Charge external ID")
-                                 @PathParam("chargeId") String chargeExternalId,
-                                 RefundRequest refundRequest, @Context UriInfo uriInfo) {
+                                 @PathVariable("chargeId") String chargeExternalId,
+                                 @RequestBody(required = false) RefundRequest refundRequest, HttpServletRequest request) {
         validateRefundRequest(refundRequest.getAmount());
         
         GatewayAccountEntity account = gatewayAccountService.getGatewayAccount(accountId)
@@ -103,17 +100,15 @@ public class RefundsResource {
         
         GatewayRefundResponse refundResponse = refundServiceResponse.getGatewayRefundResponse();
         if (refundResponse.isSuccessful()) {
-            return Response.accepted(RefundResponse.valueOf(refundServiceResponse.getRefundEntity(), accountId, uriInfo).serialize()).build();
+            return ResponseEntity.accepted().body(RefundResponse.valueOf(refundServiceResponse.getRefundEntity(), accountId, BaseUri.from(request)).serialize());
         }
         return serviceErrorResponse(refundResponse.getError().map(GatewayError::getMessage).orElse("unknown error"));
     }
 
 
 
-    @POST
-    @Path("/v1/api/service/{serviceId}/account/{accountType}/charges/{chargeId}/refunds")
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/service/{serviceId}/account/{accountType}/charges/{chargeId}/refunds")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Refund a charge",
             responses = {
@@ -135,11 +130,11 @@ public class RefundsResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response submitRefundByServiceIdAndAccountType(
-            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service external ID") @PathParam("serviceId") String serviceId,
-            @Parameter(example = "test", description = "Account Type") @PathParam("accountType") GatewayAccountType accountType,
-            @Parameter(example = "2c6vtn9pth38ppbmnt20d57t49", description = "Charge external ID") @PathParam("chargeId") String chargeExternalId,
-            @Valid RefundRequest refundRequest, @Context UriInfo uriInfo
+    public ResponseEntity<?> submitRefundByServiceIdAndAccountType(
+            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service external ID") @PathVariable("serviceId") String serviceId,
+            @Parameter(example = "test", description = "Account Type") @PathVariable("accountType") GatewayAccountType accountType,
+            @Parameter(example = "2c6vtn9pth38ppbmnt20d57t49", description = "Charge external ID") @PathVariable("chargeId") String chargeExternalId,
+            @Valid @RequestBody(required = false) RefundRequest refundRequest, HttpServletRequest request
     ) {
         validateRefundRequest(refundRequest.getAmount());
         
@@ -153,7 +148,7 @@ public class RefundsResource {
         GatewayRefundResponse gatewayRefundResponse = refundServiceResponse.getGatewayRefundResponse();
         
         if (gatewayRefundResponse.isSuccessful()) {
-            return Response.accepted(RefundResponse.valueOf(refundServiceResponse.getRefundEntity(), serviceId, accountType, uriInfo).serialize()).build();
+            return ResponseEntity.accepted().body(RefundResponse.valueOf(refundServiceResponse.getRefundEntity(), serviceId, accountType, BaseUri.from(request)).serialize());
         }
         return serviceErrorResponse(gatewayRefundResponse.getError().map(GatewayError::getMessage).orElse("unknown error"));
     }
@@ -167,9 +162,8 @@ public class RefundsResource {
         }
     }
 
-    @GET
-    @Path("/v1/api/accounts/{accountId}/charges/{chargeId}/refunds/{refundId}")
-    @Produces(APPLICATION_JSON)
+    @GetMapping("/v1/api/accounts/{accountId}/charges/{chargeId}/refunds/{refundId}")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Get a refund",
             responses = {
@@ -194,20 +188,19 @@ public class RefundsResource {
                     @ApiResponse(responseCode = "404", description = "Not found - charge or refund not found")
             }
     )
-    public Response getRefund(@Parameter(example = "1", description = "Gateway account ID")
-                              @PathParam("accountId") Long accountId,
+    public ResponseEntity<?> getRefund(@Parameter(example = "1", description = "Gateway account ID")
+                              @PathVariable("accountId") Long accountId,
                               @Parameter(example = "uqu4s24383qkod35rsb06gv3cn", description = "Charge external ID")
-                              @PathParam("chargeId") String chargeId,
+                              @PathVariable("chargeId") String chargeId,
                               @Parameter(example = "vijjk08adovg10gfqc46joem2l", description = "Refund external ID")
-                              @PathParam("refundId") String refundId,
-                              @Context UriInfo uriInfo) {
+                              @PathVariable("refundId") String refundId,
+                              HttpServletRequest request) {
         return chargeDao.findByExternalIdAndGatewayAccount(chargeId, accountId)
-                .map(chargeEntity -> getRefundResponse(chargeEntity, refundId, accountId, uriInfo))
+                .<ResponseEntity<?>>map(chargeEntity -> getRefundResponse(chargeEntity, refundId, accountId, BaseUri.from(request)))
                 .orElseGet(() -> responseWithChargeNotFound(chargeId));
     }
 
-    @GET
-    @Path("/v1/api/refunds/{refundExternalId}")
+    @GetMapping("/v1/api/refunds/{refundExternalId}")
     @Operation(
             summary = "Check if a refund exists in Connector",
             responses = {
@@ -215,15 +208,14 @@ public class RefundsResource {
                     @ApiResponse(responseCode = "404", description = "Refund missing or expunged")
             }
     )
-    public Response getRefundByExternalId(@PathParam("refundExternalId") String refundExternalId) {
+    public ResponseEntity<?> getRefundByExternalId(@PathVariable("refundExternalId") String refundExternalId) {
         return refundService.findRefundByExternalId(refundExternalId)
-                .map(refundEntity -> Response.ok().build())
-                .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
+                .map(refundEntity -> ResponseEntity.ok().build())
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
  
-    @GET
-    @Path("/v1/api/service/{serviceId}/account/{accountType}/charges/{chargeId}/refunds/{refundId}")
-    @Produces(APPLICATION_JSON)
+    @GetMapping("/v1/api/service/{serviceId}/account/{accountType}/charges/{chargeId}/refunds/{refundId}")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Get a refund",
             responses = {
@@ -248,32 +240,32 @@ public class RefundsResource {
                     @ApiResponse(responseCode = "404", description = "Not found - charge or refund not found")
             }
     )
-    public Response getRefund(
-            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathParam("serviceId") String serviceId, // pragma: allowlist secret
-            @Parameter(example = "test", description = "Account type") @PathParam("accountType") GatewayAccountType accountType,
-            @Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID") @PathParam("chargeId") String chargeId,
-            @Parameter(example = "vijjk08adovg10gfqc46joem2l", description = "Refund external ID") @PathParam("refundId") String refundId,
-            @Context UriInfo uriInfo) {
+    public ResponseEntity<?> getRefund(
+            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathVariable("serviceId") String serviceId, // pragma: allowlist secret
+            @Parameter(example = "test", description = "Account type") @PathVariable("accountType") GatewayAccountType accountType,
+            @Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID") @PathVariable("chargeId") String chargeId,
+            @Parameter(example = "vijjk08adovg10gfqc46joem2l", description = "Refund external ID") @PathVariable("refundId") String refundId,
+            HttpServletRequest request) {
         return chargeDao.findByExternalIdAndServiceIdAndAccountType(chargeId, serviceId, accountType)
-                .map(chargeEntity -> 
-                        getRefundResponse(chargeEntity, refundId, serviceId, accountType, uriInfo)
+                .<ResponseEntity<?>>map(chargeEntity -> 
+                        getRefundResponse(chargeEntity, refundId, serviceId, accountType, BaseUri.from(request))
                 )
                 .orElseGet(() -> responseWithChargeNotFound(chargeId));
     }
 
-    private Response getRefundResponse(ChargeEntity chargeEntity, String refundId, Long accountId, UriInfo uriInfo) {
+    private ResponseEntity<?> getRefundResponse(ChargeEntity chargeEntity, String refundId, Long accountId, BaseUri uriInfo) {
         return refundService.findNotExpungedRefunds(chargeEntity.getExternalId()).stream()
                 .filter(refundEntity -> refundEntity.getExternalId().equals(refundId))
                 .findFirst()
-                .map(refundEntity -> Response.ok(RefundResponse.valueOf(refundEntity, accountId, uriInfo).serialize()).build())
+                .<ResponseEntity<?>>map(refundEntity -> ResponseEntity.ok(RefundResponse.valueOf(refundEntity, accountId, uriInfo).serialize()))
                 .orElseGet(() -> responseWithRefundNotFound(refundId));
     }
 
-    private Response getRefundResponse(ChargeEntity chargeEntity, String refundId, String serviceId, GatewayAccountType accountType, UriInfo uriInfo) {
+    private ResponseEntity<?> getRefundResponse(ChargeEntity chargeEntity, String refundId, String serviceId, GatewayAccountType accountType, BaseUri uriInfo) {
         return refundService.findNotExpungedRefunds(chargeEntity.getExternalId()).stream()
                 .filter(refundEntity -> refundEntity.getExternalId().equals(refundId))
                 .findFirst()
-                .map(refundEntity -> Response.ok(RefundResponse.valueOf(refundEntity, serviceId, accountType, uriInfo).serialize()).build())
+                .<ResponseEntity<?>>map(refundEntity -> ResponseEntity.ok(RefundResponse.valueOf(refundEntity, serviceId, accountType, uriInfo).serialize()))
                 .orElseGet(() -> responseWithRefundNotFound(refundId));
     }
 }

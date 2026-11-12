@@ -23,7 +23,7 @@ public class CardTypeDaoJpaIT {
 
     @BeforeAll
     public static void setup() {
-        cardTypeDao = app.getInstanceFromGuiceContainer(CardTypeDao.class);
+        cardTypeDao = app.getBean(CardTypeDao.class);
     }
 
     @Test

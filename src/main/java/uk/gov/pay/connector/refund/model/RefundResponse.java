@@ -4,7 +4,7 @@ import black.door.hate.HalRepresentation;
 import uk.gov.pay.connector.gatewayaccount.model.GatewayAccountType;
 import uk.gov.pay.connector.refund.model.domain.RefundEntity;
 
-import jakarta.ws.rs.core.UriInfo;
+import uk.gov.pay.connector.web.BaseUri;
 import java.net.URI;
 
 import static uk.gov.service.payments.commons.model.CommonDateTimeFormatters.ISO_INSTANT_MILLISECOND_PRECISION;
@@ -15,7 +15,7 @@ public class RefundResponse extends HalResourceResponse {
         super(refundHalRepresentation, location);
     }
 
-    public static RefundResponse valueOf(RefundEntity refundEntity, Long gatewayAccountId, UriInfo uriInfo) {
+    public static RefundResponse valueOf(RefundEntity refundEntity, Long gatewayAccountId, BaseUri uriInfo) {
 
         String externalChargeId = refundEntity.getChargeExternalId();
         String externalRefundId = refundEntity.getExternalId();
@@ -41,7 +41,7 @@ public class RefundResponse extends HalResourceResponse {
                 .addLink("payment", paymentLink), selfLink);
     }
     
-    public static RefundResponse valueOf(RefundEntity refundEntity, String serviceId, GatewayAccountType accountType, UriInfo uriInfo) {
+    public static RefundResponse valueOf(RefundEntity refundEntity, String serviceId, GatewayAccountType accountType, BaseUri uriInfo) {
 
         String externalChargeId = refundEntity.getChargeExternalId();
         String externalRefundId = refundEntity.getExternalId();

@@ -7,15 +7,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import uk.gov.pay.connector.cardtype.dao.CardTypeDao;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Response;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import uk.gov.pay.connector.web.MediaTypes;
+import org.springframework.http.ResponseEntity;
+
 import static uk.gov.pay.connector.util.ResponseUtil.successResponseWithEntity;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-@Path("/")
+@RestController
 public class CardTypesResource {
 
     private final CardTypeDao cardTypeDao;
@@ -25,9 +26,8 @@ public class CardTypesResource {
         this.cardTypeDao = cardTypeDao;
     }
 
-    @GET
-    @Path("/v1/api/card-types")
-    @Produces(APPLICATION_JSON)
+    @GetMapping("/v1/api/card-types")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "List all card types",
             responses = {
@@ -35,7 +35,7 @@ public class CardTypesResource {
                             content = @Content(schema = @Schema(implementation = CardTypesResponse.class)))
             }
     )
-    public Response getCardTypes() {
+    public ResponseEntity<?> getCardTypes() {
         return successResponseWithEntity(CardTypesResponse.of(cardTypeDao.findAll()));
     }
 }

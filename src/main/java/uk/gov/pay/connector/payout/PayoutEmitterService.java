@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.payout;
 
-import com.google.inject.Inject;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.app.ConnectorConfiguration;
@@ -18,6 +18,7 @@ import uk.gov.service.payments.commons.queue.exception.QueueException;
 
 import java.time.Instant;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 import static java.lang.String.format;
 import static net.logstash.logback.argument.StructuredArguments.kv;
@@ -27,6 +28,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.GATEWAY_PAYOUT_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.LEDGER_EVENT_TYPE;
 import static uk.gov.service.payments.logging.LoggingKeys.PSP_ACCOUNT_ID;
 
+@Service
 public class PayoutEmitterService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());

@@ -62,7 +62,7 @@ class AdyenTokenWebhookNotificationHandlerIT {
 
     @BeforeEach
     void setUp() {
-        handler = app.getInstanceFromGuiceContainer(AdyenTokenWebhookNotificationHandler.class);
+        handler = app.getBean(AdyenTokenWebhookNotificationHandler.class);
 
         app.getDatabaseFixtures().validTestCardDetails();
         insertTestAccount();

@@ -16,9 +16,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
+@Component
 public class TaskQueue extends AbstractQueue {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskQueue.class);

@@ -5,16 +5,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.HeaderParam;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.gateway.PaymentGatewayName;
@@ -24,9 +17,14 @@ import uk.gov.pay.connector.gateway.sandbox.SandboxNotificationService;
 import uk.gov.pay.connector.gateway.stripe.StripeNotificationService;
 import uk.gov.pay.connector.gateway.worldpay.WorldpayNotificationService;
 
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import uk.gov.pay.connector.web.MediaTypes;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
+
 import static io.swagger.v3.oas.annotations.enums.ParameterIn.HEADER;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
-import static jakarta.ws.rs.core.MediaType.TEXT_XML;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.ADYEN;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.SANDBOX;
@@ -34,9 +32,11 @@ import static uk.gov.pay.connector.gateway.PaymentGatewayName.STRIPE;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.WORLDPAY;
 import static uk.gov.pay.connector.util.ResponseUtil.forbiddenErrorResponse;
 import static uk.gov.service.payments.logging.LoggingKeys.PROVIDER;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.TEXT_XML_VALUE;
 
-@Path("/")
 @Tag(name = "Notifications")
+@RestController
 public class NotificationResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NotificationResource.class);
@@ -58,9 +58,8 @@ public class NotificationResource {
         this.adyenNotificationService = adyenNotificationService;
     }
 
-    @POST
-    @Consumes(APPLICATION_JSON)
-    @Path("/v1/api/notifications/sandbox")
+    @PostMapping("/v1/api/notifications/sandbox")
+    @MediaTypes(consumes = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Handle sandbox notifications",
             description = "This endpoint returns a HTTP status code of 200 for authorized requests. This is used for testing purposes. " +
@@ -78,21 +77,19 @@ public class NotificationResource {
                     @ApiResponse(responseCode = "403", description = "Forbidden - notification rejected")
             }
     )
-    public Response authoriseSandboxNotifications(
-            @Parameter(in = HEADER, example = "let-me-in") @HeaderParam("Authorization") String authToken,
-            @Parameter(in = HEADER, example = "1.1.1.1, 3.3.3.3") @HeaderParam("X-Forwarded-For") String forwardedIpAddresses) {
+    public ResponseEntity<?> authoriseSandboxNotifications(
+            @Parameter(in = HEADER, example = "let-me-in") @RequestHeader(value = "Authorization", required = false) String authToken,
+            @Parameter(in = HEADER, example = "1.1.1.1, 3.3.3.3") @RequestHeader(value = "X-Forwarded-For", required = false) String forwardedIpAddresses) {
 
         if (!sandboxNotificationService.handleNotificationFor(forwardedIpAddresses, authToken)) {
             logRejectionMessage(forwardedIpAddresses, SANDBOX);
             return forbiddenErrorResponse();
         }
-        return Response.ok().build();
+        return ResponseEntity.ok().build();
     }
 
-    @POST
-    @Consumes(TEXT_XML)
-    @Path("/v1/api/notifications/worldpay")
-    @Produces({TEXT_XML, APPLICATION_JSON})
+    @PostMapping("/v1/api/notifications/worldpay")
+    @MediaTypes(produces = {TEXT_XML_VALUE, APPLICATION_JSON_VALUE}, consumes = TEXT_XML_VALUE)
     @Operation(
             summary = "Handle Worldpay notifications",
             description = "See https://github.com/govuk-pay/pay-connector/blob/master/src/test/resources/templates/worldpay/notification.txt for example notification",
@@ -101,23 +98,21 @@ public class NotificationResource {
                     @ApiResponse(responseCode = "403", description = "Forbidden - notification rejected")
             }
     )
-    public Response authoriseWorldpayNotifications(@Parameter(example = "see https://github.com/govuk-pay/pay-connector/blob/master/src/test/resources/templates/worldpay/notification.xml for example notification")
-                                                   String notification,
+    public ResponseEntity<?> authoriseWorldpayNotifications(@Parameter(example = "see https://github.com/govuk-pay/pay-connector/blob/master/src/test/resources/templates/worldpay/notification.xml for example notification")
+                                                   @RequestBody(required = false) String notification,
                                                    @Parameter(in = HEADER, example = "4.3.2.1")
-                                                   @HeaderParam("X-Forwarded-For") String forwardedIpAddresses) {
+                                                   @RequestHeader(value = "X-Forwarded-For", required = false) String forwardedIpAddresses) {
         if (!worldpayNotificationService.handleNotificationFor(forwardedIpAddresses, notification)) {
             logRejectionMessage(forwardedIpAddresses, WORLDPAY);
             return forbiddenErrorResponse();
         }
         String response = "[OK]";
         logResponseMessage(response, WORLDPAY);
-        return Response.ok(response).build();
+        return ResponseEntity.ok(response);
     }
 
-    @POST
-    @Consumes(APPLICATION_JSON)
-    @Path("/v1/api/notifications/stripe")
-    @Produces({TEXT_XML, APPLICATION_JSON})
+    @PostMapping("/v1/api/notifications/stripe")
+    @MediaTypes(produces = {TEXT_XML_VALUE, APPLICATION_JSON_VALUE}, consumes = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Handle Stripe notifications",
             responses = {
@@ -125,23 +120,22 @@ public class NotificationResource {
                     @ApiResponse(responseCode = "403", description = "Forbidden - notification rejected")
             }
     )
-    public Response authoriseStripeNotifications(String notification,
+    public ResponseEntity<?> authoriseStripeNotifications(@RequestBody(required = false) String notification,
                                                  @Parameter(example = "t=1492774577,v1=5257a869e7ecebeda32affa62cdca3fa51cad7e77a0e56ff536d0ce8e108d8bd,v0=6ffbb59b2300aae63f272406069a9788598b792a944a07aba816edb039989a39")
-                                                 @HeaderParam("Stripe-Signature") String signatureHeader,
+                                                 @RequestHeader(value = "Stripe-Signature", required = false) String signatureHeader,
                                                  @Parameter(example = "1.2.3.4")
-                                                 @HeaderParam("X-Forwarded-For") String forwardedIpAddresses) {
+                                                 @RequestHeader(value = "X-Forwarded-For", required = false) String forwardedIpAddresses) {
         if (!stripeNotificationService.handleNotificationFor(notification, signatureHeader, forwardedIpAddresses)) {
             logRejectionMessage(forwardedIpAddresses, STRIPE);
             return forbiddenErrorResponse();
         }
         String response = "[OK]";
         logResponseMessage(response, STRIPE);
-        return Response.ok(response).build();
+        return ResponseEntity.ok(response);
     }
 
-    @POST
-    @Consumes(APPLICATION_JSON)
-    @Path("/v1/api/notifications/adyen")
+    @PostMapping("/v1/api/notifications/adyen")
+    @MediaTypes(consumes = APPLICATION_JSON_VALUE)
     @Schema(oneOf = {NotificationRequest.class, AdyenTokenNotification.class})
     @Operation(
             summary = "Handle Adyen payment and token notifications",
@@ -153,24 +147,24 @@ public class NotificationResource {
                     @ApiResponse(responseCode = "415", description = "Unsupported Media Type - Unsupported content type")
             }
     )
-    @RequestBody(
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "Adyen notification payload",
             required = true,
             content = @Content(
-                    mediaType = APPLICATION_JSON,
+                    mediaType = APPLICATION_JSON_VALUE,
                     schema = @Schema(oneOf = {NotificationRequest.class, AdyenTokenNotification.class})
             )
     )
-    public Response authoriseAdyenNotifications(String notification,
+    public ResponseEntity<?> authoriseAdyenNotifications(@RequestBody(required = false) String notification,
                                                 @Parameter(in = HEADER, example = "5.6.7.8")
-                                                @HeaderParam("X-Forwarded-For") String forwardedIpAddresses,
-                                                @HeaderParam("hmacSignature") String hmacSignature) {
+                                                @RequestHeader(value = "X-Forwarded-For", required = false) String forwardedIpAddresses,
+                                                @RequestHeader(value = "hmacSignature", required = false) String hmacSignature) {
         if (!adyenNotificationService.handleNotificationFor(notification, forwardedIpAddresses, hmacSignature)) {
             logRejectionMessage(forwardedIpAddresses, ADYEN);
             return forbiddenErrorResponse();
         }
         logResponseMessage("[accepted]", ADYEN);
-        return Response.ok().build();
+        return ResponseEntity.ok().build();
     }
 
 

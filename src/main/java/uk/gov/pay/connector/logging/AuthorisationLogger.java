@@ -20,7 +20,9 @@ import uk.gov.pay.connector.gateway.worldpay.utils.WorldpayAuthoriseRequestLogGe
 
 import java.util.Locale;
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
+@Component
 public class AuthorisationLogger {
 
     private final AuthorisationRequestSummaryStringifier authorisationRequestSummaryStringifier;

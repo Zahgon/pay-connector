@@ -35,7 +35,7 @@ import java.util.Optional;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
-import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static java.lang.String.format;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -343,7 +343,7 @@ public class ITestBaseExtension implements BeforeEachCallback, BeforeAllCallback
                 .body(authorisationDetails)
                 .post(authoriseChargeUrlFor(chargeId))
                 .then()
-                .statusCode(BAD_REQUEST.getStatusCode())
+                .statusCode(BAD_REQUEST.value())
                 .contentType(JSON)
                 .body("message", contains(errorMessage))
                 .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));

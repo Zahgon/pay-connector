@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.paymentprocessor.resource;
 
-import com.google.inject.Inject;
+import jakarta.inject.Inject;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -12,16 +12,19 @@ import uk.gov.pay.connector.paymentprocessor.service.DiscrepancyService;
 import uk.gov.pay.connector.paymentprocessor.model.GatewayStatusComparison;
 
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
 import java.util.List;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+import uk.gov.pay.connector.web.MediaTypes;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.validation.annotation.Validated;
 
-@Path("/")
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 @Tag(name = "Discrepancies")
+@RestController
+@Validated
 public class DiscrepancyResource {
 
     private final DiscrepancyService discrepancyService;
@@ -31,10 +34,8 @@ public class DiscrepancyResource {
         this.discrepancyService = discrepancyService;
     }
 
-    @POST
-    @Path("/v1/api/discrepancies/report")
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/discrepancies/report")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Compare charge status with gateway",
             responses = {
@@ -45,14 +46,12 @@ public class DiscrepancyResource {
     )
     public List<GatewayStatusComparison> listDiscrepancies(
             @Parameter(array = @ArraySchema(schema = @Schema(implementation = String.class, example = "charge-external-id")))
-            @NotEmpty List<String> chargeIds) {
+            @NotEmpty @RequestBody(required = false) List<String> chargeIds) {
         return discrepancyService.listGatewayStatusComparisons(chargeIds);
     }
 
-    @POST
-    @Path("/v1/api/discrepancies/resolve")
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/discrepancies/resolve")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Resolve charge status discrepancy",
             description = "When charge status mismatches with Gateway and is in cancellable state, charge is cancelled. Otherwise no action takes place",
@@ -64,7 +63,7 @@ public class DiscrepancyResource {
     )
     public List<GatewayStatusComparison> resolveDiscrepancies(
             @Parameter(array = @ArraySchema(schema = @Schema(implementation = String.class, example = "charge-external-id")))
-            @NotEmpty List<String> chargeIds) {
+            @NotEmpty @RequestBody(required = false) List<String> chargeIds) {
         return discrepancyService.resolveDiscrepancies(chargeIds);
     }
 }

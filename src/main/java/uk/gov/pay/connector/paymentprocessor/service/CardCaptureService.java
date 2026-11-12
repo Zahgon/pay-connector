@@ -1,8 +1,8 @@
 package uk.gov.pay.connector.paymentprocessor.service;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.inject.persist.Transactional;
-import io.dropwizard.core.setup.Environment;
+import org.springframework.transaction.annotation.Transactional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.charge.model.domain.ChargeEntity;
@@ -27,6 +27,7 @@ import jakarta.persistence.OptimisticLockException;
 import java.time.InstantSource;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 import static java.lang.String.format;
 import static net.logstash.logback.argument.StructuredArguments.kv;
@@ -38,6 +39,7 @@ import static uk.gov.pay.connector.gateway.CaptureResponse.ChargeState.PENDING;
 import static uk.gov.service.payments.logging.LoggingKeys.LEDGER_EVENT_TYPE;
 import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 
+@Service
 public class CardCaptureService {
 
     private static final Logger LOG = LoggerFactory.getLogger(CardCaptureService.class);
@@ -55,13 +57,13 @@ public class CardCaptureService {
     public CardCaptureService(ChargeService chargeService,
                               PaymentProviders providers,
                               UserNotificationService userNotificationService,
-                              Environment environment,
+                              MetricRegistry metricRegistry,
                               InstantSource instantSource,
                               CaptureQueue captureQueue,
                               EventService eventService) {
         this.chargeService = chargeService;
         this.providers = providers;
-        this.metricRegistry = environment.metrics();
+        this.metricRegistry = metricRegistry;
         this.instantSource = instantSource;
         this.userNotificationService = userNotificationService;
         this.captureQueue = captureQueue;

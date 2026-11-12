@@ -1,8 +1,9 @@
 package uk.gov.pay.connector.refund.resource;
 
-import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
-import io.dropwizard.testing.junit5.ResourceExtension;
-import jakarta.ws.rs.core.Response;
+import uk.gov.pay.connector.rules.ResourceTestExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import uk.gov.pay.connector.rules.ResourceTestResponse;
+import org.springframework.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.gov.pay.connector.charge.dao.ChargeDao;
@@ -20,7 +21,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(DropwizardExtensionsSupport.class)
 public class RefundsResourceTest {
 
     private static final RefundService mockRefundService = mock(RefundService.class);
@@ -28,9 +28,8 @@ public class RefundsResourceTest {
     private static final GatewayAccountService mockGatewayAccount = mock(GatewayAccountService.class);
     private static final ChargeDao mockChargeDao = mock(ChargeDao.class);
 
-    public static final ResourceExtension resources = ResourceExtension.builder()
-            .addResource(new RefundsResource(mockRefundService, mockChargeService, mockGatewayAccount, mockChargeDao))
-            .build();
+    @RegisterExtension
+    public static final ResourceTestExtension resources = ResourceTestExtension.withResources(new RefundsResource(mockRefundService, mockChargeService, mockGatewayAccount, mockChargeDao));
 
     @Test
     void shouldReturn200WhenRefundExists() {
@@ -39,12 +38,12 @@ public class RefundsResourceTest {
 
         when(mockRefundService.findRefundByExternalId(externalRefundId)).thenReturn(Optional.of(refundEntity));
 
-        Response response = resources
+        ResourceTestResponse response = resources
                 .target("/v1/api/refunds/" + externalRefundId)
                 .request()
                 .get();
 
-        assertThat(response.getStatus(), is(Response.Status.OK.getStatusCode()));
+        assertThat(response.getStatus(), is(HttpStatus.OK.value()));
     }
 
     @Test
@@ -53,11 +52,11 @@ public class RefundsResourceTest {
 
         when(mockRefundService.findRefundByExternalId(externalRefundId)).thenReturn(Optional.empty());
 
-        Response response = resources
+        ResourceTestResponse response = resources
                 .target("/v1/api/refunds/" + externalRefundId)
                 .request()
                 .get();
 
-        assertThat(response.getStatus(), is(Response.Status.NOT_FOUND.getStatusCode()));
+        assertThat(response.getStatus(), is(HttpStatus.NOT_FOUND.value()));
     }
 }

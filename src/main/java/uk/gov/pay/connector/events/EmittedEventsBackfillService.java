@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.events;
 
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -17,11 +17,13 @@ import uk.gov.pay.connector.tasks.HistoricalEventEmitter;
 import jakarta.inject.Inject;
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import org.springframework.stereotype.Service;
 
 import static java.time.ZoneOffset.UTC;
 import static java.time.ZonedDateTime.now;
 import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 
+@Service
 public class EmittedEventsBackfillService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     public static final int PAGE_SIZE = 100;

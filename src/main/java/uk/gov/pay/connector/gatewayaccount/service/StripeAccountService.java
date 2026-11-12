@@ -24,13 +24,15 @@ import uk.gov.pay.connector.gatewayaccount.model.StripeAccountResponse;
 import uk.gov.pay.connector.gatewayaccount.model.StripeCredentials;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.InternalServerErrorException;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 
 import static com.stripe.param.AccountCreateParams.Company;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.STRIPE;
 
+@Service
 public class StripeAccountService {
 
     private static final Logger logger = LoggerFactory.getLogger(StripeAccountService.class);
@@ -67,7 +69,7 @@ public class StripeAccountService {
             account.getExternalAccounts().create(StripeTestAccountDefaults.bankAccount, requestOptions);
             return account;
         } catch (StripeException e) {
-            throw new InternalServerErrorException(e);
+            throw new WebApplicationException(e);
         }
     }
     
@@ -77,7 +79,7 @@ public class StripeAccountService {
             Person person = account.persons(Map.of(), requestOptions).create(StripeTestAccountDefaults.person, requestOptions);
             logger.info("Created person {}", person.getId());
         } catch (StripeException e) {
-            throw new InternalServerErrorException(e);
+            throw new WebApplicationException(e);
         }
     }
     

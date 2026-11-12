@@ -2,7 +2,7 @@ package uk.gov.pay.connector.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.persist.UnitOfWork;
+import uk.gov.pay.connector.common.dao.UnitOfWork;
 import io.github.netmikey.logunit.api.LogCapturer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

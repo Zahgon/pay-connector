@@ -13,10 +13,10 @@ import java.util.List;
 
 import static io.restassured.http.ContentType.JSON;
 import static java.time.temporal.ChronoUnit.HOURS;
-import static jakarta.ws.rs.core.Response.Status.ACCEPTED;
-import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
-import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
-import static jakarta.ws.rs.core.Response.Status.NO_CONTENT;
+import static org.springframework.http.HttpStatus.ACCEPTED;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasItems;
@@ -81,7 +81,7 @@ public class ChargeCancelFrontendResourceIT {
                         .withCreatedDate(Instant.now().minus(1, HOURS)).build());
         app.getWorldpayMockClient().mockCancelSuccess();
 
-        userCancelChargeAndCheckApiStatus(chargeId, USER_CANCELLED, NO_CONTENT.getStatusCode());
+        userCancelChargeAndCheckApiStatus(chargeId, USER_CANCELLED, NO_CONTENT.value());
 
         List<String> events = app.getDatabaseTestHelper().getInternalEvents(chargeId);
         assertThat(events.size(), is(3));
@@ -109,7 +109,7 @@ public class ChargeCancelFrontendResourceIT {
         testBaseExtension.getConnectorRestApiClient()
                 .withChargeId(chargeId)
                 .postFrontendChargeCancellation()
-                .statusCode(ACCEPTED.getStatusCode())
+                .statusCode(ACCEPTED.value())
                 .and()
                 .contentType(JSON)
                 .body("message", contains(expectedMessage))
@@ -165,7 +165,7 @@ public class ChargeCancelFrontendResourceIT {
                 .withChargeId(unknownChargeId)
                 .withAccountId(testBaseExtension.getAccountId())
                 .postFrontendChargeCancellation()
-                .statusCode(NOT_FOUND.getStatusCode())
+                .statusCode(NOT_FOUND.value())
                 .and()
                 .contentType(JSON)
                 .body("message", contains("Charge with id [" + unknownChargeId + "] not found."))
@@ -183,7 +183,7 @@ public class ChargeCancelFrontendResourceIT {
                     testBaseExtension.getConnectorRestApiClient()
                             .withChargeId(chargeId)
                             .postFrontendChargeCancellation()
-                            .statusCode(BAD_REQUEST.getStatusCode())
+                            .statusCode(BAD_REQUEST.value())
                             .and()
                             .contentType(JSON)
                             .body("message", contains(incorrectStateMessage))

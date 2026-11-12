@@ -1,7 +1,9 @@
 package uk.gov.pay.connector.charge.resource;
 
-import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
-import io.dropwizard.testing.junit5.ResourceExtension;
+import uk.gov.pay.connector.rules.ResourceTestExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import uk.gov.pay.connector.rules.ResourceTestResponse;
+import uk.gov.pay.connector.rules.ResourceTestEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -19,8 +21,6 @@ import uk.gov.pay.connector.usernotification.service.UserNotificationService;
 import uk.gov.pay.connector.util.JsonMappingExceptionMapper;
 import uk.gov.service.payments.commons.model.ErrorIdentifier;
 
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.Response;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -33,7 +33,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(DropwizardExtensionsSupport.class)
 public class ChargesApiResourceTest {
 
     private static final ChargeService chargeService = mock(ChargeService.class);
@@ -48,13 +47,8 @@ public class ChargesApiResourceTest {
     private static final Long AN_ACCOUNT_ID = 1234L;
     private static final GatewayAccountType A_GATEWAY_ACCOUNT_TYPE = GatewayAccountType.TEST;
 
-    public static ResourceExtension chargesApiResource = ResourceExtension.builder()
-            .addResource(new ChargesApiResource(chargeService, chargeExpiryService, gatewayAccountService, userNotificationService))
-            .setRegisterDefaultExceptionMappers(false)
-            .addProvider(ConstraintViolationExceptionMapper.class)
-            .addProvider(JsonMappingExceptionMapper.class)
-            .addProvider(ValidationExceptionMapper.class)
-            .build();
+    @RegisterExtension
+    public static ResourceTestExtension chargesApiResource = ResourceTestExtension.withResources(new ChargesApiResource(chargeService, chargeExpiryService, gatewayAccountService, userNotificationService));
 
     @Nested
     @DisplayName("Given an account id")
@@ -69,10 +63,10 @@ public class ChargesApiResourceTest {
             void accountNotFound_shouldReturn404() {
                 when(gatewayAccountService.getGatewayAccount(AN_ACCOUNT_ID)).thenReturn(Optional.empty());
 
-                try (Response response = chargesApiResource
+                try (ResourceTestResponse response = chargesApiResource
                         .target(String.format("/v1/api/accounts/%d/charges/%s/resend-confirmation-email", AN_ACCOUNT_ID, A_CHARGE_ID))
                         .request()
-                        .post(Entity.json(Collections.emptyMap()))) {
+                        .post(ResourceTestEntity.json(Collections.emptyMap()))) {
 
                     assertGenericErrorResponse(response, 404, format("Gateway Account with id [%s] not found.", AN_ACCOUNT_ID));
                 }
@@ -84,10 +78,10 @@ public class ChargesApiResourceTest {
                 when(gatewayAccountService.getGatewayAccount(AN_ACCOUNT_ID)).thenReturn(Optional.of(mockGatewayAccountEntity));
                 when(chargeService.findCharge(A_CHARGE_ID, AN_ACCOUNT_ID)).thenReturn(Optional.empty());
 
-                try (Response response = chargesApiResource
+                try (ResourceTestResponse response = chargesApiResource
                         .target(String.format("/v1/api/accounts/%d/charges/%s/resend-confirmation-email", AN_ACCOUNT_ID, A_CHARGE_ID))
                         .request()
-                        .post(Entity.json(Collections.emptyMap()))) {
+                        .post(ResourceTestEntity.json(Collections.emptyMap()))) {
 
                     assertGenericErrorResponse(response, 404, format("Charge with id [%s] not found.", A_CHARGE_ID));
                 }
@@ -101,10 +95,10 @@ public class ChargesApiResourceTest {
                 when(userNotificationService.sendPaymentConfirmedEmailSynchronously(mockCharge, mockGatewayAccountEntity, true))
                         .thenReturn(Optional.empty());
 
-                try (Response response = chargesApiResource
+                try (ResourceTestResponse response = chargesApiResource
                         .target(format("/v1/api/accounts/%d/charges/%s/resend-confirmation-email", AN_ACCOUNT_ID, A_CHARGE_ID))
                         .request()
-                        .post(Entity.json(Collections.emptyMap()))) {
+                        .post(ResourceTestEntity.json(Collections.emptyMap()))) {
 
                     assertGenericErrorResponse(response, 402, "Failed to send email");
                 }
@@ -118,10 +112,10 @@ public class ChargesApiResourceTest {
                 when(userNotificationService.sendPaymentConfirmedEmailSynchronously(mockCharge, mockGatewayAccountEntity, true))
                         .thenReturn(Optional.of("Email sent"));
 
-                try (Response response = chargesApiResource
+                try (ResourceTestResponse response = chargesApiResource
                         .target(String.format("/v1/api/accounts/%d/charges/%s/resend-confirmation-email", AN_ACCOUNT_ID, A_CHARGE_ID))
                         .request()
-                        .post(Entity.json(Collections.emptyMap()))) {
+                        .post(ResourceTestEntity.json(Collections.emptyMap()))) {
 
                     assertThat(response.getStatus(), is(204));
                 }
@@ -142,10 +136,10 @@ public class ChargesApiResourceTest {
             void accountNotFound_shouldReturn404() {
                 when(gatewayAccountService.getGatewayAccountByServiceIdAndAccountType(A_SERVICE_ID, A_GATEWAY_ACCOUNT_TYPE)).thenReturn(Optional.empty());
 
-                try (Response response = chargesApiResource
+                try (ResourceTestResponse response = chargesApiResource
                         .target(format("/v1/api/service/%s/account/%s/charges/%s/resend-confirmation-email", A_SERVICE_ID, A_GATEWAY_ACCOUNT_TYPE, A_CHARGE_ID))
                         .request()
-                        .post(Entity.json(Collections.emptyMap()))) {
+                        .post(ResourceTestEntity.json(Collections.emptyMap()))) {
 
                     assertGenericErrorResponse(response, 404, format("Gateway account not found for service external id [%s] and account type [%s]", A_SERVICE_ID, A_GATEWAY_ACCOUNT_TYPE));
                 }
@@ -157,10 +151,10 @@ public class ChargesApiResourceTest {
                 when(gatewayAccountService.getGatewayAccountByServiceIdAndAccountType(A_SERVICE_ID, A_GATEWAY_ACCOUNT_TYPE)).thenReturn(Optional.of(mockGatewayAccountEntity));
                 when(chargeService.findCharge(any(), (Long) any())).thenReturn(Optional.empty());
 
-                try (Response response = chargesApiResource
+                try (ResourceTestResponse response = chargesApiResource
                         .target(format("/v1/api/service/%s/account/%s/charges/%s/resend-confirmation-email", A_SERVICE_ID, A_GATEWAY_ACCOUNT_TYPE, A_CHARGE_ID))
                         .request()
-                        .post(Entity.json(Collections.emptyMap()))) {
+                        .post(ResourceTestEntity.json(Collections.emptyMap()))) {
 
                     assertGenericErrorResponse(response, 404, format("Charge with id [%s] not found.", A_CHARGE_ID));
                 }
@@ -174,10 +168,10 @@ public class ChargesApiResourceTest {
                 when(userNotificationService.sendPaymentConfirmedEmailSynchronously(mockCharge, mockGatewayAccountEntity, true))
                         .thenReturn(Optional.empty());
 
-                try (Response response = chargesApiResource
+                try (ResourceTestResponse response = chargesApiResource
                         .target(format("/v1/api/service/%s/account/%s/charges/%s/resend-confirmation-email", A_SERVICE_ID, A_GATEWAY_ACCOUNT_TYPE, A_CHARGE_ID))
                         .request()
-                        .post(Entity.json(Collections.emptyMap()))) {
+                        .post(ResourceTestEntity.json(Collections.emptyMap()))) {
 
                     assertGenericErrorResponse(response, 402, "Failed to send email");
                 }
@@ -191,10 +185,10 @@ public class ChargesApiResourceTest {
                 when(userNotificationService.sendPaymentConfirmedEmailSynchronously(mockCharge, mockGatewayAccountEntity, true))
                         .thenReturn(Optional.of("Email sent"));
 
-                try (Response response = chargesApiResource
+                try (ResourceTestResponse response = chargesApiResource
                         .target(format("/v1/api/service/%s/account/%s/charges/%s/resend-confirmation-email", A_SERVICE_ID, A_GATEWAY_ACCOUNT_TYPE, A_CHARGE_ID))
                         .request()
-                        .post(Entity.json(Collections.emptyMap()))) {
+                        .post(ResourceTestEntity.json(Collections.emptyMap()))) {
 
                     assertThat(response.getStatus(), is(204));
                 }
@@ -202,7 +196,7 @@ public class ChargesApiResourceTest {
         }
     }
 
-    private static void assertGenericErrorResponse(Response response, int status, String errorMessage) {
+    private static void assertGenericErrorResponse(ResourceTestResponse response, int status, String errorMessage) {
         ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
         assertThat(response.getStatus(), is(status));
         assertThat(errorResponse.identifier(), is(ErrorIdentifier.GENERIC));

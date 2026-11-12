@@ -1,6 +1,5 @@
 package uk.gov.pay.connector.refund.service;
 
-
 import com.stripe.exception.StripeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,19 +19,22 @@ import uk.gov.pay.connector.util.RandomIdGenerator;
 import uk.gov.service.payments.commons.model.ErrorIdentifier;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 import static java.lang.String.format;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static uk.gov.pay.connector.util.ResponseUtil.badRequestResponse;
 
 
+@Service
 public class RefundReversalService {
     private final LedgerService ledgerService;
     private final RefundDao refundDao;
@@ -57,7 +59,7 @@ public class RefundReversalService {
     }
 
 
-    public Response reverseFailedRefund(GatewayAccountEntity gatewayAccount, Refund refund, Charge charge, String githubUserId, String zendeskUserId) {
+    public ResponseEntity<Object> reverseFailedRefund(GatewayAccountEntity gatewayAccount, Refund refund, Charge charge, String githubUserId, String zendeskUserId) {
 
         RandomIdGenerator randomIdGenerator = new RandomIdGenerator();
         String correctionPaymentId = randomIdGenerator.random13ByteHexGenerator();
@@ -107,7 +109,7 @@ public class RefundReversalService {
                     RefundStatusCorrectedToErrorByAdmin.from(refund, charge, githubUserId, zendeskUserId)
                     )
             );
-            return Response.ok().build();
+            return ResponseEntity.ok().build();
         } catch (LedgerException e) {
             logger.info(e.getMessage(),
                     kv("refundExternalId", refundExternalId),
@@ -115,10 +117,9 @@ public class RefundReversalService {
 
             ErrorResponse errorResponse = new ErrorResponse(ErrorIdentifier.GENERIC,
                     "Stripe transfer successful but error updating payment and refunds");
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(errorResponse)
-                    .type(APPLICATION_JSON)
-                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(errorResponse);
         }
 
     }

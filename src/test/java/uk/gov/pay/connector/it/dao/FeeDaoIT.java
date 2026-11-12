@@ -42,7 +42,7 @@ public class FeeDaoIT {
 
     @BeforeEach
     void setUp() {
-        feeDao = app.getInstanceFromGuiceContainer(FeeDao.class);
+        feeDao = app.getBean(FeeDao.class);
         DatabaseFixtures.TestAccount defaultTestAccount = app.getDatabaseFixtures()
                 .aTestAccount()
                 .insert();

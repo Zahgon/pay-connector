@@ -1,15 +1,11 @@
 package uk.gov.pay.connector.gateway.worldpay;
 
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.core5.http.io.HttpClientResponseHandler;
+import uk.gov.pay.connector.util.HttpClientStubs;
+import java.io.IOException;
 import com.codahale.metrics.MetricRegistry;
-import io.dropwizard.core.setup.Environment;
-import jakarta.ws.rs.ProcessingException;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.client.Invocation;
-import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.MultivaluedHashMap;
-import jakarta.ws.rs.core.Response;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 import org.apache.hc.core5.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -49,7 +45,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.STRIPE;
@@ -79,8 +74,6 @@ class Worldpay3dsFlexCredentialsValidationServiceTest {
     @Mock
     private ClientFactory clientFactory;
 
-    @Mock
-    private Environment environment;
 
     @Mock
     private Worldpay3dsFlexJwtService worldpay3dsFlexJwtService;
@@ -89,22 +82,13 @@ class Worldpay3dsFlexCredentialsValidationServiceTest {
     private ConnectorConfiguration connectorConfiguration;
 
     @Mock
-    private Invocation.Builder invocationBuilder;
-
-    @Mock
-    private Response response;
-
-    @Mock
-    private Client client;
-
-    @Mock
-    private WebTarget webTarget;
+    private CloseableHttpClient client;
 
     @BeforeEach
     void setup() {
         mockConnectorConfiguration();
-        mockJerseyClient();
-        service = new Worldpay3dsFlexCredentialsValidationService(clientFactory, environment,
+        mockHttpClient();
+        service = new Worldpay3dsFlexCredentialsValidationService(clientFactory, mock(MetricRegistry.class),
                 worldpay3dsFlexJwtService, connectorConfiguration);
     }
 
@@ -120,14 +104,9 @@ class Worldpay3dsFlexCredentialsValidationServiceTest {
 
         Worldpay3dsFlexCredentials flexCredentials = getValid3dsFlexCredentials();
 
-        when(response.getStatus()).thenReturn(HttpStatus.SC_OK);
-        when(client.target(threeDsFlexDdcUrls.get(type))).thenReturn(webTarget);
         when(worldpay3dsFlexJwtService.generateDdcToken(eq(GatewayAccount.valueOf(gatewayAccountEntity)),
                 eq(flexCredentials), any(Instant.class), eq(WORLDPAY.getName()))).thenReturn(DDC_TOKEN);
-        var expectedFormData = new MultivaluedHashMap<String, String>() {{
-            add("JWT", DDC_TOKEN);
-        }};
-        when(invocationBuilder.post(argThat(new EntityMatcher(Entity.form(expectedFormData))))).thenReturn(response);
+        ddcEndpointAnswers(threeDsFlexDdcUrls.get(type), HttpStatus.SC_OK);
 
         assertTrue(service.validateCredentials(gatewayAccountEntity, flexCredentials));
     }
@@ -146,14 +125,9 @@ class Worldpay3dsFlexCredentialsValidationServiceTest {
         var invalidJwtMacKey = "4inva5l2-0133-4i82-d0e5-2024dbeddaa9";
         var flexCredentials = new Worldpay3dsFlexCredentials(invalidIssuer, invalidOrgUnitId, invalidJwtMacKey, false, false);
 
-        when(response.getStatus()).thenReturn(HttpStatus.SC_BAD_REQUEST);
-        when(client.target(threeDsFlexDdcUrls.get(type))).thenReturn(webTarget);
         when(worldpay3dsFlexJwtService.generateDdcToken(eq(GatewayAccount.valueOf(gatewayAccountEntity)),
                 eq(flexCredentials), any(Instant.class), eq(WORLDPAY.getName()))).thenReturn(DDC_TOKEN);
-        var expectedFormData = new MultivaluedHashMap<String, String>() {{
-            add("JWT", DDC_TOKEN);
-        }};
-        when(invocationBuilder.post(argThat(new EntityMatcher(Entity.form(expectedFormData))))).thenReturn(response);
+        ddcEndpointAnswers(threeDsFlexDdcUrls.get(type), HttpStatus.SC_BAD_REQUEST);
 
         assertFalse(service.validateCredentials(gatewayAccountEntity, flexCredentials));
     }
@@ -169,18 +143,13 @@ class Worldpay3dsFlexCredentialsValidationServiceTest {
 
         Worldpay3dsFlexCredentials flexCredentials = getValid3dsFlexCredentials();
 
-        when(response.getStatus()).thenReturn(responseCode);
-        when(client.target(threeDsFlexDdcUrls.get("live"))).thenReturn(webTarget);
         when(worldpay3dsFlexJwtService.generateDdcToken(eq(GatewayAccount.valueOf(gatewayAccountEntity)), eq(flexCredentials),
                 any(Instant.class), eq(WORLDPAY.getName()))).thenReturn(DDC_TOKEN);
-        var expectedFormData = new MultivaluedHashMap<String, String>() {{
-            add("JWT", DDC_TOKEN);
-        }};
-        when(invocationBuilder.post(argThat(new EntityMatcher(Entity.form(expectedFormData))))).thenReturn(response);
+        ddcEndpointAnswers(threeDsFlexDdcUrls.get("live"), responseCode);
 
         var exception = assertThrows(ThreeDsFlexDdcServiceUnavailableException.class,
                 () -> service.validateCredentials(gatewayAccountEntity, flexCredentials));
-        assertEquals(exception.getResponse().getStatus(), HttpStatus.SC_SERVICE_UNAVAILABLE);
+        assertEquals(exception.getResponse().getStatusCode().value(), HttpStatus.SC_SERVICE_UNAVAILABLE);
         assertThat(exception, is(instanceOf(WebApplicationException.class)));
     }
 
@@ -194,18 +163,13 @@ class Worldpay3dsFlexCredentialsValidationServiceTest {
 
         Worldpay3dsFlexCredentials flexCredentials = getValid3dsFlexCredentials();
 
-        when(client.target(threeDsFlexDdcUrls.get("live"))).thenReturn(webTarget);
         when(worldpay3dsFlexJwtService.generateDdcToken(eq(GatewayAccount.valueOf(gatewayAccountEntity)), eq(flexCredentials),
                 any(Instant.class), eq(WORLDPAY.getName()))).thenReturn(DDC_TOKEN);
-        var expectedFormData = new MultivaluedHashMap<String, String>() {{
-            add("JWT", DDC_TOKEN);
-        }};
-        when(invocationBuilder.post(argThat(new EntityMatcher(Entity.form(expectedFormData)))))
-                .thenThrow(new ProcessingException("Some I/O failure"));
+        ddcEndpointFails(threeDsFlexDdcUrls.get("live"));
 
         var exception = assertThrows(ThreeDsFlexDdcServiceUnavailableException.class,
                 () -> service.validateCredentials(gatewayAccountEntity, flexCredentials));
-        assertEquals(exception.getResponse().getStatus(), HttpStatus.SC_SERVICE_UNAVAILABLE);
+        assertEquals(exception.getResponse().getStatusCode().value(), HttpStatus.SC_SERVICE_UNAVAILABLE);
         assertThat(exception, is(instanceOf(WebApplicationException.class)));
     }
 
@@ -258,14 +222,9 @@ class Worldpay3dsFlexCredentialsValidationServiceTest {
 
             liveGatewayAccountEntity.setGatewayAccountCredentials(List.of(activeStripeCredentialsEntity, worldpayCredentialsEntity));
 
-            when(response.getStatus()).thenReturn(HttpStatus.SC_OK);
-            when(client.target(threeDsFlexDdcUrls.get("live"))).thenReturn(webTarget);
             when(worldpay3dsFlexJwtService.generateDdcToken(eq(GatewayAccount.valueOf(liveGatewayAccountEntity)),
                     eq(flexCredentials), any(Instant.class), eq(WORLDPAY.getName()))).thenReturn(DDC_TOKEN);
-            var expectedFormData = new MultivaluedHashMap<String, String>() {{
-                add("JWT", DDC_TOKEN);
-            }};
-            when(invocationBuilder.post(argThat(new EntityMatcher(Entity.form(expectedFormData))))).thenReturn(response);
+            ddcEndpointAnswers(threeDsFlexDdcUrls.get("live"), HttpStatus.SC_OK);
 
             assertTrue(service.validateCredentials(liveGatewayAccountEntity, flexCredentials));
         }
@@ -317,12 +276,28 @@ class Worldpay3dsFlexCredentialsValidationServiceTest {
         return new Worldpay3dsFlexCredentials(validIssuer, validOrgUnitId, validJwtMacKey, false, false);
     }
 
-    private void mockJerseyClient() {
-        MetricRegistry metricRegistry = mock(MetricRegistry.class);
-        when(environment.metrics()).thenReturn(metricRegistry);
-        when(clientFactory.createWithDropwizardClient(any(PaymentGatewayName.class), any(MetricRegistry.class)))
+    private void mockHttpClient() {
+        when(clientFactory.createHttpClient(any(PaymentGatewayName.class), any(MetricRegistry.class)))
                 .thenReturn(client);
-        lenient().when(webTarget.request()).thenReturn(invocationBuilder);
+    }
+
+    private void ddcEndpointAnswers(String url, int status) {
+        try {
+            when(client.execute(argThat(new FormRequestMatcher(url, "JWT=" + DDC_TOKEN)), any(HttpClientResponseHandler.class)))
+                    .thenAnswer(invocation -> invocation.<HttpClientResponseHandler<?>>getArgument(1)
+                            .handleResponse(HttpClientStubs.response(status, "", Map.of())));
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private void ddcEndpointFails(String url) {
+        try {
+            when(client.execute(argThat(new FormRequestMatcher(url, "JWT=" + DDC_TOKEN)), any(HttpClientResponseHandler.class)))
+                    .thenThrow(new IOException("Some I/O failure"));
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private void mockConnectorConfiguration() {

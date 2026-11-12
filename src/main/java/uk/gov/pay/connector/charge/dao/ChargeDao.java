@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.charge.dao;
 
-import com.google.inject.Provider;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Provider;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.TimeZone;
+import org.springframework.stereotype.Repository;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.AUTHORISATION_3DS_REQUIRED;
@@ -36,6 +37,7 @@ import static uk.gov.pay.connector.paymentinstrument.model.PaymentInstrumentStat
 import static uk.gov.pay.connector.paymentinstrument.model.PaymentInstrumentStatus.CREATED;
 
 @Transactional
+@Repository
 public class ChargeDao extends JpaDao<ChargeEntity> {
 
     private static final String STATUS = "status";

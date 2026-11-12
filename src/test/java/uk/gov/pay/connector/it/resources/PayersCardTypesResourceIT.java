@@ -1,16 +1,16 @@
 package uk.gov.pay.connector.it.resources;
 
-import io.dropwizard.testing.junit.ResourceTestRule;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import com.fasterxml.jackson.core.type.TypeReference;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import uk.gov.pay.connector.cardtype.dao.CardTypeDao;
-import uk.gov.pay.connector.cardtype.dao.CardTypeEntityBuilder;
 import uk.gov.pay.connector.cardtype.model.domain.CardTypeEntity;
+import uk.gov.pay.connector.cardtype.dao.CardTypeEntityBuilder;
 import uk.gov.pay.connector.cardtype.resource.CardTypesResource;
+import uk.gov.pay.connector.rules.ResourceTestExtension;
 
-import jakarta.ws.rs.core.GenericType;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -24,17 +24,17 @@ import static org.mockito.Mockito.when;
 
 public class PayersCardTypesResourceIT {
     private static final CardTypeDao mockedDao = mock(CardTypeDao.class);
-    @ClassRule
-    public static ResourceTestRule resources = ResourceTestRule.builder().addResource(new CardTypesResource(mockedDao)).build();
+    @RegisterExtension
+    public static ResourceTestExtension resources = ResourceTestExtension.withResources(new CardTypesResource(mockedDao));
     private CardTypeEntity cardTypeEntity;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         cardTypeEntity = CardTypeEntityBuilder.aCardTypeEntity().build();
         when(mockedDao.findAll()).thenReturn(Collections.singletonList(cardTypeEntity));
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         reset(mockedDao);
     }
@@ -43,7 +43,8 @@ public class PayersCardTypesResourceIT {
     public void shouldGetAllCardTypesWhenCardTypesExist() {
         final Map<String, List<CardTypeEntity>> response = resources.target("/v1/api/card-types")
                 .request()
-                .get(new GenericType<Map<String, List<CardTypeEntity>>>() {
+                .get()
+                .readEntity(new TypeReference<Map<String, List<CardTypeEntity>>>() {
                 });
         List<CardTypeEntity> cardTypeEntities = response.get("card_types");
         assertThat(cardTypeEntities, hasSize(1));

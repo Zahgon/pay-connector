@@ -7,17 +7,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import uk.gov.pay.connector.extension.AppWithPostgresAndSqsExtension;
 import uk.gov.pay.connector.gateway.adyen.webhook.AdyenNotificationService;
-import uk.gov.pay.connector.util.ConnectorAppWithCustomInjector;
+import uk.gov.pay.connector.util.MockedReverseDnsLookupConfiguration;
 import uk.gov.pay.connector.util.DnsPointerResourceRecord;
 import uk.gov.pay.connector.util.TestTemplateResourceLoader;
 
 import java.util.Optional;
 
 import static io.restassured.RestAssured.given;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
-import static jakarta.ws.rs.core.MediaType.TEXT_XML;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.TEXT_XML_VALUE;
 import static org.mockito.Mockito.when;
-import static uk.gov.pay.connector.util.ConnectorModuleWithOverrides.reverseDnsLookup;
+import static uk.gov.pay.connector.util.MockedReverseDnsLookupConfiguration.reverseDnsLookup;
 import static uk.gov.pay.connector.util.TestTemplateResourceLoader.ADYEN_BALANCE_PLATFORM_REPORT_NOTIFICATION;
 import static uk.gov.pay.connector.util.TestTemplateResourceLoader.ADYEN_CONFIGURATION_NOTIFICATION;
 import static uk.gov.pay.connector.util.TestTemplateResourceLoader.ADYEN_NOTIFICATION;
@@ -27,7 +27,7 @@ import static uk.gov.pay.connector.util.TestTemplateResourceLoader.ADYEN_TRANSFE
 public class AdyenNotificationResourceIT {
 
     @RegisterExtension
-    public static AppWithPostgresAndSqsExtension app = new AppWithPostgresAndSqsExtension(ConnectorAppWithCustomInjector.class);
+    public static AppWithPostgresAndSqsExtension app = new AppWithPostgresAndSqsExtension(MockedReverseDnsLookupConfiguration.class);
 
     @RegisterExtension
     LogCapturer logs = LogCapturer.create().captureForType(AdyenNotificationService.class);
@@ -52,7 +52,7 @@ public class AdyenNotificationResourceIT {
                 .port(app.getLocalPort())
                 .body("{\"notificationItems\":[{\"NotificationRequestItem\":{\"eventCode\":\"AUTHORISATION\"}}]}")
                 .header("X-Forwarded-For", UNEXPECTED_IP_ADDRESS)
-                .contentType(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON_VALUE)
                 .post(NOTIFICATION_PATH)
                 .then()
                 .statusCode(403);
@@ -72,7 +72,7 @@ public class AdyenNotificationResourceIT {
         given()
                 .port(app.getLocalPort())
                 .body("{\"notificationItems\":[]}")
-                .contentType(TEXT_XML)
+                .contentType(TEXT_XML_VALUE)
                 .post(NOTIFICATION_PATH)
                 .then()
                 .statusCode(415);
@@ -85,7 +85,7 @@ public class AdyenNotificationResourceIT {
                 .port(app.getLocalPort())
                 .body(payload)
                 .header("X-Forwarded-For", ADYEN_IP_ADDRESS)
-                .contentType(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON_VALUE)
                 .post(NOTIFICATION_PATH)
                 .then()
                 .statusCode(500);
@@ -103,7 +103,7 @@ public class AdyenNotificationResourceIT {
                     .port(app.getLocalPort())
                     .body(payload)
                     .header("X-Forwarded-For", ADYEN_IP_ADDRESS)
-                    .contentType(APPLICATION_JSON)
+                    .contentType(APPLICATION_JSON_VALUE)
                     .post(NOTIFICATION_PATH)
                     .then()
                     .statusCode(200);
@@ -122,7 +122,7 @@ public class AdyenNotificationResourceIT {
                     .body(payload)
                     .header("X-Forwarded-For", ADYEN_IP_ADDRESS)
                     .header("hmacSignature", HMAC_SIGNATURE)
-                    .contentType(APPLICATION_JSON)
+                    .contentType(APPLICATION_JSON_VALUE)
                     .post(NOTIFICATION_PATH)
                     .then()
                     .statusCode(200);
@@ -137,7 +137,7 @@ public class AdyenNotificationResourceIT {
                     .body(payload)
                     .header("X-Forwarded-For", ADYEN_IP_ADDRESS)
                     .header("hmacSignature", "some invalid Hmac Signature")
-                    .contentType(APPLICATION_JSON)
+                    .contentType(APPLICATION_JSON_VALUE)
                     .post(NOTIFICATION_PATH)
                     .then()
                     .statusCode(403);
@@ -157,7 +157,7 @@ public class AdyenNotificationResourceIT {
                     .body(payload)
                     .header("X-Forwarded-For", ADYEN_IP_ADDRESS)
                     .header("hmacSignature", hmacSignatureForBalancePlatformReport)
-                    .contentType(APPLICATION_JSON)
+                    .contentType(APPLICATION_JSON_VALUE)
                     .post(NOTIFICATION_PATH)
                     .then()
                     .statusCode(200);
@@ -173,7 +173,7 @@ public class AdyenNotificationResourceIT {
                     .body(payload)
                     .header("X-Forwarded-For", ADYEN_IP_ADDRESS)
                     .header("hmacSignature", "some invalid Hmac Signature")
-                    .contentType(APPLICATION_JSON)
+                    .contentType(APPLICATION_JSON_VALUE)
                     .post(NOTIFICATION_PATH)
                     .then()
                     .statusCode(403);
@@ -189,7 +189,7 @@ public class AdyenNotificationResourceIT {
                 .body(payload)
                 .header("X-Forwarded-For", ADYEN_IP_ADDRESS)
                 .header("hmacSignature", HMAC_SIGNATURE_FOR_TRANSFER)
-                .contentType(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON_VALUE)
                 .post(NOTIFICATION_PATH)
                 .then()
                 .statusCode(200);
@@ -209,7 +209,7 @@ public class AdyenNotificationResourceIT {
                 .body(unknownWebhookPayload)
                 .header("X-Forwarded-For", ADYEN_IP_ADDRESS)
                 .header("hmacSignature", HMAC_SIGNATURE_FOR_PAYLOAD_WITH_UPDATED_TOKEN)
-                .contentType(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON_VALUE)
                 .post(NOTIFICATION_PATH)
                 .then()
                 .statusCode(200);
@@ -229,7 +229,7 @@ public class AdyenNotificationResourceIT {
                     .body(payload)
                     .header("X-Forwarded-For", ADYEN_IP_ADDRESS)
                     .header("hmacSignature", HMAC_SIGNATURE_FOR_CONFIGURATION)
-                    .contentType(APPLICATION_JSON)
+                    .contentType(APPLICATION_JSON_VALUE)
                     .post(NOTIFICATION_PATH)
                     .then()
                     .statusCode(200);
@@ -244,7 +244,7 @@ public class AdyenNotificationResourceIT {
                     .body(payload)
                     .header("X-Forwarded-For", ADYEN_IP_ADDRESS)
                     .header("hmacSignature", "some invalid Hmac Signature")
-                    .contentType(APPLICATION_JSON)
+                    .contentType(APPLICATION_JSON_VALUE)
                     .post(NOTIFICATION_PATH)
                     .then()
                     .statusCode(403);

@@ -1,43 +1,41 @@
 package uk.gov.pay.connector.app;
 
-import io.dropwizard.testing.ResourceHelpers;
-import io.dropwizard.testing.junit.DropwizardAppRule;
-import io.dropwizard.util.Duration;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import uk.gov.pay.connector.app.adyen.AdyenGatewayConfig;
 import uk.gov.pay.connector.app.adyen.BaseUrls;
+
+import java.time.Duration;
+import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 
-public class ConnectorConfigurationIT {
+class ConnectorConfigurationIT {
 
-    @Rule
-    public final DropwizardAppRule<ConnectorConfiguration> RULE =
-            new DropwizardAppRule<>(ConnectorApp.class, ResourceHelpers.resourceFilePath("config/test-config.yaml"));
+    private final ConnectorConfiguration configuration =
+            ConnectorTestApplication.loadConfiguration("config/test-config.yaml", List.of());
 
     @Test
     public void shouldParseConfiguration() {
-        JerseyClientOverrides jerseyClientOverrides = RULE.getConfiguration().getWorldpayConfig().getJerseyClientOverrides().get();
+        JerseyClientOverrides jerseyClientOverrides = configuration.getWorldpayConfig().getJerseyClientOverrides().get();
 
         Duration authReadTimeout = jerseyClientOverrides.getAuth().getReadTimeout();
-        assertThat(authReadTimeout, is(Duration.milliseconds(222)));
+        assertThat(authReadTimeout, is(Duration.ofMillis(222)));
 
-        CaptureProcessConfig captureProcessConfig = RULE.getConfiguration().getCaptureProcessConfig();
+        CaptureProcessConfig captureProcessConfig = configuration.getCaptureProcessConfig();
         assertThat(captureProcessConfig.getChargesConsideredOverdueForCaptureAfter(), is(60));
         assertThat(captureProcessConfig.getMaximumRetries(), is(26));
 
-        assertThat(RULE.getConfiguration().getLedgerBaseUrl(), is(not(emptyString())));
-        assertThat(RULE.getConfiguration().getRestClientConfig().isDisabledSecureConnection(), is(true));
-        assertThat(RULE.getConfiguration().getEmittedEventSweepConfig().getNotEmittedEventMaxAgeInSeconds(), is(1800));
+        assertThat(configuration.getLedgerBaseUrl(), is(not(emptyString())));
+        assertThat(configuration.getRestClientConfig().isDisabledSecureConnection(), is(true));
+        assertThat(configuration.getEmittedEventSweepConfig().getNotEmittedEventMaxAgeInSeconds(), is(1800));
     }
 
     @Test
     public void shouldParseAdyenConfiguration() {
-        AdyenGatewayConfig adyenGatewayConfig = RULE.getConfiguration().getAdyenGatewayConfig();
+        AdyenGatewayConfig adyenGatewayConfig = configuration.getAdyenGatewayConfig();
         BaseUrls baseUrls = adyenGatewayConfig.getBaseUrls();
 
         assertThat(baseUrls.checkout().test(), is("https://checkout-test.adyen.com/someVersion"));

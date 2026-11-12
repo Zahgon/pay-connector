@@ -5,12 +5,14 @@ import org.slf4j.LoggerFactory;
 import uk.gov.service.payments.commons.model.ErrorIdentifier;
 import uk.gov.pay.connector.common.model.api.ErrorResponse;
 
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.ext.ExceptionMapper;
 import java.util.List;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import uk.gov.pay.connector.web.ExceptionMapper;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 
+@Component
 public class ZeroAmountNotAllowedForGatewayAccountExceptionMapper implements ExceptionMapper<ZeroAmountNotAllowedForGatewayAccountException> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ZeroAmountNotAllowedForGatewayAccountExceptionMapper.class);
@@ -18,15 +20,14 @@ public class ZeroAmountNotAllowedForGatewayAccountExceptionMapper implements Exc
     private static final String RESPONSE_ERROR_MESSAGE = "Zero amount charges are not enabled for this gateway account";
 
     @Override
-    public Response toResponse(ZeroAmountNotAllowedForGatewayAccountException exception) {
+    public ResponseEntity<ErrorResponse> toResponse(ZeroAmountNotAllowedForGatewayAccountException exception) {
         LOGGER.info(exception.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(ErrorIdentifier.ZERO_AMOUNT_NOT_ALLOWED, List.of(RESPONSE_ERROR_MESSAGE));
 
-        return Response.status(422)
-                .entity(errorResponse)
-                .type(APPLICATION_JSON)
-                .build();
+        return ResponseEntity.status(422)
+                .contentType(APPLICATION_JSON)
+                .body(errorResponse);
     }
 
 }

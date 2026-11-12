@@ -32,6 +32,7 @@ import uk.gov.service.payments.commons.queue.exception.QueueException;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.springframework.stereotype.Component;
 
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
@@ -42,6 +43,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.GATEWAY_PAYOUT_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.REFUND_EXTERNAL_ID;
 
+@Component
 public class StripePayoutReconciliationHandler implements PayoutReconcileHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StripePayoutReconciliationHandler.class);

@@ -1,10 +1,9 @@
 package uk.gov.pay.connector.app;
 
-import io.dropwizard.core.Configuration;
 
 import java.time.Duration;
 
-public class ChargeSweepConfig extends Configuration {
+public class ChargeSweepConfig {
 
     private int defaultChargeExpiryThreshold;
     private int awaitingCaptureExpiryThreshold;

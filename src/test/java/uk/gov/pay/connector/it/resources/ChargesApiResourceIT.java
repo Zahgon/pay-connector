@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.it.resources;
 
-import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.Response;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -32,10 +32,10 @@ import java.time.ZonedDateTime;
 import java.util.Map;
 
 import static io.restassured.http.ContentType.JSON;
-import static jakarta.ws.rs.core.Response.Status.CONFLICT;
-import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
-import static jakarta.ws.rs.core.Response.Status.NO_CONTENT;
-import static jakarta.ws.rs.core.Response.Status.OK;
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.NO_CONTENT;
+import static org.springframework.http.HttpStatus.OK;
 import static java.lang.String.format;
 import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -104,7 +104,7 @@ public class ChargesApiResourceIT {
                 .then()
                 .statusCode(204);
 
-        CardCaptureProcess cardCaptureProcess = app.getInstanceFromGuiceContainer(CardCaptureProcess.class);
+        CardCaptureProcess cardCaptureProcess = app.getBean(CardCaptureProcess.class);
 
         await()
                 .atMost(Duration.ofSeconds(10))
@@ -131,7 +131,7 @@ public class ChargesApiResourceIT {
                     .withHeader(HttpHeaders.ACCEPT, JSON.getAcceptHeader())
                     .getCharge()
                     .contentType(JSON)
-                    .statusCode(NOT_FOUND.getStatusCode())
+                    .statusCode(NOT_FOUND.value())
                     .body("code", is(404))
                     .body("message", is("HTTP 404 Not Found"));
         }
@@ -142,7 +142,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId("does-not-exist")
                     .getCharge()
-                    .statusCode(NOT_FOUND.getStatusCode());
+                    .statusCode(NOT_FOUND.value());
         }
 
         @Test
@@ -166,7 +166,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body(JSON_CHARGE_KEY, is(externalChargeId))
                     .body(JSON_STATE_KEY, is(EXTERNAL_SUBMITTED.getStatus()));
@@ -193,7 +193,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("card_details", is(notNullValue()))
                     .body("card_details.last_digits_card_number", is("5678"))
@@ -220,7 +220,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("metadata.key1", is(true))
                     .body("metadata.key2", is(123))
@@ -244,7 +244,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("metadata", is(Matchers.nullValue()));
         }
@@ -271,7 +271,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("card_details.card_brand", is(mastercardCredit.getLabel()));
         }
@@ -295,7 +295,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("authorisation_summary.three_d_secure.required", is(true))
                     .body("authorisation_summary.three_d_secure.version", is("2.1.0"));
@@ -320,7 +320,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("authorisation_summary.three_d_secure.required", is(true))
                     .body("authorisation_summary.three_d_secure", not(hasKey("version")));
@@ -344,7 +344,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("authorisation_summary.three_d_secure.required", is(false))
                     .body("authorisation_summary.three_d_secure", not(hasKey("version")));
@@ -370,7 +370,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("card_details.card_brand", is(""));
         }
@@ -395,7 +395,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("$card_details", not(hasKey("billing_address")));
         }
@@ -414,7 +414,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("fee", is(100));
         }
@@ -435,7 +435,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("fee", is(100))
                     .body("net_amount", is(Long.valueOf(defaultAmount + defaultCorporateSurchargeAmount - feeCollected).intValue()));
@@ -448,7 +448,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(chargeId)
                     .getCharge()
-                    .statusCode(NOT_FOUND.getStatusCode())
+                    .statusCode(NOT_FOUND.value())
                     .contentType(JSON)
                     .body(JSON_MESSAGE_KEY, contains(format("Charge with id [%s] not found.", chargeId)))
                     .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
@@ -462,7 +462,7 @@ public class ChargesApiResourceIT {
             // run expiry task
             testBaseExtension.getConnectorRestApiClient()
                     .postChargeExpiryTask()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("expiry-success", is(1))
                     .body("expiry-failed", is(0));
@@ -472,7 +472,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(extChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body(JSON_CHARGE_KEY, is(extChargeId))
                     .body(JSON_STATE_KEY, is(EXPIRED.toExternal().getStatus()));
@@ -486,7 +486,7 @@ public class ChargesApiResourceIT {
 
             testBaseExtension.getConnectorRestApiClient()
                     .postChargeExpiryTask()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("expiry-success", is(1))
                     .body("expiry-failed", is(0));
@@ -495,7 +495,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(extChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body(JSON_CHARGE_KEY, is(extChargeId))
                     .body(JSON_STATE_KEY, is(EXPIRED.toExternal().getStatus()));
@@ -510,7 +510,7 @@ public class ChargesApiResourceIT {
             // run expiry task
             testBaseExtension.getConnectorRestApiClient()
                     .postChargeExpiryTask()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("expiry-success", is(1))
                     .body("expiry-failed", is(0));
@@ -520,7 +520,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(extChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body(JSON_CHARGE_KEY, is(extChargeId))
                     .body(JSON_STATE_KEY, is(EXPIRED.toExternal().getStatus()));
@@ -548,7 +548,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("card_details.card_type", is(nullValue()));
         }
@@ -569,7 +569,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("authorisation_mode", is("moto_api"));
         }
@@ -592,7 +592,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("state.can_retry", is(true));
         }
@@ -615,7 +615,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("state.can_retry", is(true));
         }
@@ -638,7 +638,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("state.can_retry", is(false));
         }
@@ -661,7 +661,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("state.can_retry", is(nullValue()));
         }
@@ -684,7 +684,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("state.can_retry", is(nullValue()));
         }
@@ -710,7 +710,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("card_details.card_type", is("debit"));
         }
@@ -735,7 +735,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("exemption", is(notNullValue()))
                     .body("exemption.requested", is(true))
@@ -764,7 +764,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("exemption", is(notNullValue()))
                     .body("exemption.requested", is(true))
@@ -789,7 +789,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(externalChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body("exemption", is(nullValue()));
         }
@@ -824,7 +824,7 @@ public class ChargesApiResourceIT {
                     ))
                     .post(format("/v1/api/service/%s/account/%s/charges", VALID_SERVICE_ID, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(Response.Status.CREATED.getStatusCode())
+                    .statusCode(HttpStatus.CREATED.value())
                     .extract().path("charge_id");
         }
 
@@ -834,19 +834,19 @@ public class ChargesApiResourceIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s/charges/%s", VALID_SERVICE_ID, GatewayAccountType.TEST, testChargeId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("charge_id", is(testChargeId))
                     .body("state.status", is(EXTERNAL_CREATED.getStatus()));
 
             app.givenSetup()
                     .post(format("/v1/api/service/%s/account/%s/charges/%s/cancel", VALID_SERVICE_ID, GatewayAccountType.TEST, testChargeId))
                     .then()
-                    .statusCode(NO_CONTENT.getStatusCode());
+                    .statusCode(NO_CONTENT.value());
 
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s/charges/%s", VALID_SERVICE_ID, GatewayAccountType.TEST, testChargeId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("charge_id", is(testChargeId))
                     .body("state.status", is(EXTERNAL_CANCELLED.getStatus()))
                     .body(JSON_AMOUNT_KEY, isNumber(AMOUNT))
@@ -861,7 +861,7 @@ public class ChargesApiResourceIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s/charges/%s", NON_EXISTENT_SERVICE_ID, GatewayAccountType.TEST, testChargeId))
                     .then()
-                    .statusCode(NOT_FOUND.getStatusCode())
+                    .statusCode(NOT_FOUND.value())
                     .contentType(JSON)
                     .body(JSON_MESSAGE_KEY, contains(format("Charge with id [%s] not found.", testChargeId)))
                     .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
@@ -872,7 +872,7 @@ public class ChargesApiResourceIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s/charges/%s", VALID_SERVICE_ID, GatewayAccountType.TEST, "unknown-charge-id"))
                     .then()
-                    .statusCode(NOT_FOUND.getStatusCode())
+                    .statusCode(NOT_FOUND.value())
                     .contentType(JSON)
                     .body(JSON_MESSAGE_KEY, contains(format("Charge with id [unknown-charge-id] not found.")))
                     .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
@@ -890,13 +890,13 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(extChargeId)
                     .postMarkChargeAsCaptureApprovedByChargeIdAndAccountId()
-                    .statusCode(NO_CONTENT.getStatusCode());
+                    .statusCode(NO_CONTENT.value());
 
             testBaseExtension.getConnectorRestApiClient()
                     .withAccountId(accountId)
                     .withChargeId(extChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body(JSON_CHARGE_KEY, is(extChargeId))
                     .body(JSON_STATE_KEY, is(CAPTURE_APPROVED.toExternal().getStatus()));
@@ -912,14 +912,14 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(extChargeId)
                     .postMarkChargeAsCaptureApprovedByChargeIdAndAccountId()
-                    .statusCode(NO_CONTENT.getStatusCode());
+                    .statusCode(NO_CONTENT.value());
 
             // get the charge back and assert its status is expired
             testBaseExtension.getConnectorRestApiClient()
                     .withAccountId(accountId)
                     .withChargeId(extChargeId)
                     .getCharge()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body(JSON_CHARGE_KEY, is(extChargeId))
                     .body(JSON_STATE_KEY, is(CAPTURE_APPROVED.toExternal().getStatus()));
@@ -932,7 +932,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId("i-do-not-exist")
                     .postMarkChargeAsCaptureApprovedByChargeIdAndAccountId()
-                    .statusCode(NOT_FOUND.getStatusCode())
+                    .statusCode(NOT_FOUND.value())
                     .contentType(JSON)
                     .body(JSON_MESSAGE_KEY, contains("Charge with id [i-do-not-exist] not found."))
                     .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
@@ -948,7 +948,7 @@ public class ChargesApiResourceIT {
                     .withAccountId(accountId)
                     .withChargeId(extChargeId)
                     .postMarkChargeAsCaptureApprovedByChargeIdAndAccountId()
-                    .statusCode(CONFLICT.getStatusCode())
+                    .statusCode(CONFLICT.value())
                     .contentType(JSON)
                     .body(JSON_MESSAGE_KEY, contains(expectedErrorMessage))
                     .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
@@ -965,12 +965,12 @@ public class ChargesApiResourceIT {
             app.givenSetup()
                     .post(format("/v1/api/service/%s/account/test/charges/%s/capture", SERVICE_ID, extChargeId))
                     .then()
-                    .statusCode(NO_CONTENT.getStatusCode());
+                    .statusCode(NO_CONTENT.value());
 
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s/charges/%s", SERVICE_ID, GatewayAccountType.TEST, extChargeId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body(JSON_CHARGE_KEY, is(extChargeId))
                     .body(JSON_STATE_KEY, is(CAPTURE_APPROVED.toExternal().getStatus()));
@@ -984,12 +984,12 @@ public class ChargesApiResourceIT {
             app.givenSetup()
                     .post(format("/v1/api/service/%s/account/test/charges/%s/capture", SERVICE_ID, extChargeId))
                     .then()
-                    .statusCode(NO_CONTENT.getStatusCode());
+                    .statusCode(NO_CONTENT.value());
 
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/%s/charges/%s", SERVICE_ID, GatewayAccountType.TEST, extChargeId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .contentType(JSON)
                     .body(JSON_CHARGE_KEY, is(extChargeId))
                     .body(JSON_STATE_KEY, is(CAPTURE_APPROVED.toExternal().getStatus()));
@@ -1000,7 +1000,7 @@ public class ChargesApiResourceIT {
             app.givenSetup()
                     .post(format("/v1/api/service/%s/account/test/charges/%s/capture", SERVICE_ID, "non-existent-chargeId"))
                     .then()
-                    .statusCode(NOT_FOUND.getStatusCode())
+                    .statusCode(NOT_FOUND.value())
                     .contentType(JSON)
                     .body(JSON_MESSAGE_KEY, contains("Charge with id [non-existent-chargeId] not found."))
                     .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
@@ -1015,7 +1015,7 @@ public class ChargesApiResourceIT {
             app.givenSetup()
                     .post(format("/v1/api/service/%s/account/test/charges/%s/capture", SERVICE_ID, extChargeId))
                     .then()
-                    .statusCode(CONFLICT.getStatusCode())
+                    .statusCode(CONFLICT.value())
                     .contentType(JSON)
                     .body(JSON_MESSAGE_KEY, contains(expectedErrorMessage))
                     .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));

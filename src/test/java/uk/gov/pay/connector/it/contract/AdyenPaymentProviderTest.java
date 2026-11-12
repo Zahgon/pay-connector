@@ -41,7 +41,7 @@ import static uk.gov.pay.connector.util.SystemUtils.envOrThrow;
  * - ConfigOverride.config("adyen.merchantAccountIds.test", gdsConnectorAdyenMerchantAccountIdTest),
  * - ConfigOverride.config("adyen.apiKeys.companyAccount.test", gdsConnectorAdyenCompanyAccountApiKeyTest)
  * - ConfigOverride.config("adyen.baseUrls.checkout.test", "https://checkout-test.adyen.com/v72")
- * If you get an error referring to duplicated metrics, add app.getAppRule().getEnvironment().metrics().removeMatching(MetricFilter.ALL); to the top of the setup method
+ * If you get an error referring to duplicated metrics, add app.getBean(MetricRegistry.class).removeMatching(MetricFilter.ALL); to the top of the setup method
  */
 
 @Disabled
@@ -50,7 +50,7 @@ public class AdyenPaymentProviderTest {
     private static final Long AMOUNT = 500L;
 
     @RegisterExtension
-    public static AppWithPostgresAndSqsExtension app = new AppWithPostgresAndSqsExtension();
+    public AppWithPostgresAndSqsExtension app = new AppWithPostgresAndSqsExtension();
 
     private AdyenPaymentProvider adyenPaymentProvider;
 
@@ -62,7 +62,7 @@ public class AdyenPaymentProviderTest {
         envOrThrow("GDS_CONNECTOR_ADYEN_MERCHANT_ACCOUNT_ID_TEST");
         envOrThrow("GDS_CONNECTOR_ADYEN_COMPANY_ACCOUNT_API_KEY_TEST");
         
-        adyenPaymentProvider = app.getInstanceFromGuiceContainer(AdyenPaymentProvider.class);
+        adyenPaymentProvider = app.getBean(AdyenPaymentProvider.class);
 
         gatewayAccountEntity = new GatewayAccountEntity();
         gatewayAccountCredentialsEntity = aGatewayAccountCredentialsEntity()

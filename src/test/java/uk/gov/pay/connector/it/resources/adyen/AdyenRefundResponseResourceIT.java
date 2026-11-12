@@ -55,8 +55,8 @@ public class AdyenRefundResponseResourceIT {
     void setUp() {
         accountId = randomLong();
         credentialsId = randomLong();
-        refundDao = app.getInstanceFromGuiceContainer(RefundDao.class);
-        feeDao = app.getInstanceFromGuiceContainer(FeeDao.class);
+        refundDao = app.getBean(RefundDao.class);
+        feeDao = app.getBean(FeeDao.class);
 
         var credentialParams = anAddGatewayAccountCredentialsParams()
                 .withId(credentialsId)

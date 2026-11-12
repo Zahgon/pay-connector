@@ -1,9 +1,9 @@
 package uk.gov.pay.connector.charge.resource;
 
-import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
-import io.dropwizard.testing.junit5.ResourceExtension;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.Response;
+import uk.gov.pay.connector.rules.ResourceTestExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import uk.gov.pay.connector.rules.ResourceTestResponse;
+import uk.gov.pay.connector.rules.ResourceTestEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,19 +33,10 @@ import static uk.gov.pay.connector.util.JsonEncoder.toJson;
 import static uk.gov.pay.connector.util.RandomTestDataGeneratorUtils.randomAlphabetic;
 import static uk.gov.pay.connector.util.RandomTestDataGeneratorUtils.randomAlphanumeric;
 
-@ExtendWith(DropwizardExtensionsSupport.class)
 public class ChargesApiResourceValidationTest {
 
-    public static ResourceExtension chargesApiResource = ResourceExtension.builder()
-            .addResource(new ChargesApiResource(null, null, null, null))
-            .setRegisterDefaultExceptionMappers(false)
-            .addProvider(ConstraintViolationExceptionMapper.class)
-            .addProvider(JsonMappingExceptionMapper.class)
-            .addProvider(ValidationExceptionMapper.class)
-            .addProvider(MissingMandatoryAttributeExceptionMapper.class)
-            .addProvider(UnexpectedAttributeExceptionMapper.class)
-            .addProvider(InvalidAttributeValueExceptionMapper.class)
-            .build();
+    @RegisterExtension
+    public static ResourceTestExtension chargesApiResource = ResourceTestExtension.withResources(new ChargesApiResource(null, null, null, null));
 
     @DisplayName("Should return 400 if fields are missing")
     @ParameterizedTest
@@ -54,10 +45,10 @@ public class ChargesApiResourceValidationTest {
             "/v1/api/service/my-service-id/account/test/charges"
     })
     void shouldReturn422_whenFieldsMissing(String url) {
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(Map.of()))) {
+                .post(ResourceTestEntity.json(Map.of()))) {
 
             assertThat(response.getStatus(), is(422));
             List<String> errorResponseMessages = response.readEntity(ErrorResponse.class).messages();
@@ -81,10 +72,10 @@ public class ChargesApiResourceValidationTest {
                 "email", randomAlphabetic(256),
                 "return_url", "https://service.example/success-page/");
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             assertThat(response.getStatus(), is(422));
             List<String> errorResponseMessages = response.readEntity(ErrorResponse.class).messages();
@@ -104,10 +95,10 @@ public class ChargesApiResourceValidationTest {
                 "email", "test@example.com",
                 "return_url", "https://service.example/success-page/");
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target("/v1/api/accounts/invalidAccountId/charges")
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             assertThat(response.getStatus(), is(404));
         }
@@ -128,10 +119,10 @@ public class ChargesApiResourceValidationTest {
                 "return_url", "https://service.example/success-page/",
                 "language", "not a supported language");
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             assertGenericErrorResponse(response, 400, "not a supported language");
         }
@@ -160,10 +151,10 @@ public class ChargesApiResourceValidationTest {
                 "metadata", metadata
         );
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             assertThat(response.getStatus(), is(422));
 
@@ -191,10 +182,10 @@ public class ChargesApiResourceValidationTest {
                 "metadata", "metadata cannot be a string"
         );
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             assertGenericErrorResponse(response, 400, "Field [metadata] must be an object of JSON key-value pairs");
         }
@@ -215,10 +206,10 @@ public class ChargesApiResourceValidationTest {
                 "metadata", new Object[1]
         );
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             assertGenericErrorResponse(response, 400, "Field [metadata] must be an object of JSON key-value pairs");
         }
@@ -239,10 +230,10 @@ public class ChargesApiResourceValidationTest {
                 "authorisation_mode", "foo"
         );
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             assertGenericErrorResponse(response, 400, "Cannot deserialize value of type `uk.gov.service.payments.commons.model.AuthorisationMode`");
         }
@@ -265,10 +256,10 @@ public class ChargesApiResourceValidationTest {
                 "agreement_payment_type", "fantasy-value"
         );
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             assertGenericErrorResponse(response, 400, "Cannot deserialize value of type `uk.gov.service.payments.commons.model.AgreementPaymentType`");
         }
@@ -290,10 +281,10 @@ public class ChargesApiResourceValidationTest {
                 "agreement_payment_type", "fantasy-value"
         );
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             assertGenericErrorResponse(response, 400, "Cannot deserialize value of type `uk.gov.service.payments.commons.model.AgreementPaymentType`");
         }
@@ -314,11 +305,11 @@ public class ChargesApiResourceValidationTest {
                 "agreement_id", "agreement12345677890123456"
         );
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
                 .header("Idempotency-Key", "a".repeat(256))
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             assertGenericErrorResponse(response, 422, "Header [Idempotency-Key] can have a size between 1 and 255");
         }
@@ -339,11 +330,11 @@ public class ChargesApiResourceValidationTest {
                 "agreement_id", "agreement12345677890123456"
         );
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
                 .header("Idempotency-Key", "")
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             assertGenericErrorResponse(response, 422, "Header [Idempotency-Key] can have a size between 1 and 255");
         }
@@ -363,10 +354,10 @@ public class ChargesApiResourceValidationTest {
                 "description", "Test description"
         ));
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
             assertThat(response.getStatus(), is(422));
@@ -389,10 +380,10 @@ public class ChargesApiResourceValidationTest {
                 "return_url", ""
         ));
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
             assertThat(response.getStatus(), is(422));
@@ -415,10 +406,10 @@ public class ChargesApiResourceValidationTest {
                 "return_url", "not.a.valid.url"
         ));
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
             assertThat(response.getStatus(), is(422));
@@ -442,10 +433,10 @@ public class ChargesApiResourceValidationTest {
                 "authorisation_mode", "moto_api"
         ));
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
             assertThat(response.getStatus(), is(422));
@@ -468,10 +459,10 @@ public class ChargesApiResourceValidationTest {
                 "source", "invalid-source-value"
         ));
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
             assertThat(response.getStatus(), is(400));
@@ -494,10 +485,10 @@ public class ChargesApiResourceValidationTest {
                 "source", true
         ));
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
             assertThat(response.getStatus(), is(400));
@@ -535,10 +526,10 @@ public class ChargesApiResourceValidationTest {
                         ))
         ));
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
             assertThat(response.getStatus(), is(422));
@@ -551,7 +542,7 @@ public class ChargesApiResourceValidationTest {
         }
     }
 
-    private static void assertGenericErrorResponse(Response response, int status, String errorMessage) {
+    private static void assertGenericErrorResponse(ResourceTestResponse response, int status, String errorMessage) {
         ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
         assertThat(response.getStatus(), is(status));
         assertThat(errorResponse.identifier(), is(ErrorIdentifier.GENERIC));

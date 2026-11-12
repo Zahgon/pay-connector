@@ -27,7 +27,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
+import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE;
 import static java.lang.String.format;
 import static java.net.URLEncoder.encode;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -172,7 +172,7 @@ public class StripeCardResourceAuthoriseIT {
                 .statusCode(OK_200);
 
         app.getStripeWireMockServer().verify(postRequestedFor(urlEqualTo("/v1/payment_methods"))
-                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED)));
+                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED_VALUE)));
 
         verifyPaymentMethodRequest();
         verifyPaymentIntentRequest(externalChargeId, stripeAccountId);
@@ -195,10 +195,10 @@ public class StripeCardResourceAuthoriseIT {
                 .statusCode(OK_200);
 
         app.getStripeWireMockServer().verify(postRequestedFor(urlEqualTo("/v1/payment_methods"))
-                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED)));
+                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED_VALUE)));
 
         app.getStripeWireMockServer().verify(postRequestedFor(urlEqualTo("/v1/payment_intents"))
-                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED)));
+                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED_VALUE)));
 
     }
 
@@ -223,7 +223,7 @@ public class StripeCardResourceAuthoriseIT {
                 .body("status", is(AUTHORISATION_SUCCESS.toString()));
 
         app.getStripeWireMockServer().verify(postRequestedFor(urlEqualTo("/v1/payment_methods"))
-                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED)));
+                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED_VALUE)));
 
         verifyPaymentMethodRequest();
         verifyCustomerRequest();
@@ -258,7 +258,7 @@ public class StripeCardResourceAuthoriseIT {
                 .body("status", is(AUTHORISATION_3DS_REQUIRED.toString()));
 
         app.getStripeWireMockServer().verify(postRequestedFor(urlEqualTo("/v1/payment_methods"))
-                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED)));
+                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED_VALUE)));
 
         verifyPaymentMethodRequest();
         verifyCustomerRequest();
@@ -380,10 +380,10 @@ public class StripeCardResourceAuthoriseIT {
                 .statusCode(400);
 
         app.getStripeWireMockServer().verify(postRequestedFor(urlEqualTo("/v1/payment_methods"))
-                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED)));
+                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED_VALUE)));
 
         app.getStripeWireMockServer().verify(postRequestedFor(urlEqualTo("/v1/payment_intents"))
-                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED)));
+                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED_VALUE)));
         
         var charge = app.getDatabaseTestHelper().getChargeByExternalId(externalChargeId);
 
@@ -582,7 +582,7 @@ public class StripeCardResourceAuthoriseIT {
 
     private void verifyCustomerRequest() {
         app.getStripeWireMockServer().verify(postRequestedFor(urlEqualTo("/v1/customers"))
-                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED))
+                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED_VALUE))
                 .withHeader("Authorization", equalTo("Bearer sk_test"))
                 .withRequestBody(containing(queryParamWithValue("name", CARD_HOLDER_NAME)))
                 .withRequestBody(containing(queryParamWithValue("description", AGREEMENT_DESCRIPTION))));
@@ -590,7 +590,7 @@ public class StripeCardResourceAuthoriseIT {
 
     private void verifyPaymentIntentRequest(String externalChargeId, String stripeAccountId) {
         app.getStripeWireMockServer().verify(postRequestedFor(urlEqualTo("/v1/payment_intents"))
-                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED))
+                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED_VALUE))
                 .withHeader("Authorization", equalTo("Bearer sk_test"))
                 .withRequestBody(containing(queryParamWithValue("amount", "6234")))
                 .withRequestBody(containing(queryParamWithValue("confirm", "true")))
@@ -608,7 +608,7 @@ public class StripeCardResourceAuthoriseIT {
 
     private void verifyPaymentMethodRequest() {
         app.getStripeWireMockServer().verify(postRequestedFor(urlEqualTo("/v1/payment_methods"))
-                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED))
+                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED_VALUE))
                 .withHeader("Authorization", equalTo("Bearer sk_test"))
                 .withRequestBody(containing(queryParamWithValue("billing_details[name]", "Scrooge McDuck")))
                 .withRequestBody(containing(queryParamWithValue("type", "card")))

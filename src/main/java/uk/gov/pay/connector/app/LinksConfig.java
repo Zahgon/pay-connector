@@ -1,8 +1,7 @@
 package uk.gov.pay.connector.app;
 
-import io.dropwizard.core.Configuration;
 
-public class LinksConfig extends Configuration {
+public class LinksConfig {
 
     private String frontendUrl;
     public String getFrontendUrl() {

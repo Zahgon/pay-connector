@@ -21,7 +21,7 @@ import uk.gov.pay.connector.rules.SqsTestDocker;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static io.dropwizard.testing.ConfigOverride.config;
+import static uk.gov.pay.connector.app.ConfigOverride.config;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;

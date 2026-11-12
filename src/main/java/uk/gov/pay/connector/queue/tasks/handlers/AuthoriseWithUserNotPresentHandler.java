@@ -1,11 +1,13 @@
 package uk.gov.pay.connector.queue.tasks.handlers;
 
-import com.google.inject.Inject;
+import jakarta.inject.Inject;
 import uk.gov.pay.connector.charge.service.ChargeEligibleForCaptureService;
 import uk.gov.pay.connector.charge.service.ChargeService;
 import uk.gov.pay.connector.gateway.model.response.BaseAuthoriseResponse;
 import uk.gov.pay.connector.paymentprocessor.service.CardAuthoriseService;
+import org.springframework.stereotype.Component;
 
+@Component
 public class AuthoriseWithUserNotPresentHandler {
     private final ChargeService chargeService;
     private final CardAuthoriseService cardAuthoriseService;

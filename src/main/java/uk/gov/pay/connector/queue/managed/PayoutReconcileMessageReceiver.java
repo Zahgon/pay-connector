@@ -1,9 +1,8 @@
 package uk.gov.pay.connector.queue.managed;
 
-import io.dropwizard.lifecycle.Managed;
-import io.dropwizard.core.setup.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.SmartLifecycle;
 import uk.gov.pay.connector.app.ConnectorConfiguration;
 import uk.gov.pay.connector.payout.PayoutReconcileProcess;
 
@@ -11,7 +10,7 @@ import jakarta.inject.Inject;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class PayoutReconcileMessageReceiver implements Managed {
+public class PayoutReconcileMessageReceiver implements SmartLifecycle {
 
     private static final String PAYOUT_RECONCILE_MESSAGE_RECEIVER_THREAD_NAME = "sqs-message-payoutReconcileMessageReceiver";
 
@@ -21,20 +20,17 @@ public class PayoutReconcileMessageReceiver implements Managed {
     private final PayoutReconcileProcess payoutReconcileProcess;
     private final boolean payoutReconcileQueueEnabled;
     private ScheduledExecutorService payoutReconcileMessageExecutorService;
+    private volatile boolean running;
 
     @Inject
-    public PayoutReconcileMessageReceiver(PayoutReconcileProcess payoutReconcileProcess, Environment environment,
+    public PayoutReconcileMessageReceiver(PayoutReconcileProcess payoutReconcileProcess,
                                           ConnectorConfiguration connectorConfiguration) {
         this.payoutReconcileProcess = payoutReconcileProcess;
 
         int queueScheduleNumberOfThreads = connectorConfiguration.getPayoutReconcileProcessConfig()
                 .getQueueSchedulerNumberOfThreads();
 
-        payoutReconcileMessageExecutorService = environment
-                .lifecycle()
-                .scheduledExecutorService(PAYOUT_RECONCILE_MESSAGE_RECEIVER_THREAD_NAME)
-                .threads(queueScheduleNumberOfThreads)
-                .build();
+        payoutReconcileMessageExecutorService = ScheduledExecutors.create(PAYOUT_RECONCILE_MESSAGE_RECEIVER_THREAD_NAME, queueScheduleNumberOfThreads);
 
         queueSchedulerThreadDelayInSeconds = connectorConfiguration.getPayoutReconcileProcessConfig().getQueueSchedulerThreadDelayInSeconds();
         payoutReconcileQueueEnabled = connectorConfiguration.getPayoutReconcileProcessConfig().getPayoutReconcileQueueEnabled();
@@ -42,6 +38,7 @@ public class PayoutReconcileMessageReceiver implements Managed {
 
     @Override
     public void start() {
+        running = true;
         if (payoutReconcileQueueEnabled) {
             int initialDelay = queueSchedulerThreadDelayInSeconds;
             payoutReconcileMessageExecutorService.scheduleWithFixedDelay(
@@ -53,7 +50,13 @@ public class PayoutReconcileMessageReceiver implements Managed {
     }
 
     @Override
+    public boolean isRunning() {
+        return running;
+    }
+
+    @Override
     public void stop() {
+        running = false;
         LOGGER.info("Shutting down payout reconciliation service");
         payoutReconcileMessageExecutorService.shutdownNow();
         LOGGER.info("Payout reconciliation service shut down");

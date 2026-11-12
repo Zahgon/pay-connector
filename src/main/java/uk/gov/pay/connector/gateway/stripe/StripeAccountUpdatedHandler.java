@@ -12,10 +12,12 @@ import uk.gov.pay.connector.gatewayaccountcredentials.service.GatewayAccountCred
 import jakarta.inject.Inject;
 
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.STRIPE;
 
+@Component
 public class StripeAccountUpdatedHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StripeAccountUpdatedHandler.class);

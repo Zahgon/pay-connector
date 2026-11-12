@@ -1,8 +1,10 @@
 package uk.gov.pay.connector.gatewayaccount.resource;
 
+import uk.gov.pay.connector.rules.ResourceTestExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import uk.gov.pay.connector.rules.ResourceTestResponse;
+import uk.gov.pay.connector.rules.ResourceTestEntity;
 import com.fasterxml.jackson.databind.JsonNode;
-import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
-import io.dropwizard.testing.junit5.ResourceExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,11 +14,8 @@ import uk.gov.pay.connector.gatewayaccount.model.GatewayAccountEntity;
 import uk.gov.pay.connector.gatewayaccount.service.GatewayAccountService;
 import uk.gov.pay.connector.gatewayaccount.service.GatewayAccountSwitchPaymentProviderService;
 import uk.gov.pay.connector.gatewayaccountcredentials.dao.GatewayAccountCredentialsDao;
-import uk.gov.pay.connector.rules.ResourceTestRuleWithCustomExceptionMappersBuilder;
 import uk.gov.pay.connector.util.RandomIdGenerator;
 
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +35,6 @@ import static uk.gov.pay.connector.gatewayaccountcredentials.model.GatewayAccoun
 import static uk.gov.pay.connector.gatewayaccountcredentials.model.GatewayAccountCredentialsEntityFixture.aGatewayAccountCredentialsEntity;
 import static uk.gov.pay.connector.util.RandomIdGenerator.randomUuid;
 
-@ExtendWith(DropwizardExtensionsSupport.class)
 class GatewayAccountResourceSwitchPspValidationTest {
 
     private static GatewayAccountDao gatewayAccountDao = mock(GatewayAccountDao.class);
@@ -45,11 +43,9 @@ class GatewayAccountResourceSwitchPspValidationTest {
 
     private GatewayAccountEntity gatewayAccountEntity;
 
-    private static final ResourceExtension resources = ResourceTestRuleWithCustomExceptionMappersBuilder
-            .getBuilder()
-            .addResource(new GatewayAccountResource(gatewayAccountService, null,null, null,
-                    new GatewayAccountSwitchPaymentProviderService(gatewayAccountDao, gatewayAccountCredentialsDao)))
-            .build();
+    @RegisterExtension
+    private static final ResourceTestExtension resources = ResourceTestExtension.withResources(new GatewayAccountResource(gatewayAccountService, null,null, null,
+                    new GatewayAccountSwitchPaymentProviderService(gatewayAccountDao, gatewayAccountCredentialsDao)));
 
     @Nested
     class ByServiceIdAndAccountType {
@@ -77,10 +73,9 @@ class GatewayAccountResourceSwitchPspValidationTest {
             when(gatewayAccountService.getGatewayAccountByServiceIdAndAccountType(serviceId, TEST))
                     .thenReturn(Optional.of(gatewayAccountEntity));
 
-            Response response = resources.client()
-                    .target(format("/v1/api/service/%s/account/test/switch-psp", serviceId))
+            ResourceTestResponse response = resources.target(format("/v1/api/service/%s/account/test/switch-psp", serviceId))
                     .request()
-                    .post(Entity.json(Map.of("user_external_id", "some-user-external-id",
+                    .post(ResourceTestEntity.json(Map.of("user_external_id", "some-user-external-id",
                             "gateway_account_credential_external_id", switchToExtId)));
 
             assertThat(response.getStatus(), is(400));
@@ -100,10 +95,9 @@ class GatewayAccountResourceSwitchPspValidationTest {
             when(gatewayAccountService.getGatewayAccountByServiceIdAndAccountType(serviceId, TEST))
                     .thenReturn(Optional.of(gatewayAccountEntity));
 
-            Response response = resources.client()
-                    .target(format("/v1/api/service/%s/account/test/switch-psp", serviceId))
+            ResourceTestResponse response = resources.target(format("/v1/api/service/%s/account/test/switch-psp", serviceId))
                     .request()
-                    .post(Entity.json(Map.of("user_external_id", "some-user-external-id",
+                    .post(ResourceTestEntity.json(Map.of("user_external_id", "some-user-external-id",
                             "gateway_account_credential_external_id", randomUuid())));
 
             assertThat(response.getStatus(), is(400));
@@ -128,10 +122,9 @@ class GatewayAccountResourceSwitchPspValidationTest {
                     .thenReturn(Optional.of(gatewayAccountEntity));
 
             String nonExistentCredentialExternalId = randomUuid();
-            Response response = resources.client()
-                    .target(format("/v1/api/service/%s/account/test/switch-psp", serviceId))
+            ResourceTestResponse response = resources.target(format("/v1/api/service/%s/account/test/switch-psp", serviceId))
                     .request()
-                    .post(Entity.json(Map.of("user_external_id", "some-user-external-id",
+                    .post(ResourceTestEntity.json(Map.of("user_external_id", "some-user-external-id",
                             "gateway_account_credential_external_id", nonExistentCredentialExternalId)));
 
             assertThat(response.getStatus(), is(404));
@@ -156,10 +149,9 @@ class GatewayAccountResourceSwitchPspValidationTest {
             when(gatewayAccountService.getGatewayAccountByServiceIdAndAccountType(serviceId, TEST))
                     .thenReturn(Optional.of(gatewayAccountEntity));
 
-            Response response = resources.client()
-                    .target(format("/v1/api/service/%s/account/test/switch-psp", serviceId))
+            ResourceTestResponse response = resources.target(format("/v1/api/service/%s/account/test/switch-psp", serviceId))
                     .request()
-                    .post(Entity.json(Map.of("user_external_id", "some-user-external-id",
+                    .post(ResourceTestEntity.json(Map.of("user_external_id", "some-user-external-id",
                             "gateway_account_credential_external_id", switchToExtId)));
 
             assertThat(response.getStatus(), is(400));
@@ -173,10 +165,9 @@ class GatewayAccountResourceSwitchPspValidationTest {
             when(gatewayAccountService.getGatewayAccountByServiceIdAndAccountType(serviceId, TEST))
                     .thenReturn(Optional.empty());
 
-            Response response = resources.client()
-                    .target(format("/v1/api/service/%s/account/test/switch-psp", serviceId))
+            ResourceTestResponse response = resources.target(format("/v1/api/service/%s/account/test/switch-psp", serviceId))
                     .request()
-                    .post(Entity.json(Map.of("user_external_id", "some-user-external-id",
+                    .post(ResourceTestEntity.json(Map.of("user_external_id", "some-user-external-id",
                             "gateway_account_credential_external_id", randomUuid())));
 
             assertThat(response.getStatus(), is(404));
@@ -191,10 +182,9 @@ class GatewayAccountResourceSwitchPspValidationTest {
             when(gatewayAccountService.getGatewayAccountByServiceIdAndAccountType(serviceId, TEST))
                     .thenReturn(Optional.of(gatewayAccountEntity));
 
-            Response response = resources.client()
-                    .target(format("/v1/api/service/%s/account/test/switch-psp", serviceId))
+            ResourceTestResponse response = resources.target(format("/v1/api/service/%s/account/test/switch-psp", serviceId))
                     .request()
-                    .post(Entity.json(Map.of("user_external_id", "some-user-external-id",
+                    .post(ResourceTestEntity.json(Map.of("user_external_id", "some-user-external-id",
                             "gateway_account_credential_external_id", randomUuid())));
 
             assertThat(response.getStatus(), is(400));
@@ -205,10 +195,9 @@ class GatewayAccountResourceSwitchPspValidationTest {
 
         @Test
         void returnUnprocessableContentWhenNoPayloadPresent() {
-            Response response = resources.client()
-                    .target(format("/v1/api/service/%s/account/test/switch-psp", serviceId))
+            ResourceTestResponse response = resources.target(format("/v1/api/service/%s/account/test/switch-psp", serviceId))
                     .request()
-                    .post(Entity.json(Map.of("invalid_key", "some-user-external-id")));
+                    .post(ResourceTestEntity.json(Map.of("invalid_key", "some-user-external-id")));
 
             assertThat(response.getStatus(), is(422));
 
@@ -243,10 +232,9 @@ class GatewayAccountResourceSwitchPspValidationTest {
 
             when(gatewayAccountService.getGatewayAccount(1)).thenReturn(Optional.of(gatewayAccountEntity));
 
-            Response response = resources.client()
-                    .target("/v1/api/accounts/1/switch-psp")
+            ResourceTestResponse response = resources.target("/v1/api/accounts/1/switch-psp")
                     .request()
-                    .post(Entity.json(Map.of("user_external_id", "some-user-external-id",
+                    .post(ResourceTestEntity.json(Map.of("user_external_id", "some-user-external-id",
                             "gateway_account_credential_external_id", switchToExtId)));
 
             assertThat(response.getStatus(), is(400));
@@ -266,10 +254,9 @@ class GatewayAccountResourceSwitchPspValidationTest {
 
             when(gatewayAccountService.getGatewayAccount(1)).thenReturn(Optional.of(gatewayAccountEntity));
 
-            Response response = resources.client()
-                    .target("/v1/api/accounts/1/switch-psp")
+            ResourceTestResponse response = resources.target("/v1/api/accounts/1/switch-psp")
                     .request()
-                    .post(Entity.json(Map.of("user_external_id", "some-user-external-id",
+                    .post(ResourceTestEntity.json(Map.of("user_external_id", "some-user-external-id",
                             "gateway_account_credential_external_id", switchToExtId)));
 
             assertThat(response.getStatus(), is(400));
@@ -293,10 +280,9 @@ class GatewayAccountResourceSwitchPspValidationTest {
 
             when(gatewayAccountService.getGatewayAccount(1)).thenReturn(Optional.of(gatewayAccountEntity));
 
-            Response response = resources.client()
-                    .target("/v1/api/accounts/1/switch-psp")
+            ResourceTestResponse response = resources.target("/v1/api/accounts/1/switch-psp")
                     .request()
-                    .post(Entity.json(Map.of("user_external_id", "some-user-external-id",
+                    .post(ResourceTestEntity.json(Map.of("user_external_id", "some-user-external-id",
                             "gateway_account_credential_external_id", switchToExtId)));
 
             assertThat(response.getStatus(), is(404));
@@ -320,10 +306,9 @@ class GatewayAccountResourceSwitchPspValidationTest {
 
             when(gatewayAccountService.getGatewayAccount(1)).thenReturn(Optional.of(gatewayAccountEntity));
 
-            Response response = resources.client()
-                    .target("/v1/api/accounts/1/switch-psp")
+            ResourceTestResponse response = resources.target("/v1/api/accounts/1/switch-psp")
                     .request()
-                    .post(Entity.json(Map.of("user_external_id", "some-user-external-id",
+                    .post(ResourceTestEntity.json(Map.of("user_external_id", "some-user-external-id",
                             "gateway_account_credential_external_id", switchToExtId)));
 
             assertThat(response.getStatus(), is(400));
@@ -336,10 +321,9 @@ class GatewayAccountResourceSwitchPspValidationTest {
         void shouldReturn404WhenGatewayAccountIsNonExistent() {
             when(gatewayAccountService.getGatewayAccount(1)).thenReturn(Optional.empty());
 
-            Response response = resources.client()
-                    .target("/v1/api/accounts/1/switch-psp")
+            ResourceTestResponse response = resources.target("/v1/api/accounts/1/switch-psp")
                     .request()
-                    .post(Entity.json(Map.of("user_external_id", "some-user-external-id",
+                    .post(ResourceTestEntity.json(Map.of("user_external_id", "some-user-external-id",
                             "gateway_account_credential_external_id", randomUuid())));
 
             assertThat(response.getStatus(), is(404));
@@ -353,10 +337,9 @@ class GatewayAccountResourceSwitchPspValidationTest {
             gatewayAccountEntity.setProviderSwitchEnabled(false);
             when(gatewayAccountService.getGatewayAccount(1)).thenReturn(Optional.of(gatewayAccountEntity));
 
-            Response response = resources.client()
-                    .target("/v1/api/accounts/1/switch-psp")
+            ResourceTestResponse response = resources.target("/v1/api/accounts/1/switch-psp")
                     .request()
-                    .post(Entity.json(Map.of("user_external_id", "some-user-external-id",
+                    .post(ResourceTestEntity.json(Map.of("user_external_id", "some-user-external-id",
                             "gateway_account_credential_external_id", randomUuid())));
 
             assertThat(response.getStatus(), is(400));
@@ -372,10 +355,9 @@ class GatewayAccountResourceSwitchPspValidationTest {
             gatewayAccountEntity.setProviderSwitchEnabled(true);
             when(gatewayAccountService.getGatewayAccount(1)).thenReturn(Optional.of(gatewayAccountEntity));
 
-            Response response = resources.client()
-                    .target("/v1/api/accounts/1/switch-psp")
+            ResourceTestResponse response = resources.target("/v1/api/accounts/1/switch-psp")
                     .request()
-                    .post(Entity.json(payload));
+                    .post(ResourceTestEntity.json(payload));
 
             assertThat(response.getStatus(), is(422));
 

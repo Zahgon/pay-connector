@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import static io.dropwizard.testing.ConfigOverride.config;
+import static uk.gov.pay.connector.app.ConfigOverride.config;
 import static java.lang.String.format;
 import static org.hamcrest.Matchers.contains;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;

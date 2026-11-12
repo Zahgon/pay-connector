@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.tasks;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Inject;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.charge.exception.ChargeNotFoundRuntimeException;
@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
 
 import static java.lang.String.format;
 import static java.time.ZonedDateTime.now;
@@ -70,6 +71,7 @@ import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.USER_CANCEL_
 import static uk.gov.pay.connector.charge.util.AdyenFeeCalculator.hasAllExpectedFeeRecordsForAdyen;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.ADYEN;
 
+@Component
 public class HistoricalEventEmitter {
     public static final List<ChargeStatus> TERMINAL_AUTHENTICATION_STATES = List.of(
             AUTHORISATION_3DS_REQUIRED,

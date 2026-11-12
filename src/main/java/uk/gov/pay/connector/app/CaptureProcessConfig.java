@@ -1,12 +1,11 @@
 package uk.gov.pay.connector.app;
 
 
-import io.dropwizard.core.Configuration;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
-public class CaptureProcessConfig extends Configuration {
+public class CaptureProcessConfig {
 
     private int chargesConsideredOverdueForCaptureAfter;
     private int maximumRetries;

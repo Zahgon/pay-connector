@@ -6,8 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import io.dropwizard.jackson.Jackson;
 import uk.gov.pay.connector.events.eventdetails.EmptyEventDetails;
+import uk.gov.pay.connector.util.ObjectMapperFactory;
 import uk.gov.pay.connector.events.eventdetails.EventDetails;
 import uk.gov.service.payments.commons.api.json.IsoInstantMicrosecondSerializer;
 
@@ -17,7 +17,7 @@ import java.util.Objects;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public abstract class Event {
-    private static final ObjectMapper MAPPER = Jackson.newObjectMapper();
+    private static final ObjectMapper MAPPER = ObjectMapperFactory.newObjectMapper();
     private String resourceExternalId;
     private EventDetails eventDetails;
     private Instant timestamp;

@@ -3,9 +3,11 @@ package uk.gov.pay.connector.util;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import org.springframework.stereotype.Component;
 
 import static java.util.function.Predicate.not;
 
+@Component
 public class AcceptLanguageHeaderParser {
 
     private final static String DEFAULT_LOCALE = "en-GB";

@@ -1,8 +1,7 @@
 package uk.gov.pay.connector.app;
 
-import io.dropwizard.core.Configuration;
 
-public class JPAConfiguration extends Configuration {
+public class JPAConfiguration {
 
     private String jpaLoggingLevel;
     private String sqlLoggingLevel;

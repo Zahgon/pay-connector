@@ -9,7 +9,7 @@ import uk.gov.pay.connector.util.JsonObjectMapper;
 import java.net.URI;
 import java.util.Map;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.ADYEN;
 import static uk.gov.pay.connector.gateway.model.OrderRequestType.AUTHORISE_3DS;
 
@@ -28,7 +28,7 @@ public record Adyen3dsAuthorisationRequest(
     @Override
     public GatewayOrder getGatewayOrder() {
         var payload = jsonObjectMapper.objectToString(requestPayload);
-        return new GatewayOrder(AUTHORISE_3DS, payload, APPLICATION_JSON_TYPE);
+        return new GatewayOrder(AUTHORISE_3DS, payload, APPLICATION_JSON);
     }
 
     @Override

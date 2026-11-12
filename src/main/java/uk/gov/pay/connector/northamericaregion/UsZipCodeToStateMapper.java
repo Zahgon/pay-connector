@@ -4,10 +4,12 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import org.springframework.stereotype.Component;
 
 import static java.util.function.UnaryOperator.identity;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
+@Component
 public class UsZipCodeToStateMapper {
 
     private static final Pattern WELL_FORMED_ZIP_CODE_AND_OPTIONAL_PLUS_FOUR = Pattern.compile("([0-9]{3})[0-9]{2}(?:-[0-9]{4})?");

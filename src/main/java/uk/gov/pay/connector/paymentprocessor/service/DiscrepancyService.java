@@ -19,8 +19,10 @@ import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.springframework.stereotype.Service;
 
 
+@Service
 public class DiscrepancyService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DiscrepancyService.class);
 

@@ -11,7 +11,9 @@ import uk.gov.service.payments.commons.queue.exception.QueueException;
 import jakarta.inject.Inject;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import org.springframework.stereotype.Component;
 
+@Component
 public class StateTransitionEmitterProcess {
     private static final Logger LOGGER = LoggerFactory.getLogger(StateTransitionEmitterProcess.class);
 

@@ -1,14 +1,14 @@
 package uk.gov.pay.connector.refund.service;
 
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import jakarta.inject.Inject;
 import uk.gov.pay.connector.util.RandomIdGenerator;
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.stereotype.Component;
 
-@Singleton
+@Component
 public class RefundReversalStripeConnectTransferRequestBuilder {
 
     @Inject

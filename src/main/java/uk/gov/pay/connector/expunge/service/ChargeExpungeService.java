@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.expunge.service;
 
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.inject.Inject;
 import jakarta.persistence.OptimisticLockException;
 import org.slf4j.Logger;
@@ -22,6 +22,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 import static java.lang.String.format;
 import static net.logstash.logback.argument.StructuredArguments.kv;
@@ -42,6 +43,7 @@ import static uk.gov.pay.connector.util.ChargeFeeCalculator.hasRequiredFeesForAd
 import static uk.gov.service.payments.logging.LoggingKeys.MDC_REQUEST_ID_KEY;
 import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 
+@Service
 public class ChargeExpungeService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());

@@ -11,9 +11,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static jakarta.ws.rs.core.HttpHeaders.CONTENT_TYPE;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
-import static jakarta.ws.rs.core.MediaType.TEXT_PLAIN;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
 public class CardidStub {
 
@@ -25,7 +25,7 @@ public class CardidStub {
     }
 
     public void returnCardInformation(String cardNumber, CardInformation cardInformation) throws JsonProcessingException {
-        ResponseDefinitionBuilder response = aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON)
+        ResponseDefinitionBuilder response = aResponse().withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                 .withStatus(200)
                 .withBody(objectMapper.writeValueAsString(cardInformation));
         wireMockServer.stubFor(
@@ -35,7 +35,7 @@ public class CardidStub {
     }
     
     public void returnNotFound(String cardNumber) throws JsonProcessingException {
-        ResponseDefinitionBuilder response = aResponse().withHeader(CONTENT_TYPE, TEXT_PLAIN)
+        ResponseDefinitionBuilder response = aResponse().withHeader(CONTENT_TYPE, TEXT_PLAIN_VALUE)
                 .withStatus(404);
         wireMockServer.stubFor(
                 post(urlPathEqualTo("/v1/api/card"))

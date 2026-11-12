@@ -41,7 +41,7 @@ public class GatewayAccountResourceCreateIT {
 
     @BeforeEach
     void setUp() {
-        gatewayAccountDao = app.getInstanceFromGuiceContainer(GatewayAccountDao.class);
+        gatewayAccountDao = app.getBean(GatewayAccountDao.class);
     }
 
     @Nested

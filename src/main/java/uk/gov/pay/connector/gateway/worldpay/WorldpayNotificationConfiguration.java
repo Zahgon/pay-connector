@@ -1,11 +1,13 @@
 package uk.gov.pay.connector.gateway.worldpay;
 
-import com.google.inject.Inject;
+import jakarta.inject.Inject;
 import uk.gov.pay.connector.app.ConnectorConfiguration;
 import uk.gov.pay.connector.app.WorldpayConfig;
 import uk.gov.pay.connector.gateway.NotificationConfiguration;
 import uk.gov.pay.connector.gateway.PaymentGatewayName;
+import org.springframework.stereotype.Component;
 
+@Component
 public class WorldpayNotificationConfiguration implements NotificationConfiguration {
 
     private final WorldpayConfig config;

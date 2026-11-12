@@ -1,34 +1,25 @@
 package uk.gov.pay.connector.util;
 
-import org.glassfish.jersey.apache5.connector.Apache5ConnectorProvider;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.spi.ConnectorProvider;
-
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
-
-import static org.glassfish.jersey.client.RequestEntityProcessing.BUFFERED;
+import org.apache.hc.client5.http.config.ConnectionConfig;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.core5.util.Timeout;
 
 public class TestClientFactory {
-    public static Client createJerseyClient() {
+    public static CloseableHttpClient createHttpClient() {
         return createClientWithApacheConnectorAndTimeout(-1);
     }
 
-    public static Client createClientWithApacheConnectorAndTimeout(int readTimeout) {
-        ClientConfig clientConfig = new ClientConfig();
-        ConnectorProvider provider = new Apache5ConnectorProvider();
-        clientConfig.connectorProvider(provider);
+    public static CloseableHttpClient createClientWithApacheConnectorAndTimeout(int readTimeout) {
+        ConnectionConfig.Builder connectionConfig = ConnectionConfig.custom();
         if (readTimeout > 0) {
-            clientConfig.property(ClientProperties.READ_TIMEOUT, readTimeout);
+            connectionConfig.setSocketTimeout(Timeout.ofMilliseconds(readTimeout));
         }
-        clientConfig.property(ClientProperties.REQUEST_ENTITY_PROCESSING, BUFFERED);
-
-        Client client = ClientBuilder
-                .newBuilder()
-                .withConfig(clientConfig)
+        return HttpClients.custom()
+                .setConnectionManager(PoolingHttpClientConnectionManagerBuilder.create()
+                        .setDefaultConnectionConfig(connectionConfig.build())
+                        .build())
                 .build();
-
-        return client;
     }
 }

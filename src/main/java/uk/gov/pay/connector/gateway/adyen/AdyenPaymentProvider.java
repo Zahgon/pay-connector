@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.gateway.adyen;
 
-import io.dropwizard.core.setup.Environment;
+import com.codahale.metrics.MetricRegistry;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import uk.gov.pay.connector.app.ConnectorConfiguration;
@@ -50,9 +50,11 @@ import uk.gov.pay.connector.util.JsonObjectMapper;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.ADYEN;
 
+@Component
 public class AdyenPaymentProvider implements PaymentProvider {
 
     private final AdyenAuthoriseHandler adyenAuthoriseHandler;
@@ -68,13 +70,13 @@ public class AdyenPaymentProvider implements PaymentProvider {
     @Inject
     public AdyenPaymentProvider(
             ConnectorConfiguration connectorConfiguration,
-            Environment environment,
+            MetricRegistry metricRegistry,
             GatewayClientFactory gatewayClientFactory,
             @Named("DefaultRefundEntityFactory") RefundEntityFactory refundEntityFactory,
             AdyenAuthoriseRequestToGatewayOrderConverter adyenAuthoriseRequestToGatewayOrderConverter,
             JsonObjectMapper jsonObjectMapper) {
         AdyenGatewayConfig adyenGatewayConfig = connectorConfiguration.getAdyenGatewayConfig();
-        GatewayClient client = gatewayClientFactory.createGatewayClient(ADYEN, environment.metrics());
+        GatewayClient client = gatewayClientFactory.createGatewayClient(ADYEN, metricRegistry);
         adyenAuthoriseHandler = new AdyenAuthoriseHandler(client, connectorConfiguration, adyenAuthoriseRequestToGatewayOrderConverter, jsonObjectMapper);
         adyenAuthorise3dsHandler = new AdyenAuthorise3dsHandler(client, connectorConfiguration, jsonObjectMapper);
         adyenCaptureHandler = new AdyenCaptureHandler(client, connectorConfiguration, jsonObjectMapper);

@@ -34,9 +34,9 @@ public class GatewayAccountCredentialsHistoryDaoIT {
 
     @BeforeEach
     void setUp() {
-        gatewayAccountCredentialsDao = app.getInstanceFromGuiceContainer(GatewayAccountCredentialsDao.class);
-        gatewayAccountDao = app.getInstanceFromGuiceContainer(GatewayAccountDao.class);
-        gatewayAccountCredentialsHistoryDao = app.getInstanceFromGuiceContainer(GatewayAccountCredentialsHistoryDao.class);
+        gatewayAccountCredentialsDao = app.getBean(GatewayAccountCredentialsDao.class);
+        gatewayAccountDao = app.getBean(GatewayAccountDao.class);
+        gatewayAccountCredentialsHistoryDao = app.getBean(GatewayAccountCredentialsHistoryDao.class);
     }
 
     @Test

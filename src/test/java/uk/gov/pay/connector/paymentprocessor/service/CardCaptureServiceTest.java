@@ -1,8 +1,8 @@
 package uk.gov.pay.connector.paymentprocessor.service;
 
+import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Counter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.dropwizard.core.setup.Environment;
 import io.github.netmikey.logunit.api.LogCapturer;
 import jakarta.persistence.OptimisticLockException;
 import org.hamcrest.Description;
@@ -97,8 +97,6 @@ class CardCaptureServiceTest extends CardServiceTest {
     @Mock
     private ConnectorConfiguration mockConfiguration;
     @Mock
-    private Environment mockEnvironment;
-    @Mock
     private StateTransitionService mockStateTransitionService;
     @Mock
     private LedgerService ledgerService;
@@ -127,7 +125,6 @@ class CardCaptureServiceTest extends CardServiceTest {
     @BeforeEach
     void beforeTest() {
         Counter mockCounter = mock(Counter.class);
-        when(mockEnvironment.metrics()).thenReturn(mockMetricRegistry);
         lenient().when(mockMetricRegistry.counter(anyString())).thenReturn(mockCounter);
 
         ChargeService chargeService = new ChargeService(null, mockedChargeDao, mockedChargeEventDao,
@@ -137,7 +134,7 @@ class CardCaptureServiceTest extends CardServiceTest {
                 mockTaskQueueService, mockWorldpay3dsFlexJwtService, mockIdempotencyDao, mockExternalTransactionStateFactory,
                 objectMapper, null, INSTANT_SOURCE);
 
-        cardCaptureService = new CardCaptureService(chargeService, mockedProviders, mockUserNotificationService, mockEnvironment,
+        cardCaptureService = new CardCaptureService(chargeService, mockedProviders, mockUserNotificationService, mockMetricRegistry,
                 INSTANT_SOURCE, mockCaptureQueue, mockEventService);
     }
 

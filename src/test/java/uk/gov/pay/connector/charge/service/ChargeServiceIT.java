@@ -11,11 +11,11 @@ import uk.gov.pay.connector.charge.model.ChargeCreateRequest;
 import uk.gov.pay.connector.charge.model.ChargeCreateRequestBuilder;
 import uk.gov.pay.connector.it.dao.DatabaseFixtures;
 import uk.gov.pay.connector.paymentinstrument.model.PaymentInstrumentStatus;
-import uk.gov.pay.connector.rules.DropwizardAppWithPostgresRule;
+import uk.gov.pay.connector.rules.AppWithPostgresRule;
 import uk.gov.pay.connector.util.DatabaseTestHelper;
 import uk.gov.service.payments.commons.model.AuthorisationMode;
 
-import jakarta.ws.rs.core.UriInfo;
+import uk.gov.pay.connector.web.BaseUri;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -25,10 +25,10 @@ import static uk.gov.pay.connector.util.AddGatewayAccountParams.AddGatewayAccoun
 public class ChargeServiceIT {
 
     @ClassRule
-    public static DropwizardAppWithPostgresRule app = new DropwizardAppWithPostgresRule();
+    public static AppWithPostgresRule app = new AppWithPostgresRule();
 
     @Mock
-    private UriInfo mockUriInfo;
+    private BaseUri mockBaseUri;
 
     private ChargeService chargeService;
 
@@ -38,7 +38,7 @@ public class ChargeServiceIT {
 
     @Before
     public void setUp() throws Exception {
-        chargeService = app.getInstanceFromGuiceContainer(ChargeService.class);
+        chargeService = app.getBean(ChargeService.class);
         databaseTestHelper = app.getDatabaseTestHelper();
 
         databaseTestHelper.addGatewayAccount(anAddGatewayAccountParams()
@@ -71,6 +71,6 @@ public class ChargeServiceIT {
                 .withAgreementId(agreementExternalId)
                 .withAuthorisationMode(AuthorisationMode.AGREEMENT)
                 .build();
-        assertThrows(IdempotencyKeyUsedException.class, () -> chargeService.create(chargeCreateRequest, GATEWAY_ACCOUNT_ID, mockUriInfo, idempotencyKey));
+        assertThrows(IdempotencyKeyUsedException.class, () -> chargeService.create(chargeCreateRequest, GATEWAY_ACCOUNT_ID, mockBaseUri, idempotencyKey));
     }
 }

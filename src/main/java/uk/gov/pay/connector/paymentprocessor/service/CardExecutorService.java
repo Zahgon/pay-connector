@@ -2,8 +2,8 @@ package uk.gov.pay.connector.paymentprocessor.service;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Inject;
-import io.dropwizard.core.setup.Environment;
+import jakarta.inject.Inject;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +11,7 @@ import org.slf4j.MDC;
 import uk.gov.pay.connector.app.ConnectorConfiguration;
 import uk.gov.pay.connector.app.ExecutorServiceConfig;
 
-import jakarta.ws.rs.WebApplicationException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -23,6 +23,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
+import org.springframework.stereotype.Service;
 
 import static java.lang.Runtime.getRuntime;
 import static uk.gov.pay.connector.paymentprocessor.service.CardExecutorService.ExecutionStatus.COMPLETED;
@@ -36,6 +37,7 @@ import static uk.gov.pay.connector.paymentprocessor.service.CardExecutorService.
  * catches the timeout exception and returns to frontend as 'in progress'. Frontend then polls connector until the 
  * charge is authorised (by the CES thread), and continues on its merry way.
  */
+@Service
 public class CardExecutorService {
 
     private static final Logger logger = LoggerFactory.getLogger(CardExecutorService.class);
@@ -53,11 +55,11 @@ public class CardExecutorService {
     }
 
     @Inject
-    public CardExecutorService(ConnectorConfiguration configuration, Environment environment) {
+    public CardExecutorService(ConnectorConfiguration configuration, MetricRegistry metricRegistry) {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat("CardExecutorService-%d")
                 .build();
-        this.metricRegistry = environment.metrics();
+        this.metricRegistry = metricRegistry;
         this.config = configuration.getExecutorServiceConfig();
         int numberOfThreads = config.getThreadsPerCpu() * getRuntime().availableProcessors();
         this.executor = Executors.newFixedThreadPool(numberOfThreads, threadFactory);

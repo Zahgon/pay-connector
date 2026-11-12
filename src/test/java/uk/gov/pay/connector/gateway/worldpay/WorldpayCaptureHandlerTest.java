@@ -1,7 +1,9 @@
 package uk.gov.pay.connector.gateway.worldpay;
 
+import uk.gov.pay.connector.util.HttpClientStubs;
+import java.io.IOException;
 import com.google.common.collect.ImmutableMap;
-import jakarta.ws.rs.core.Response;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,8 +58,6 @@ class WorldpayCaptureHandlerTest {
 
     @Mock
     private GatewayClient client;
-    @Mock
-    private Response response;
 
     private final Map<String, Object> credentials = Map.of(
             ONE_OFF_CUSTOMER_INITIATED, Map.of(
@@ -85,9 +85,7 @@ class WorldpayCaptureHandlerTest {
     @ParameterizedTest
     @ValueSource(strings = {"250"})
     void shouldCaptureAPaymentSuccessfully(Long corporateSurchargeAmount) throws Exception {
-        when(response.getStatus()).thenReturn(HttpStatus.SC_OK);
-        when(response.readEntity(String.class)).thenReturn(load("templates/worldpay/capture-success-response.xml"));
-        GatewayClient.Response response = new TestResponse(this.response);
+        GatewayClient.Response response = new TestResponse(HttpClientStubs.response(HttpStatus.SC_OK, load("templates/worldpay/capture-success-response.xml"), Map.of()));
         when(client.postRequestFor(any(URI.class), eq(WORLDPAY), eq("test"), any(GatewayOrder.class), anyMap()))
                 .thenReturn(response);
 
@@ -121,9 +119,7 @@ class WorldpayCaptureHandlerTest {
 
     @Test
     void shouldCaptureARecurringPaymentSuccessfully() throws Exception {
-        when(response.getStatus()).thenReturn(HttpStatus.SC_OK);
-        when(response.readEntity(String.class)).thenReturn(load("templates/worldpay/capture-success-response.xml"));
-        GatewayClient.Response response = new TestResponse(this.response);
+        GatewayClient.Response response = new TestResponse(HttpClientStubs.response(HttpStatus.SC_OK, load("templates/worldpay/capture-success-response.xml"), Map.of()));
         when(client.postRequestFor(any(URI.class), eq(WORLDPAY), eq("test"), any(GatewayOrder.class), anyMap()))
                 .thenReturn(response);
 
@@ -156,17 +152,15 @@ class WorldpayCaptureHandlerTest {
 
     private static class TestResponse extends GatewayClient.Response {
 
-        protected TestResponse(Response delegate) {
+        protected TestResponse(ClassicHttpResponse delegate) throws IOException {
             super(delegate);
         }
     }
 
     @Test
     void shouldErrorIfOrderReferenceNotKnownInCapture() throws Exception {
-        when(response.getStatus()).thenReturn(HttpStatus.SC_OK);
-        when(response.readEntity(String.class)).thenReturn(load("templates/worldpay/error-response.xml")
-                .replace("{{errorDescription}}", "Order has already been paid"));
-        TestResponse testResponse = new TestResponse(this.response);
+        TestResponse testResponse = new TestResponse(HttpClientStubs.response(HttpStatus.SC_OK, load("templates/worldpay/error-response.xml")
+                .replace("{{errorDescription}}", "Order has already been paid"), Map.of()));
         when(client.postRequestFor(any(URI.class), eq(WORLDPAY), eq("test"), any(GatewayOrder.class), anyMap())).thenReturn(testResponse);
 
         CaptureResponse gatewayResponse = worldpayCaptureHandler.capture(getCaptureRequest());

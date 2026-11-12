@@ -11,7 +11,7 @@ import uk.gov.pay.connector.queue.capture.CaptureQueue;
 
 import java.time.Instant;
 
-import static io.dropwizard.testing.ConfigOverride.config;
+import static uk.gov.pay.connector.app.ConfigOverride.config;
 import static java.lang.String.format;
 import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.MINUTES;

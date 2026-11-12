@@ -1,8 +1,11 @@
 package uk.gov.pay.connector.refund.resource;
 
+import uk.gov.pay.connector.rules.ResourceTestExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import uk.gov.pay.connector.rules.ResourceTestResponse;
+import uk.gov.pay.connector.rules.ResourceTestEntity;
+import org.springframework.http.HttpStatus;
 
-import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
-import io.dropwizard.testing.junit5.ResourceExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.gov.pay.connector.charge.model.domain.Charge;
@@ -16,8 +19,6 @@ import uk.gov.pay.connector.refund.model.domain.Refund;
 import uk.gov.pay.connector.refund.model.domain.RefundEntity;
 import uk.gov.pay.connector.refund.service.RefundReversalService;
 
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.Response;
 
 import java.util.Map;
 import java.util.Optional;
@@ -31,7 +32,6 @@ import static uk.gov.pay.connector.charge.model.domain.ChargeEntityFixture.aVali
 import static uk.gov.pay.connector.gatewayaccount.model.GatewayAccountEntityFixture.aGatewayAccountEntity;
 import static uk.gov.pay.connector.model.domain.RefundEntityFixture.aValidRefundEntity;
 
-@ExtendWith(DropwizardExtensionsSupport.class)
 class RefundReversalResourceTest {
     private static final ChargeService mockChargeService = mock(ChargeService.class);
     private static final GatewayAccountDao mockGatewayAccountDao = mock(GatewayAccountDao.class);
@@ -41,9 +41,8 @@ class RefundReversalResourceTest {
     String externalChargeId = "a-charge-id";
     String refundExternalId = "a-refund-id";
 
-    public static final ResourceExtension resources = ResourceExtension.builder()
-            .addResource(new RefundReversalResource(mockChargeService, mockGatewayAccountDao, mockRefundReversalService))
-            .build();
+    @RegisterExtension
+    public static final ResourceTestExtension resources = ResourceTestExtension.withResources(new RefundReversalResource(mockChargeService, mockGatewayAccountDao, mockRefundReversalService));
     
 
     @Test
@@ -59,14 +58,14 @@ class RefundReversalResourceTest {
         Charge charge = Charge.from(chargeEntity);
         when(mockChargeService.findCharge("a-charge-id")).thenReturn(Optional.of(charge));
 
-        Response response = resources
+        ResourceTestResponse response = resources
                 .target("/v1/api/accounts/123/charges/a-charge-id/refunds/a-refund-id/reverse-failed")
                 .request()
-                .post(Entity.json(""));
+                .post(ResourceTestEntity.json(""));
 
         String responseBody = response.readEntity(String.class);
 
-        assertThat(response.getStatus(), is(Response.Status.BAD_REQUEST.getStatusCode()));
+        assertThat(response.getStatus(), is(HttpStatus.BAD_REQUEST.value()));
         assertThat(responseBody, is("Operation only available for Stripe"));
     }
 
@@ -85,13 +84,13 @@ class RefundReversalResourceTest {
 
         when(mockRefundReversalService.findMaybeHistoricRefundByRefundId(wrongRefundExternalId)).thenReturn(Optional.empty());
 
-        Response response = resources
+        ResourceTestResponse response = resources
                 .target("/v1/api/accounts/1234/charges/a-charge-id/refunds/a-refund-id/reverse-failed")
                 .request()
-                .post(Entity.json(Map.of("zendesk_ticket_id", "1223333343", "github_user_id", "Idris")));
+                .post(ResourceTestEntity.json(Map.of("zendesk_ticket_id", "1223333343", "github_user_id", "Idris")));
 
         ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
-        assertThat(response.getStatus(), is(Response.Status.NOT_FOUND.getStatusCode()));
+        assertThat(response.getStatus(), is(HttpStatus.NOT_FOUND.value()));
         assertThat(errorResponse.messages(), hasItem("Refund with id [a-refund-id] not found."));
     }
 
@@ -115,14 +114,14 @@ class RefundReversalResourceTest {
         when(mockRefundReversalService.findMaybeHistoricRefundByRefundId(refundExternalId)).thenReturn(Optional.of(refund));
 
 
-        Response response = resources
+        ResourceTestResponse response = resources
                 .target("/v1/api/accounts/1234/charges/a-charge-id/refunds/a-refund-id/reverse-failed")
                 .request()
-                .post(Entity.json(Map.of("zendesk_ticket_id", "1223333343", "github_user_id", "Idris")));
+                .post(ResourceTestEntity.json(Map.of("zendesk_ticket_id", "1223333343", "github_user_id", "Idris")));
 
         ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
         assertThat(errorResponse.messages(), hasItem("Refund with id [a-refund-id] not found for Charge wih id [a-charge-id] and gateway account with id [1234]."));
-        assertThat(response.getStatus(), is(Response.Status.NOT_FOUND.getStatusCode()));
+        assertThat(response.getStatus(), is(HttpStatus.NOT_FOUND.value()));
     }
 
     @Test
@@ -133,13 +132,13 @@ class RefundReversalResourceTest {
         Charge charge = Charge.from(chargeEntity);
         when(mockChargeService.findCharge(externalChargeId)).thenReturn(Optional.of(charge));
 
-        Response response = resources
+        ResourceTestResponse response = resources
                 .target("/v1/api/accounts/0/charges/a-charge-id/refunds/a-refund-id/reverse-failed")
                 .request()
-                .post(Entity.json(Map.of("zendesk_ticket_id", "1223333343", "github_user_id", "87")));
+                .post(ResourceTestEntity.json(Map.of("zendesk_ticket_id", "1223333343", "github_user_id", "87")));
 
         ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
-        assertThat(response.getStatus(), is(Response.Status.NOT_FOUND.getStatusCode()));
+        assertThat(response.getStatus(), is(HttpStatus.NOT_FOUND.value()));
         assertThat(errorResponse.messages(), hasItem("Gateway Account with id [0] not found."));
 
     }
@@ -166,12 +165,12 @@ class RefundReversalResourceTest {
         when(mockGatewayAccountDao.findById(gatewayAccountId)).thenReturn(Optional.of(gatewayAccountEntity));
         when(mockChargeService.findCharge(externalChargeId)).thenReturn(Optional.of(charge));
 
-        Response response = resources
+        ResourceTestResponse response = resources
                 .target("/v1/api/accounts/1234/charges/a-charge-id/refunds/a-refund-id/reverse-failed")
                 .request()
-                .post(Entity.json(Map.of("zendesk_ticket_id", "1223333343", "github_user_id", "87")));
+                .post(ResourceTestEntity.json(Map.of("zendesk_ticket_id", "1223333343", "github_user_id", "87")));
 
-        assertThat(response.getStatus(), is(Response.Status.NOT_FOUND.getStatusCode()));
+        assertThat(response.getStatus(), is(HttpStatus.NOT_FOUND.value()));
         ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
         assertThat(errorResponse.messages(), hasItem("Refund with id [a-refund-id] not found for Charge wih id [a-charge-id] and gateway account with id [1234]."));
     }
@@ -183,14 +182,14 @@ class RefundReversalResourceTest {
 
         when(mockChargeService.findCharge(externalChargeId)).thenReturn(Optional.empty());
 
-        Response response = resources
+        ResourceTestResponse response = resources
                 .target("/v1/api/accounts/129/charges/a-charge-id/refunds/a-refund-id/reverse-failed")
                 .request()
-                .post(Entity.json(Map.of("zendesk_ticket_id", "1223333343", "github_user_id", "87")));
+                .post(ResourceTestEntity.json(Map.of("zendesk_ticket_id", "1223333343", "github_user_id", "87")));
 
         ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
 
-        assertThat(response.getStatus(), is(Response.Status.NOT_FOUND.getStatusCode()));
+        assertThat(response.getStatus(), is(HttpStatus.NOT_FOUND.value()));
         assertThat(errorResponse.messages(), hasItem("Charge with id [a-charge-id] not found."));
     }
 }

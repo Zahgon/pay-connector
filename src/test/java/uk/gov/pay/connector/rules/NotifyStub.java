@@ -2,17 +2,17 @@ package uk.gov.pay.connector.rules;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
+import java.util.Map;
+import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static jakarta.ws.rs.core.HttpHeaders.CONTENT_TYPE;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static uk.gov.pay.connector.util.JsonEncoder.toJson;
 
 
-import java.util.Map;
-import java.util.UUID;
 
 public class NotifyStub {
     private final WireMockServer wireMockServer;
@@ -39,7 +39,7 @@ public class NotifyStub {
                 post(urlPathEqualTo("/v2/notifications/email"))
                         .willReturn(
                                 aResponse()
-                                        .withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                                        .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                                         .withStatus(201)
                                         .withBody(toJson(payload))
                         )
@@ -51,7 +51,7 @@ public class NotifyStub {
                 post(urlPathEqualTo("/v2/notifications/email"))
                         .willReturn(
                                 aResponse()
-                                        .withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                                        .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                                         .withStatus(400)
                                         .withBody(toJson(Map.of()))
                         )

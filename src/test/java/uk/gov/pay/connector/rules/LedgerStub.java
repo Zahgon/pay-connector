@@ -22,8 +22,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static jakarta.ws.rs.core.HttpHeaders.CONTENT_TYPE;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 import static uk.gov.pay.connector.model.domain.RefundTransactionsForPaymentFixture.aValidRefundTransactionsForPayment;
@@ -54,7 +54,7 @@ public class LedgerStub {
 
     public void returnLedgerTransaction(String externalId, LedgerTransaction ledgerTransaction) throws JsonProcessingException {
         ResponseDefinitionBuilder response = aResponse()
-                .withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                 .withStatus(200)
                 .withBody(objectMapper.writeValueAsString(ledgerTransaction));
         wireMockServer.stubFor(
@@ -66,7 +66,7 @@ public class LedgerStub {
 
     public void returnLedgerTransaction(String externalId, long gatewayAccountId, LedgerTransaction ledgerTransaction) throws JsonProcessingException {
         ResponseDefinitionBuilder response = aResponse()
-                .withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                 .withStatus(200)
                 .withBody(objectMapper.writeValueAsString(ledgerTransaction));
         wireMockServer.stubFor(
@@ -127,7 +127,7 @@ public class LedgerStub {
 
         ResponseDefinitionBuilder response = aResponse()
                 .withStatus(200)
-                .withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                 .withBody(objectMapper.writeValueAsString(refundTransactionsForPayment));
 
         String url = format("/v1/transaction/%s/transaction", chargeExternalId);
@@ -146,7 +146,7 @@ public class LedgerStub {
     private void stubResponseForProviderAndGatewayTransactionId(String gatewayTransactionId, String paymentProvider,
                                                                 Map<String, Object> ledgerTransactionFields, int status) throws JsonProcessingException {
         ResponseDefinitionBuilder responseDefBuilder = aResponse()
-                .withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                 .withStatus(status);
 
         if (nonNull(ledgerTransactionFields) && ledgerTransactionFields.size() > 0) {
@@ -164,7 +164,7 @@ public class LedgerStub {
 
     private void stubResponse(String externalId, Map<String, Object> ledgerTransactionFields) throws JsonProcessingException {
         ResponseDefinitionBuilder responseDefBuilder = aResponse()
-                .withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                 .withStatus(200)
                 .withBody(objectMapper.writeValueAsString(ledgerTransactionFields));
         wireMockServer.stubFor(
@@ -178,7 +178,7 @@ public class LedgerStub {
 
     public void returnTransactionNotFound(String externalId) {
         ResponseDefinitionBuilder responseDefBuilder = aResponse()
-                .withHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                 .withStatus(404);
 
         wireMockServer.stubFor(

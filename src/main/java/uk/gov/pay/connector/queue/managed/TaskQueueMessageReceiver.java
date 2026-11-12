@@ -1,9 +1,8 @@
 package uk.gov.pay.connector.queue.managed;
 
-import io.dropwizard.lifecycle.Managed;
-import io.dropwizard.core.setup.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.SmartLifecycle;
 import uk.gov.pay.connector.app.ConnectorConfiguration;
 import uk.gov.pay.connector.app.config.TaskQueueConfig;
 import uk.gov.pay.connector.queue.tasks.TaskQueueMessageHandler;
@@ -12,7 +11,7 @@ import jakarta.inject.Inject;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class TaskQueueMessageReceiver implements Managed {
+public class TaskQueueMessageReceiver implements SmartLifecycle {
 
     private static final String TASK_QUEUE_MESSAGE_RECEIVER_THREAD_NAME = "sqs-message-tasksQueueMessageReceiver";
 
@@ -23,19 +22,16 @@ public class TaskQueueMessageReceiver implements Managed {
     private final TaskQueueMessageHandler taskQueueMessageHandler;
     private boolean taskQueueEnabled;
     private ScheduledExecutorService tasksQueueScheduledExecutorService;
+    private volatile boolean running;
 
     @Inject
-    public TaskQueueMessageReceiver(TaskQueueMessageHandler taskQueueMessageHandler, Environment environment,
+    public TaskQueueMessageReceiver(TaskQueueMessageHandler taskQueueMessageHandler,
                                     ConnectorConfiguration connectorConfiguration) {
         this.taskQueueMessageHandler = taskQueueMessageHandler;
 
         int queueScheduleNumberOfThreads = 1;
 
-        tasksQueueScheduledExecutorService = environment
-                .lifecycle()
-                .scheduledExecutorService(TASK_QUEUE_MESSAGE_RECEIVER_THREAD_NAME)
-                .threads(queueScheduleNumberOfThreads)
-                .build();
+        tasksQueueScheduledExecutorService = ScheduledExecutors.create(TASK_QUEUE_MESSAGE_RECEIVER_THREAD_NAME, queueScheduleNumberOfThreads);
 
         TaskQueueConfig taskQueueConfig = connectorConfiguration.getTaskQueueConfig();
         queueSchedulerThreadDelayInSeconds = taskQueueConfig.getQueueSchedulerThreadDelayInSeconds();
@@ -45,6 +41,7 @@ public class TaskQueueMessageReceiver implements Managed {
 
     @Override
     public void start() {
+        running = true;
         if (taskQueueEnabled) {
             int initialDelay = queueSchedulerThreadDelayInSeconds;
             tasksQueueScheduledExecutorService.scheduleWithFixedDelay(
@@ -56,7 +53,13 @@ public class TaskQueueMessageReceiver implements Managed {
     }
 
     @Override
+    public boolean isRunning() {
+        return running;
+    }
+
+    @Override
     public void stop() {
+        running = false;
         LOGGER.info("Shutting down task queue message receiver");
         tasksQueueScheduledExecutorService.shutdown();
         try {

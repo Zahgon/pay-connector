@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.app;
 
-import io.dropwizard.util.Duration;
+import java.time.Duration;
 
 public class OperationOverrides {
     private Duration readTimeout;

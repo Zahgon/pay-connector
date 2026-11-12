@@ -19,7 +19,7 @@ import uk.gov.pay.connector.queue.tasks.handlers.adyen.AdyenWebhookTaskHandler;
 import java.util.List;
 import java.util.Optional;
 
-import static io.dropwizard.testing.ConfigOverride.config;
+import static uk.gov.pay.connector.app.ConfigOverride.config;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.CAPTURED;
@@ -47,7 +47,7 @@ class AdyenWebhookTaskHandlerForPaymentWebhooksIT {
 
     @BeforeEach
     void setUp() {
-        adyenWebhookTaskHandler = app.getInstanceFromGuiceContainer(AdyenWebhookTaskHandler.class);
+        adyenWebhookTaskHandler = app.getBean(AdyenWebhookTaskHandler.class);
         app.purgeEventQueue();
     }
 
@@ -232,7 +232,7 @@ class AdyenWebhookTaskHandlerForPaymentWebhooksIT {
     }
 
     private List<Message> readMessagesFromEventQueue() {
-        SqsClient sqsClient = app.getInstanceFromGuiceContainer(SqsClient.class);
+        SqsClient sqsClient = app.getBean(SqsClient.class);
 
         ReceiveMessageRequest receiveMessageRequest = ReceiveMessageRequest.builder()
                 .queueUrl(app.getEventQueueUrl())

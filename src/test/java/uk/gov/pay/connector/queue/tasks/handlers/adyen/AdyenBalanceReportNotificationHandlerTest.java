@@ -3,7 +3,7 @@ package uk.gov.pay.connector.queue.tasks.handlers.adyen;
 import com.adyen.model.reportwebhooks.ReportNotificationData;
 import com.adyen.model.reportwebhooks.ReportNotificationRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import jakarta.ws.rs.WebApplicationException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

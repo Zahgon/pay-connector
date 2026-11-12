@@ -29,7 +29,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static java.lang.String.format;
 import static java.lang.String.join;
-import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
@@ -184,7 +184,7 @@ public class GatewayAccountFrontendResourceIT {
                 .get(ACCOUNTS_FRONTEND_URL + nonNumericGatewayAccount)
                 .then()
                 .contentType(JSON)
-                .statusCode(NOT_FOUND.getStatusCode())
+                .statusCode(NOT_FOUND.value())
                 .body("code", is(404))
                 .body("message", is("HTTP 404 Not Found"));
     }
@@ -410,7 +410,7 @@ public class GatewayAccountFrontendResourceIT {
                     .patch(ACCOUNTS_FRONTEND_URL + "NON_NUMERIC_ACCOUNT_ID" + "/servicename")
                     .then()
                     .contentType(JSON)
-                    .statusCode(NOT_FOUND.getStatusCode())
+                    .statusCode(NOT_FOUND.value())
                     .body("code", is(404))
                     .body("message", is("HTTP 404 Not Found"));
         }

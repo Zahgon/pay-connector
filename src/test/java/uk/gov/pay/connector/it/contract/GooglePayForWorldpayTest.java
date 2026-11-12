@@ -1,8 +1,10 @@
 package uk.gov.pay.connector.it.contract;
 
-import io.dropwizard.core.setup.Environment;
-import jakarta.ws.rs.client.ClientBuilder;
+import com.codahale.metrics.MetricRegistry;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -14,15 +16,17 @@ import uk.gov.pay.connector.gateway.worldpay.WorldpayOrderStatusResponse;
 import uk.gov.pay.connector.gatewayaccount.model.GatewayAccountEntity;
 import uk.gov.pay.connector.gatewayaccount.model.GatewayAccountType;
 import uk.gov.pay.connector.gatewayaccount.model.WorldpayCredentials;
-import uk.gov.pay.connector.rules.DropwizardAppWithPostgresRule;
+import uk.gov.pay.connector.rules.AppWithPostgresRule;
 import uk.gov.service.payments.commons.model.AuthorisationMode;
 
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import static io.dropwizard.testing.ConfigOverride.config;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import java.io.IOException;
+
+import static uk.gov.pay.connector.app.ConfigOverride.config;
+import static org.springframework.http.MediaType.APPLICATION_XML;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -48,7 +52,7 @@ public class GooglePayForWorldpayTest {
     private String signedMessage = "{\"encryptedMessage\":\"3QcR7WccaLDaSSBn1b4yNY3EjVq16bwxAPF5TITtznbuQCYZCEVWvqQTsJiZA8rChdL94w3CxJYWVrJ580IJvRZ/xsKxa3DN8WnLf9gu6vQ8ky8Xes08qA2wvUNkiJBUtDWE7NmKPxkrmvz2a8KGkAFrrsYghVIBYBXALxadQg9NawHDxZmBrVhxC+NvNtH1GFo0B2mUvyayzxKwqYs8qd7PBiVWEoNFShilLOA65jYhR6C6vEkt+n9BRywtwrBA0f8CX8Ay4TebufWVA6lDAGZWHxWJ2alBrxKE52dhkf6vBxWwDk3GrjAQf97bZ6pfw+hQMZ4n4QLFzvTQD2e1RKNjsaNt5cn2OgvwKM4UbwiByowRMSN9ZPynDG/rsnCkNLBS5sZEMkW3K3LMR1xYPMiBUDnoqEt9ONNYMxUJE+toUF7H6fgBsT/Ju+52kpiDQgwhbwbUw97TKA\\u003d\\u003d\",\"ephemeralPublicKey\":\"BGgZEJ5TvU0BuA5/BYql24H5Ce9N+R7VgoivFv5lH6FyWXvqDQMBlVb4vZGSIR6Ziknpkalk2hYOiSrIkhxUmaM\\u003d\",\"tag\":\"HDfoODJBoosAef3H6NYH9jrUvm2/bmqNZDPTBfOFv4U\\u003d\"}";
 
     @Rule
-    public DropwizardAppWithPostgresRule app = new DropwizardAppWithPostgresRule(
+    public AppWithPostgresRule app = new AppWithPostgresRule(
             config("worldpay.urls.test", "https://secure-test.worldpay.com/jsp/merchant/xml/paymentService.jsp"));
 
     @Test
@@ -72,7 +76,7 @@ public class GooglePayForWorldpayTest {
 
         GatewayClient authoriseClient = getGatewayClient();
 
-        GatewayOrder gatewayOrder = new GatewayOrder(OrderRequestType.AUTHORISE, payload, APPLICATION_XML_TYPE);
+        GatewayOrder gatewayOrder = new GatewayOrder(OrderRequestType.AUTHORISE, payload, APPLICATION_XML);
         WorldpayCredentials credentials = (WorldpayCredentials) gatewayAccount.getGatewayAccountCredentialsEntity(WORLDPAY.getName()).getCredentialsObject();
         GatewayClient.Response response = authoriseClient.postRequestFor(
                 URI.create("https://secure-test.worldpay.com/jsp/merchant/xml/paymentService.jsp"),
@@ -88,8 +92,14 @@ public class GooglePayForWorldpayTest {
         assertThat(worldpayOrderStatusResponse.getLastEvent(), is("AUTHORISED"));
     }
 
+    private final CloseableHttpClient httpClient = HttpClients.createDefault();
+
+    @After
+    public void closeHttpClient() throws IOException {
+        httpClient.close();
+    }
+
     private GatewayClient getGatewayClient() {
-        Environment environment = app.getInstanceFromGuiceContainer(Environment.class);
-        return new GatewayClient(ClientBuilder.newClient(), environment.metrics());
+        return new GatewayClient(httpClient, app.getBean(MetricRegistry.class));
     }
 }

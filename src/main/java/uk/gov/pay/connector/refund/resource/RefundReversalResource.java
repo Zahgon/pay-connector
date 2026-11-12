@@ -2,8 +2,6 @@ package uk.gov.pay.connector.refund.resource;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import uk.gov.pay.connector.charge.exception.ChargeNotFoundRuntimeException;
@@ -20,19 +18,20 @@ import uk.gov.pay.connector.refund.model.domain.Refund;
 import uk.gov.pay.connector.refund.service.RefundReversalService;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.UriInfo;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import uk.gov.pay.connector.web.MediaTypes;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.RequestBody;
 
-@Path("/")
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 @Tag(name = "Refunds")
+@RestController
 public class RefundReversalResource {
     private final ChargeService chargeService;
 
@@ -47,10 +46,8 @@ public class RefundReversalResource {
         this.refundReversalService = refundReversalService;
     }
 
-    @POST
-    @Path("/v1/api/accounts/{gatewayAccountId}/charges/{chargeId}/refunds/{refundId}/reverse-failed")
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/accounts/{gatewayAccountId}/charges/{chargeId}/refunds/{refundId}/reverse-failed")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Fix failed refund charge",
             responses = {
@@ -60,24 +57,22 @@ public class RefundReversalResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response reverseRefund(@Parameter(example = "1", description = "Gateway account ID")
-                                  @PathParam("gatewayAccountId") Long gatewayAccountId,
+    public ResponseEntity<?> reverseRefund(@Parameter(example = "1", description = "Gateway account ID")
+                                  @PathVariable("gatewayAccountId") Long gatewayAccountId,
                                   @Parameter(example = "2c6vtn9pth38ppbmnt20d57t49", description = "Charge external ID")
-                                  @PathParam("chargeId") String chargeExternalId,
+                                  @PathVariable("chargeId") String chargeExternalId,
                                   @Parameter(example = "3c6vtn9pth38ppbmnt20d57t49", description = "Refund external ID")
-                                  @PathParam("refundId") String refundExternalId,
-                                  @Context UriInfo uriInfo,
+                                  @PathVariable("refundId") String refundExternalId,
+                                  HttpServletRequest request,
                                   @Parameter
-                                  GithubAndZendeskCredential githubAndZendeskCredential
+                                  @RequestBody(required = false) GithubAndZendeskCredential githubAndZendeskCredential
     ) {
 
         Charge charge = chargeService.findCharge(chargeExternalId)
                 .orElseThrow(() -> new ChargeNotFoundRuntimeException(chargeExternalId));
 
         if (!PaymentGatewayName.STRIPE.getName().equals(charge.getPaymentGatewayName())) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Operation only available for Stripe")
-                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Operation only available for Stripe");
         }
 
         GatewayAccountEntity gatewayAccount = gatewayAccountDao.findById(gatewayAccountId)

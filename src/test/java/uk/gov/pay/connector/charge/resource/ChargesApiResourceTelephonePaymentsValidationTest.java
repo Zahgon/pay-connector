@@ -1,7 +1,9 @@
 package uk.gov.pay.connector.charge.resource;
 
-import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
-import io.dropwizard.testing.junit5.ResourceExtension;
+import uk.gov.pay.connector.rules.ResourceTestExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import uk.gov.pay.connector.rules.ResourceTestResponse;
+import uk.gov.pay.connector.rules.ResourceTestEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -11,8 +13,6 @@ import uk.gov.pay.connector.common.model.api.ErrorResponse;
 import uk.gov.pay.connector.util.JsonMappingExceptionMapper;
 import uk.gov.service.payments.commons.model.ErrorIdentifier;
 
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
 
@@ -20,15 +20,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@ExtendWith(DropwizardExtensionsSupport.class)
 public class ChargesApiResourceTelephonePaymentsValidationTest {
 
-    public static ResourceExtension chargesApiResource = ResourceExtension.builder()
-            .addResource(new ChargesApiResource(null, null, null, null))
-            .setRegisterDefaultExceptionMappers(false)
-            .addProvider(ConstraintViolationExceptionMapper.class)
-            .addProvider(JsonMappingExceptionMapper.class)
-            .build();
+    @RegisterExtension
+    public static ResourceTestExtension chargesApiResource = ResourceTestExtension.withResources(new ChargesApiResource(null, null, null, null));
     
     @DisplayName("Should return 400 for an invalid card expiry date")
     @ParameterizedTest
@@ -46,10 +41,10 @@ public class ChargesApiResourceTelephonePaymentsValidationTest {
                 "card_expiry", "99/99"
         );
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
             
             assertGenericErrorResponse(response, 400,"Not in MM/yy format");
         }
@@ -71,10 +66,10 @@ public class ChargesApiResourceTelephonePaymentsValidationTest {
                 "card_type", "invalid-card"
         );
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
             
             assertGenericErrorResponse(response, 422,"Field [card_type] must be either master-card, visa, maestro, diners-club, american-express or jcb");
         }
@@ -95,10 +90,10 @@ public class ChargesApiResourceTelephonePaymentsValidationTest {
                 "payment_outcome", Map.of(
                         "status", "invalid"
                 ));
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             assertGenericErrorResponse(response, 422,"Field [payment_outcome] must include a valid status and error code");
         }
@@ -125,10 +120,10 @@ public class ChargesApiResourceTelephonePaymentsValidationTest {
                         )
                 ));
         
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             assertGenericErrorResponse(response, 422,"Field [payment_outcome] must include a valid status and error code");
         }
@@ -150,10 +145,10 @@ public class ChargesApiResourceTelephonePaymentsValidationTest {
                         "status", "success",
                         "code", "P0010"
                 ));
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
             
             assertGenericErrorResponse(response, 422,"Field [payment_outcome] must include a valid status and error code");
         }
@@ -175,10 +170,10 @@ public class ChargesApiResourceTelephonePaymentsValidationTest {
                 "created_date", "invalid"
                 );
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             assertGenericErrorResponse(response, 422,"Field [created_date] must be a valid ISO-8601 time and date format");
         }    
@@ -200,10 +195,10 @@ public class ChargesApiResourceTelephonePaymentsValidationTest {
                 "authorised_date", "invalid"
         );
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
 
             assertGenericErrorResponse(response, 422,"Field [authorised_date] must be a valid ISO-8601 time and date format");
         }
@@ -218,10 +213,10 @@ public class ChargesApiResourceTelephonePaymentsValidationTest {
     public void shouldReturn422ForMissingFields(String url) {
         var payload = Map.of();
 
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(payload))) {
+                .post(ResourceTestEntity.json(payload))) {
             
             assertThat(response.getStatus(), is(422));
             List<String> errorResponseMessages = response.readEntity(ErrorResponse.class).messages();
@@ -241,16 +236,16 @@ public class ChargesApiResourceTelephonePaymentsValidationTest {
             "/v1/api/service/my-service-id/account/test/telephone-charges"
     })
     public void shouldReturn422ForNullRequestBody(String url) {
-        try (Response response = chargesApiResource
+        try (ResourceTestResponse response = chargesApiResource
                 .target(url)
                 .request()
-                .post(Entity.json(""))) {
+                .post(ResourceTestEntity.json(""))) {
             
             assertGenericErrorResponse(response, 422,"must not be null" );
         }
     }
     
-    private static void assertGenericErrorResponse(Response response, int status, String errorMessage) {
+    private static void assertGenericErrorResponse(ResourceTestResponse response, int status, String errorMessage) {
         ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
         assertThat(response.getStatus(), is(status));
         assertThat(errorResponse.identifier(), is(ErrorIdentifier.GENERIC));

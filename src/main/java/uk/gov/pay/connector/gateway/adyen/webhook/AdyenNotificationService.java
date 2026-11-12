@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.gateway.adyen.webhook;
 
-import com.google.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
+import jakarta.inject.Inject;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -13,6 +13,7 @@ import uk.gov.pay.connector.queue.tasks.handlers.adyen.AdyenBalanceReportNotific
 import uk.gov.pay.connector.queue.tasks.model.Task;
 
 import java.util.List;
+import org.springframework.stereotype.Service;
 
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.ADYEN;
 import static uk.gov.pay.connector.gateway.adyen.webhook.model.AdyenWebhookType.BALANCE_PLATFORM_REPORT;
@@ -22,6 +23,7 @@ import static uk.gov.pay.connector.queue.tasks.TaskType.HANDLE_ADYEN_TOKEN_WEBHO
 import static uk.gov.pay.connector.queue.tasks.TaskType.HANDLE_ADYEN_TRANSFER_WEBHOOK_NOTIFICATION;
 import static uk.gov.service.payments.logging.LoggingKeys.PROVIDER;
 
+@Service
 public class AdyenNotificationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AdyenNotificationService.class);

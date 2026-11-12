@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.it.resources;
 
-import jakarta.ws.rs.core.Response;
+import org.springframework.http.HttpStatus;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -66,7 +66,7 @@ public class ChargesApiResourceCreateProviderCredentialsIT {
                     .body(postBody)
                     .post(format("/v1/api/accounts/%s/charges", accountId))
                     .then()
-                    .statusCode(Response.Status.CREATED.getStatusCode())
+                    .statusCode(HttpStatus.CREATED.value())
                     .contentType(JSON)
                     .body("payment_provider", is("worldpay"))
                     .extract().body().jsonPath().get("charge_id");
@@ -103,7 +103,7 @@ public class ChargesApiResourceCreateProviderCredentialsIT {
                     .body(postBody)
                     .post(format("/v1/api/accounts/%s/charges", accountId))
                     .then()
-                    .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
                     .contentType(JSON)
                     .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()))
                     .body("message", contains(format("Credentials not found for gateway account [%s] and credential_external_id [random-credential-id]", accountId)));
@@ -136,7 +136,7 @@ public class ChargesApiResourceCreateProviderCredentialsIT {
                     .body(postBody)
                     .post(format("/v1/api/accounts/%s/charges", accountId))
                     .then()
-                    .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
                     .contentType(JSON)
                     .body("message", contains("Payment provider details are not configured on this account"))
                     .body("error_identifier", is(ErrorIdentifier.ACCOUNT_NOT_LINKED_WITH_PSP.toString()));
@@ -169,7 +169,7 @@ public class ChargesApiResourceCreateProviderCredentialsIT {
                     .body(postBody)
                     .post(format("/v1/api/accounts/%s/charges", accountId))
                     .then()
-                    .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
                     .contentType(JSON)
                     .body("message", contains("Payment provider details are not configured on this account"))
                     .body("error_identifier", is(ErrorIdentifier.ACCOUNT_NOT_LINKED_WITH_PSP.toString()));
@@ -211,7 +211,7 @@ public class ChargesApiResourceCreateProviderCredentialsIT {
                     .body(postBody)
                     .post(format("/v1/api/service/%s/account/%s/charges", VALID_SERVICE_ID, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(Response.Status.CREATED.getStatusCode())
+                    .statusCode(HttpStatus.CREATED.value())
                     .contentType(JSON)
                     .body("payment_provider", is("worldpay"))
                     .extract().body().jsonPath().get("charge_id");
@@ -249,7 +249,7 @@ public class ChargesApiResourceCreateProviderCredentialsIT {
                     .body(postBody)
                     .post(format("/v1/api/service/%s/account/%s/charges", VALID_SERVICE_ID, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
                     .contentType(JSON)
                     .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()))
                     .body("message", contains(format("Credentials not found for gateway account [%s] and credential_external_id [random-credential-id]", accountId)));
@@ -283,7 +283,7 @@ public class ChargesApiResourceCreateProviderCredentialsIT {
                     .body(postBody)
                     .post(format("/v1/api/service/%s/account/%s/charges", VALID_SERVICE_ID, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
                     .contentType(JSON)
                     .body("message", contains("Payment provider details are not configured on this account"))
                     .body("error_identifier", is(ErrorIdentifier.ACCOUNT_NOT_LINKED_WITH_PSP.toString()));
@@ -317,7 +317,7 @@ public class ChargesApiResourceCreateProviderCredentialsIT {
                     .body(postBody)
                     .post(format("/v1/api/service/%s/account/%s/charges", VALID_SERVICE_ID, GatewayAccountType.TEST))
                     .then()
-                    .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
                     .contentType(JSON)
                     .body("message", contains("Payment provider details are not configured on this account"))
                     .body("error_identifier", is(ErrorIdentifier.ACCOUNT_NOT_LINKED_WITH_PSP.toString()));

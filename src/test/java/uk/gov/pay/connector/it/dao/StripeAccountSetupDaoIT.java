@@ -26,7 +26,7 @@ public class StripeAccountSetupDaoIT {
 
     @BeforeEach
     void setUp() {
-        stripeAccountSetupDao = app.getInstanceFromGuiceContainer(StripeAccountSetupDao.class);
+        stripeAccountSetupDao = app.getBean(StripeAccountSetupDao.class);
     }
 
     @Test

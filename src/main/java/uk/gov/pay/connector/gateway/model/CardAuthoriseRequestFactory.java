@@ -7,7 +7,9 @@ import uk.gov.pay.connector.gateway.model.request.records.CardAuthoriseRequest;
 import uk.gov.pay.connector.gateway.worldpay.WorldpayCardAuthoriseRequestFactory;
 
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
+@Component
 public class CardAuthoriseRequestFactory {
 
     private final WorldpayCardAuthoriseRequestFactory worldpayCardAuthoriseRequestFactory;

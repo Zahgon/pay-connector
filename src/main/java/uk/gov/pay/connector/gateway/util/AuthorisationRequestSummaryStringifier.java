@@ -5,9 +5,11 @@ import uk.gov.pay.connector.paymentprocessor.model.Exemption3ds;
 
 import java.util.Optional;
 import java.util.StringJoiner;
+import org.springframework.stereotype.Component;
 
 import static uk.gov.pay.connector.gateway.model.AuthorisationRequestSummary.Presence.PRESENT;
 
+@Component
 public class AuthorisationRequestSummaryStringifier {
 
     public String stringify(AuthorisationRequestSummary authorisationRequestSummary) {

@@ -12,9 +12,9 @@ import uk.gov.pay.connector.util.RandomIdGenerator;
 import java.util.Map;
 
 import static java.lang.String.format;
-import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
-import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
-import static jakarta.ws.rs.core.Response.Status.OK;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.OK;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
@@ -68,12 +68,12 @@ public class GatewayAccountResourceUpdateIT {
                     .body(toJson(payload))
                     .patch(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("worldpay_3ds_flex.exemption_engine_enabled", is(true));
 
             payload = Map.of(
@@ -85,12 +85,12 @@ public class GatewayAccountResourceUpdateIT {
                     .body(toJson(payload))
                     .patch(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("worldpay_3ds_flex.exemption_engine_enabled", is(false));
         }
 
@@ -99,7 +99,7 @@ public class GatewayAccountResourceUpdateIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("notifySettings", nullValue());
 
             Map<String, Object> payload = Map.of("op", "replace",
@@ -112,12 +112,12 @@ public class GatewayAccountResourceUpdateIT {
                     .body(toJson(payload))
                     .patch(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("notifySettings.api_token", is("anapitoken"))
                     .body("notifySettings.template_id", is("atemplateid"))
                     .body("notifySettings.refund_issued_template_id", is("anothertemplate"));
@@ -129,12 +129,12 @@ public class GatewayAccountResourceUpdateIT {
                     .body(toJson(payload))
                     .patch(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("notifySettings", nullValue());
         }
         
@@ -149,7 +149,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(toJson(payload))
                     .patch(format("/v1/api/service/%s/account/test", serviceId))
                     .then().log().body()
-                    .statusCode(BAD_REQUEST.getStatusCode())
+                    .statusCode(BAD_REQUEST.value())
                     .body("error_identifier", is("GENERIC"))
                     .body("message", contains("Operation [insert] is not valid for path [notify_settings]"));
         }
@@ -165,7 +165,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(toJson(payload))
                     .patch(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(BAD_REQUEST.getStatusCode())
+                    .statusCode(BAD_REQUEST.value())
                     .body("error_identifier", is("GENERIC"))
                     .body("message", contains("Operation [op] not supported for path [wrong_path]"));
         }
@@ -175,7 +175,7 @@ public class GatewayAccountResourceUpdateIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("block_prepaid_cards", is(false));
 
             Map<String, Object> payload = Map.of("op", "replace",
@@ -186,12 +186,12 @@ public class GatewayAccountResourceUpdateIT {
                     .body(toJson(payload))
                     .patch(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("block_prepaid_cards", is(true));
         }
 
@@ -200,7 +200,7 @@ public class GatewayAccountResourceUpdateIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("email_collection_mode", is("MANDATORY"));
 
             Map<String, Object> payload = Map.of("op", "replace",
@@ -211,12 +211,12 @@ public class GatewayAccountResourceUpdateIT {
                     .body(toJson(payload))
                     .patch(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("email_collection_mode", is("OFF"));
         }
 
@@ -230,7 +230,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(toJson(payload))
                     .patch(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(BAD_REQUEST.getStatusCode())
+                    .statusCode(BAD_REQUEST.value())
                     .body("error_identifier", is("GENERIC"))
                     .body("message", contains("Value [nope] is not valid for [email_collection_mode]"));
         }
@@ -240,7 +240,7 @@ public class GatewayAccountResourceUpdateIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("corporate_credit_card_surcharge_amount", is(0))
                     .body("corporate_debit_card_surcharge_amount", is(0))
                     .body("corporate_prepaid_debit_card_surcharge_amount", is(0));
@@ -253,7 +253,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(toJson(payload))
                     .patch(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             payload = Map.of("op", "replace",
                     "path", "corporate_debit_card_surcharge_amount",
@@ -263,7 +263,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(toJson(payload))
                     .patch(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             payload = Map.of("op", "replace",
                     "path", "corporate_prepaid_debit_card_surcharge_amount",
@@ -273,12 +273,12 @@ public class GatewayAccountResourceUpdateIT {
                     .body(toJson(payload))
                     .patch(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("corporate_credit_card_surcharge_amount", is(100))
                     .body("corporate_debit_card_surcharge_amount", is(200))
                     .body("corporate_prepaid_debit_card_surcharge_amount", is(400));
@@ -289,7 +289,7 @@ public class GatewayAccountResourceUpdateIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("allow_telephone_payment_notifications", is(false));
 
             Map<String, Object> payload = Map.of("op", "replace",
@@ -300,12 +300,12 @@ public class GatewayAccountResourceUpdateIT {
                     .body(toJson(payload))
                     .patch(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("allow_telephone_payment_notifications", is(true));
         }
         
@@ -317,7 +317,7 @@ public class GatewayAccountResourceUpdateIT {
                             "value", true)))
                     .patch(format("/v1/api/service/%s/live/", serviceId))
                     .then()
-                    .statusCode(NOT_FOUND.getStatusCode());
+                    .statusCode(NOT_FOUND.value());
         }
         
         @Test
@@ -328,7 +328,7 @@ public class GatewayAccountResourceUpdateIT {
                             "value", true)))
                     .patch("/v1/api/nexiste-pas/test/")
                     .then()
-                    .statusCode(NOT_FOUND.getStatusCode());
+                    .statusCode(NOT_FOUND.value());
         }
 
         @Test
@@ -336,7 +336,7 @@ public class GatewayAccountResourceUpdateIT {
             app.givenSetup()
                     .get(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("disabled", is(false));
 
             Map<String, Object> payload = Map.of("op", "replace",
@@ -347,7 +347,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(toJson(payload))
                     .patch(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .body(toJson(Map.of("op", "replace",
@@ -355,7 +355,7 @@ public class GatewayAccountResourceUpdateIT {
                             "value", true)))
                     .patch(format("/v1/api/service/%s/account/test", serviceId))
                     .then()
-                    .statusCode(NOT_FOUND.getStatusCode());
+                    .statusCode(NOT_FOUND.value());
         }
     }
 
@@ -386,12 +386,12 @@ public class GatewayAccountResourceUpdateIT {
                     .body(payload)
                     .patch("/v1/api/accounts/" + gatewayAccountId)
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .get("/v1/api/accounts/" + gatewayAccountId)
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("worldpay_3ds_flex.exemption_engine_enabled", is(true));
         }
 
@@ -406,7 +406,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(payload)
                     .patch("/v1/api/accounts/" + gatewayAccountId)
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
         }
 
         @Test
@@ -419,7 +419,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(payload)
                     .patch("/v1/api/accounts/" + gatewayAccountId)
                     .then()
-                    .statusCode(BAD_REQUEST.getStatusCode());
+                    .statusCode(BAD_REQUEST.value());
         }
 
         @Test
@@ -431,12 +431,12 @@ public class GatewayAccountResourceUpdateIT {
                     .body(payload)
                     .patch("/v1/api/accounts/" + gatewayAccountId)
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             app.givenSetup()
                     .get("/v1/api/accounts/" + gatewayAccountId)
                     .then()
-                    .statusCode(OK.getStatusCode())
+                    .statusCode(OK.value())
                     .body("block_prepaid_cards", is(true));
         }
 
@@ -449,7 +449,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(payload)
                     .patch("/v1/api/accounts/" + gatewayAccountId)
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
         }
 
         @Test
@@ -461,7 +461,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(payload)
                     .patch("/v1/api/accounts/" + gatewayAccountId)
                     .then()
-                    .statusCode(BAD_REQUEST.getStatusCode());
+                    .statusCode(BAD_REQUEST.value());
         }
 
         @Test
@@ -476,7 +476,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(payload)
                     .patch("/v1/api/accounts/" + nonExistentGatewayAccountId)
                     .then()
-                    .statusCode(NOT_FOUND.getStatusCode());
+                    .statusCode(NOT_FOUND.value());
         }
 
         @Test
@@ -490,7 +490,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(payload)
                     .patch("/v1/api/accounts/" + gatewayAccountId)
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
 
             payload = objectMapper.writeValueAsString(Map.of("op", "remove",
                     "path", "notify_settings"));
@@ -499,7 +499,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(payload)
                     .patch("/v1/api/accounts/" + gatewayAccountId)
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
         }
 
         @Test
@@ -510,7 +510,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(payload)
                     .patch("/v1/api/accounts/" + gatewayAccountId)
                     .then()
-                    .statusCode(BAD_REQUEST.getStatusCode());
+                    .statusCode(BAD_REQUEST.value());
         }
 
         @Test
@@ -528,7 +528,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(payload)
                     .patch("/v1/api/accounts/" + gatewayAccountId)
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
             app.givenSetup()
                     .get("/v1/api/accounts/" + gatewayAccountId)
                     .then()
@@ -553,7 +553,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(payload)
                     .patch("/v1/api/accounts/" + gatewayAccountId)
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
             app.givenSetup()
                     .get("/v1/api/accounts/" + gatewayAccountId)
                     .then()
@@ -577,7 +577,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(payload)
                     .patch("/v1/api/accounts/" + gatewayAccountId)
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
             app.givenSetup()
                     .get("/v1/api/accounts/" + gatewayAccountId)
                     .then()
@@ -599,7 +599,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(payload)
                     .patch("/v1/api/accounts/" + gatewayAccountId)
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
             app.givenSetup()
                     .get("/v1/api/accounts/" + gatewayAccountId)
                     .then()
@@ -616,7 +616,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(payload)
                     .patch("/v1/api/accounts/" + nonExistentGatewayAccountId)
                     .then()
-                    .statusCode(NOT_FOUND.getStatusCode());
+                    .statusCode(NOT_FOUND.value());
         }
 
         @Test
@@ -639,7 +639,7 @@ public class GatewayAccountResourceUpdateIT {
                     .body(payload)
                     .patch("/v1/api/accounts/" + gatewayAccountId)
                     .then()
-                    .statusCode(OK.getStatusCode());
+                    .statusCode(OK.value());
             app.givenSetup()
                     .get("/v1/api/accounts/" + gatewayAccountId)
                     .then()

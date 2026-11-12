@@ -7,10 +7,12 @@ import uk.gov.pay.connector.events.EventService;
 import uk.gov.pay.connector.refund.model.domain.RefundStatus;
 
 import java.time.Instant;
+import org.springframework.stereotype.Component;
 
 import static uk.gov.pay.connector.refund.model.domain.RefundStatus.REFUNDED;
 import static uk.gov.pay.connector.refund.model.domain.RefundStatus.REFUND_ERROR;
 
+@Component
 public class AdyenGatewayRefundNotificationProcessor implements GatewayRefundNotificationProcessor {
 
     ChargeService chargeService;

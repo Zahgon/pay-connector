@@ -1,230 +1,175 @@
 package uk.gov.pay.connector.it.gatewayclient;
 
 import com.codahale.metrics.MetricRegistry;
-import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import io.dropwizard.testing.DropwizardTestSupport;
-import io.dropwizard.testing.ResourceHelpers;
-import org.glassfish.jersey.client.ClientProperties;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-import uk.gov.pay.connector.app.ConnectorApp;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import uk.gov.pay.connector.app.ConnectorConfiguration;
+import uk.gov.pay.connector.app.ConnectorTestApplication;
 import uk.gov.pay.connector.gateway.ClientFactory;
-import uk.gov.service.payments.commons.testing.port.PortFactory;
+import uk.gov.pay.connector.util.HttpClientInspector;
 
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.Invocation;
+import java.io.IOException;
 import java.net.SocketTimeoutException;
+import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.lang.String.format;
-import static org.hamcrest.Matchers.lessThan;
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.junit.Assert.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.fail;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.lessThan;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
 import static uk.gov.pay.connector.gateway.GatewayOperation.AUTHORISE;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.WORLDPAY;
 
-@RunWith(MockitoJUnitRunner.class)
-public class ClientFactoryIT {
+class ClientFactoryIT {
 
-    private DropwizardTestSupport<ConnectorConfiguration> app;
-    
-    private static String DEFAULT_DROPWIZARD_CONFIG = "config/test-it-config.yaml";
+    private static final String DEFAULT_CONFIG = "config/test-it-config.yaml";
+    private static final String PROXY_HOST_PROPERTY = "https.proxyHost";
+    private static final String PROXY_PORT_PROPERTY = "https.proxyPort";
 
-    @Mock
-    MetricRegistry mockMetricRegistry;
+    private static final WireMockServer wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
 
-    @ClassRule
-    public static WireMockClassRule wireMockRule = new WireMockClassRule(PortFactory.findFreePort());
+    private final MetricRegistry mockMetricRegistry = mock(MetricRegistry.class);
+    private ConnectorConfiguration configuration;
 
-    @Before
-    public void setup() {
-        wireMockRule.resetAll();
+    @BeforeAll
+    static void startWireMock() {
+        wireMockServer.start();
     }
-    
-    @After
-    public void after() {
-        System.clearProperty("https.proxyHost");
-        System.clearProperty("https.proxyPort");
-        app.after();
+
+    @AfterAll
+    static void stopWireMock() {
+        wireMockServer.stop();
+    }
+
+    @BeforeEach
+    void setup() {
+        wireMockServer.resetAll();
+    }
+
+    @AfterEach
+    void after() {
+        System.clearProperty(PROXY_HOST_PROPERTY);
+        System.clearProperty(PROXY_PORT_PROPERTY);
     }
 
     @Test
-    public void shouldProxyRequestToTargetServer_whenProxyEnabled() {
-        app = startApp(DEFAULT_DROPWIZARD_CONFIG, true);
+    void shouldProxyRequestToTargetServer_whenProxyEnabled() throws IOException {
+        configuration = loadConfiguration(DEFAULT_CONFIG, true);
 
-        wireMockRule.stubFor(get(urlPathEqualTo("/hello"))
+        wireMockServer.stubFor(get(urlPathEqualTo("/hello"))
                 .willReturn(aResponse().withBody("world").withStatus(200)));
 
-        Client client = new ClientFactory(app.getEnvironment(), app.getConfiguration())
-                .createWithDropwizardClient(WORLDPAY, AUTHORISE, mockMetricRegistry);
+        try (CloseableHttpClient client = new ClientFactory(configuration)
+                .createHttpClient(WORLDPAY, AUTHORISE, mockMetricRegistry)) {
 
-        client.target(getServerUrl()).path("hello").request().get();
+            client.execute(new HttpGet(getServerUrl() + "/hello"), response -> response.getCode());
 
-        wireMockRule.verify(1, getRequestedFor(urlEqualTo("/hello")));
-        assertEquals(90000, client.getConfiguration().getProperty(ClientProperties.READ_TIMEOUT));
+            wireMockServer.verify(1, getRequestedFor(urlEqualTo("/hello")));
+            assertEquals(90000, readTimeoutOf(client));
+        }
     }
 
     @Test
-    public void shouldNotProxyRequestToTargetServer_whenProxyDisabled() {
-        app = startApp(DEFAULT_DROPWIZARD_CONFIG, false);
+    void shouldNotProxyRequestToTargetServer_whenProxyDisabled() throws IOException {
+        configuration = loadConfiguration(DEFAULT_CONFIG, false);
 
-        wireMockRule.stubFor(get(urlPathEqualTo("/hello"))
+        wireMockServer.stubFor(get(urlPathEqualTo("/hello"))
                 .willReturn(aResponse().withBody("world").withStatus(200)));
-        Client client = new ClientFactory(app.getEnvironment(), app.getConfiguration())
-                .createWithDropwizardClient(WORLDPAY, AUTHORISE, mockMetricRegistry);
 
-        client.target(getServerUrl()).path("hello").request().get();
+        try (CloseableHttpClient client = new ClientFactory(configuration)
+                .createHttpClient(WORLDPAY, AUTHORISE, mockMetricRegistry)) {
 
-        wireMockRule.verify(1, getRequestedFor(urlEqualTo("/hello")));
-        assertEquals(90000, client.getConfiguration().getProperty(ClientProperties.READ_TIMEOUT));
+            client.execute(new HttpGet(getServerUrl() + "/hello"), response -> response.getCode());
+
+            wireMockServer.verify(1, getRequestedFor(urlEqualTo("/hello")));
+            assertEquals(90000, readTimeoutOf(client));
+        }
     }
 
     @Test
-    public void anHttpRequestShouldTimeOut_whenCustomJerseyReadTimeoutIsConfigured() {
-        app = startApp("config/client-factory-test-config.yaml", false);
+    void anHttpRequestShouldTimeOut_whenCustomReadTimeoutIsConfigured() throws IOException {
+        configuration = loadConfiguration("config/client-factory-test-config.yaml", false);
 
-        String path = "/hello";
-
-        wireMockRule.stubFor(get(urlPathEqualTo("/hello"))
+        wireMockServer.stubFor(get(urlPathEqualTo("/hello"))
                 .willReturn(aResponse().withBody("world").withStatus(200).withFixedDelay(2000)));
-        
-        Client client = new ClientFactory(app.getEnvironment(), app.getConfiguration())
-                .createWithDropwizardClient(WORLDPAY, AUTHORISE, mockMetricRegistry);
 
-        Invocation.Builder request = client.target(getServerUrl()).path(path).request();
-        long startTime = System.currentTimeMillis();
-        try {
-            request.get();
-            fail();
-        } catch (jakarta.ws.rs.ProcessingException e) {
-            long endTime = System.currentTimeMillis();
-
-            Throwable timeoutException = e.getCause();
-            assertThat(timeoutException, instanceOf(SocketTimeoutException.class));
+        try (CloseableHttpClient client = new ClientFactory(configuration)
+                .createHttpClient(WORLDPAY, AUTHORISE, mockMetricRegistry)) {
 
             /*
-
-            There are three settings which control timeouts in the Jersey client:
-
-            1. timeout:
-
-            Defines the socket timeout (SO_TIMEOUT), which is the
-            timeout for waiting for data or, put differently, a maximum period inactivity
-            between two consecutive data packets).
-
-            2. connectionTimeout:
-
-            Determines the timeout until a connection is established
-
-            3. readTimeout:
-
-            Sets the read timeout to a specified timeout, in
-            milliseconds. A non-zero value specifies the timeout when
-            reading from Input stream when a connection is established to a
-            resource. If the timeout expires before there is data available
-            for read, a java.net.SocketTimeoutException is raised. A
-            timeout of zero is interpreted as an infinite timeout.
-
-            Within the execution of this test, the value of `timeout` does not have any effect,
-            because we're using a mock server, so we don't expect inter-packet delays.
-
-            We are also unlikely to suffer from delays establishing the connection.
-
-            However there is some overhead in the overall request process which is hard to quantify (on a
-            dev laptop the overhead was about 140ms).
-
-            In order to avoid random test failures, we've chosen a generous overhead value.
-
-            We assert that the request timed out, and that it was less than the configure readTimeout value, plus
-            the overhead.
+            The read timeout is the longest the client waits for data once the request is sent. Within this test the
+            connection is established at once, and there is some overhead in the overall request process which is
+            hard to quantify (on a dev laptop the overhead was about 140ms). In order to avoid random test failures,
+            we've chosen a generous overhead value: we assert that the request timed out, in less than the configured
+            read timeout plus the overhead.
             */
             final long connectionOverheadInMillis = 1000;
-            long expectedTimeout = app.getConfiguration().getCustomJerseyClient().getReadTimeout().toMilliseconds()
+            long expectedTimeout = configuration.getCustomJerseyClient().getReadTimeout().toMillis()
                     + connectionOverheadInMillis;
 
-            long actualDuration = endTime - startTime;
-
-            assertThat(actualDuration, lessThan(expectedTimeout));
+            assertTimesOutWithin(client, expectedTimeout);
         }
     }
 
     @Test
-    public void shouldUseGatewaySpecificReadTimeoutOverride_whenSpecified() {
-        app = startApp("config/client-factory-test-config-with-worldpay-timeout-override.yaml", false);
+    void shouldUseGatewaySpecificReadTimeoutOverride_whenSpecified() throws IOException {
+        configuration = loadConfiguration("config/client-factory-test-config-with-worldpay-timeout-override.yaml", false);
 
-        String path = "/hello";
-        
-        wireMockRule.stubFor(get(urlPathEqualTo("/hello"))
+        wireMockServer.stubFor(get(urlPathEqualTo("/hello"))
                 .willReturn(aResponse().withBody("world").withStatus(200).withFixedDelay(2000)));
 
-        Client client = new ClientFactory(app.getEnvironment(), app.getConfiguration())
-                .createWithDropwizardClient(WORLDPAY, AUTHORISE, mockMetricRegistry);
+        try (CloseableHttpClient client = new ClientFactory(configuration)
+                .createHttpClient(WORLDPAY, AUTHORISE, mockMetricRegistry)) {
 
-        Invocation.Builder request = client.target(getServerUrl()).path(path).request();
-
-        Long authOverriddenTimeout = app.getConfiguration().getWorldpayConfig().getJerseyClientOverrides()
-                .map(override -> override.getAuth().getReadTimeout().toMicroseconds())
-                .orElse(0L);
-        assertGatewayFailure(request, authOverriddenTimeout);
-    }
-
-    private void assertGatewayFailure(Invocation.Builder request, Long authOverriddenTimeout) {
-        long startTime = System.currentTimeMillis();
-
-        try {
-            request.get();
-            fail();
-        } catch (jakarta.ws.rs.ProcessingException e) {
-            long endTime = System.currentTimeMillis();
-
-            Throwable timeoutException = e.getCause();
-            assertThat(timeoutException, instanceOf(SocketTimeoutException.class));
-
+            long authOverriddenTimeout = configuration.getWorldpayConfig().getJerseyClientOverrides()
+                    .map(override -> override.getAuth().getReadTimeout().toMillis())
+                    .orElse(0L);
             final long connectionOverheadInMillis = 1000;
-
-            long expectedTimeout = authOverriddenTimeout + connectionOverheadInMillis;
-
-            long actualDuration = endTime - startTime;
-
-            assertThat(actualDuration, lessThan(expectedTimeout));
+            assertTimesOutWithin(client, authOverriddenTimeout + connectionOverheadInMillis);
         }
-
     }
 
-    private DropwizardTestSupport<ConnectorConfiguration> startApp(String configuration, boolean proxyEnabled) {
-        final String PROXY_HOST_PROPERTY = "https.proxyHost";
-        final String PROXY_PORT_PROPERTY = "https.proxyPort";
+    private void assertTimesOutWithin(CloseableHttpClient client, long expectedTimeout) {
+        long startTime = System.currentTimeMillis();
+        IOException exception = assertThrows(IOException.class,
+                () -> client.execute(new HttpGet(getServerUrl() + "/hello"), response -> response.getCode()));
+        long actualDuration = System.currentTimeMillis() - startTime;
 
-        app = new DropwizardTestSupport<>(ConnectorApp.class,
-                ResourceHelpers.resourceFilePath(configuration));
+        assertThat(exception, instanceOf(SocketTimeoutException.class));
+        assertThat(actualDuration, lessThan(expectedTimeout));
+    }
+
+    private static long readTimeoutOf(CloseableHttpClient client) {
+        return HttpClientInspector.find(client, RequestConfig.class).orElseThrow().getResponseTimeout().toMilliseconds();
+    }
+
+    private ConnectorConfiguration loadConfiguration(String configuration, boolean proxyEnabled) {
         if (proxyEnabled) {
             System.setProperty(PROXY_HOST_PROPERTY, "localhost");
-            System.setProperty(PROXY_PORT_PROPERTY, String.valueOf(wireMockRule.port()));
+            System.setProperty(PROXY_PORT_PROPERTY, String.valueOf(wireMockServer.port()));
         } else {
             System.clearProperty(PROXY_HOST_PROPERTY);
             System.clearProperty(PROXY_PORT_PROPERTY);
         }
-        try {
-            app.before();
-            return app;
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
+        return ConnectorTestApplication.loadConfiguration(configuration, List.of());
     }
 
     private String getServerUrl() {
-        return format("http://localhost:%s", wireMockRule.port());
+        return format("http://localhost:%s", wireMockServer.port());
     }
 }

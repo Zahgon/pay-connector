@@ -13,9 +13,11 @@ import uk.gov.pay.connector.northamericaregion.NorthAmericanRegionMapper;
 import jakarta.inject.Inject;
 
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
 import static uk.gov.pay.connector.common.model.domain.NumbersInStringsSanitizer.sanitize;
 
+@Component
 public class AuthCardDetailsToCardDetailsEntityConverter {
 
     private final NorthAmericanRegionMapper northAmericanRegionMapper;

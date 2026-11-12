@@ -9,14 +9,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.UriInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -50,13 +42,23 @@ import uk.gov.pay.connector.wallets.googlepay.api.GooglePayAuthRequest;
 
 import java.util.Map;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import uk.gov.pay.connector.web.MediaTypes;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.validation.annotation.Validated;
+
 import static uk.gov.pay.connector.util.ResponseUtil.badRequestResponse;
 import static uk.gov.pay.connector.util.ResponseUtil.gatewayErrorResponse;
 import static uk.gov.service.payments.logging.LoggingKeys.SECURE_TOKEN;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-@Path("/")
 @Tag(name = "Charge operations")
+@RestController
+@Validated
 public class CardResource {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -87,10 +89,8 @@ public class CardResource {
         this.gatewayAccountService = gatewayAccountService;
     }
 
-    @POST
-    @Path("/v1/frontend/charges/{chargeId}/wallets/apple")
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/frontend/charges/{chargeId}/wallets/apple")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Authorise Apple Pay payment",
             responses = {
@@ -106,17 +106,15 @@ public class CardResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error"),
             }
     )
-    public Response authoriseApplePay(@Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
-                                      @PathParam("chargeId") String chargeId,
-                                      @NotNull @Valid ApplePayAuthRequest applePayAuthRequest) {
+    public ResponseEntity<?> authoriseApplePay(@Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
+                                      @PathVariable("chargeId") String chargeId,
+                                      @NotNull @Valid @RequestBody(required = false) ApplePayAuthRequest applePayAuthRequest) {
         return walletService.authorise(chargeId, applePayAuthRequest);
     }
 
 
-    @POST
-    @Path("/v1/frontend/charges/{chargeId}/wallets/google")
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/frontend/charges/{chargeId}/wallets/google")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Authorise Google Pay payment",
             responses = {
@@ -132,17 +130,15 @@ public class CardResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error"),
             }
     )
-    public Response authoriseChargeGooglePay(@Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
-                                             @PathParam("chargeId") String chargeId,
-                                             @NotNull @Valid GooglePayAuthRequest googlePayAuthRequest) {
+    public ResponseEntity<?> authoriseChargeGooglePay(@Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
+                                             @PathVariable("chargeId") String chargeId,
+                                             @NotNull @Valid @RequestBody(required = false) GooglePayAuthRequest googlePayAuthRequest) {
         logger.info("Received wallet payment info \n{} \nfor charge with id {}", googlePayAuthRequest.getPaymentInfo().toString(), chargeId);
         return walletService.authorise(chargeId, googlePayAuthRequest);
     }
 
-    @POST
-    @Path("/v1/frontend/charges/{chargeId}/wallets/google/adyen")
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/frontend/charges/{chargeId}/wallets/google/adyen")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Authorise Adyen Google Pay payment",
             responses = {
@@ -158,17 +154,15 @@ public class CardResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error"),
             }
     )
-    public Response authoriseChargeAdyenGooglePay(@Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
-                                             @PathParam("chargeId") String chargeId,
-                                             @NotNull @Valid AdyenGooglePayAuthRequest adyenGooglePayAuthRequest) {
+    public ResponseEntity<?> authoriseChargeAdyenGooglePay(@Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
+                                             @PathVariable("chargeId") String chargeId,
+                                             @NotNull @Valid @RequestBody(required = false) AdyenGooglePayAuthRequest adyenGooglePayAuthRequest) {
         logger.info("Received wallet payment info \n{} \nfor charge with id {}", adyenGooglePayAuthRequest.getPaymentInfo().toString(), chargeId);
         return walletService.authorise(chargeId, adyenGooglePayAuthRequest);
     }
 
-    @POST
-    @Path("/v1/frontend/charges/{chargeId}/cards")
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/frontend/charges/{chargeId}/cards")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Authorise charge",
             responses = {
@@ -184,9 +178,9 @@ public class CardResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error - For gateway errors or anything else not handled"),
             }
     )
-    public Response authoriseCharge(@Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
-                                    @PathParam("chargeId") String chargeId,
-                                    @Valid AuthCardDetails authCardDetails) {
+    public ResponseEntity<?> authoriseCharge(@Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
+                                    @PathVariable("chargeId") String chargeId,
+                                    @Valid @RequestBody(required = false) AuthCardDetails authCardDetails) {
         AuthorisationResponse response = cardAuthoriseService.doAuthoriseWeb(chargeId, authCardDetails);
 
         return response.getGatewayError().map(this::handleError)
@@ -194,7 +188,7 @@ public class CardResource {
                         .orElseGet(() -> ResponseUtil.serviceErrorResponse("InterpretedStatus not found for Gateway response")));
     }
 
-    private Response handleAuthResponse(AuthoriseStatus authoriseStatus) {
+    private ResponseEntity<?> handleAuthResponse(AuthoriseStatus authoriseStatus) {
         switch (authoriseStatus) {
             case REJECTED:
                 return badRequestResponse("This transaction was declined.");
@@ -206,10 +200,8 @@ public class CardResource {
         }
     }
 
-    @POST
-    @Path("/v1/frontend/charges/{chargeId}/3ds")
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/frontend/charges/{chargeId}/3ds")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Authorise 3DS charge",
             responses = {
@@ -223,8 +215,8 @@ public class CardResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error - For gateway errors or anything else not handled"),
             }
     )
-    public Response authorise3dsCharge(@Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
-                                       @PathParam("chargeId") String chargeId, Auth3dsResult auth3DsResult) {
+    public ResponseEntity<?> authorise3dsCharge(@Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
+                                       @PathVariable("chargeId") String chargeId, @RequestBody(required = false) Auth3dsResult auth3DsResult) {
         Gateway3DSAuthorisationResponse response = card3dsResponseAuthService.process3DSecureAuthorisation(chargeId, auth3DsResult);
 
         if (response.isSuccessful()) {
@@ -243,8 +235,8 @@ public class CardResource {
         );
     }
 
-    @POST
-    @Path("/v1/frontend/charges/{chargeId}/capture")
+    @PostMapping("/v1/frontend/charges/{chargeId}/capture")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Mark charge as eligible for capture",
             description = "Marks charge as eligible (or ready - for delayed capture) for capture and also adds charge to capture queue (if not delayed capture).",
@@ -255,17 +247,14 @@ public class CardResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
-    public Response captureCharge(@Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
-                                  @PathParam("chargeId") String chargeId) {
+    public ResponseEntity<?> captureCharge(@Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
+                                  @PathVariable("chargeId") String chargeId) {
         chargeEligibleForCaptureService.markChargeAsEligibleForCapture(chargeId);
         return ResponseUtil.noContentResponse();
     }
 
-    @POST
-    @Path("/v1/api/service/{serviceId}/account/{accountType}/charges/{chargeId}/capture")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/service/{serviceId}/account/{accountType}/charges/{chargeId}/capture")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Mark delayed capture charge as eligible for capture and adds charge to capture queue",
             description = "This endpoint should be called to capture a delayed capture charge. The charge needs to have been previously marked as AWAITING CAPTURE REQUEST for this call to succeed. " +
@@ -278,18 +267,17 @@ public class CardResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response markChargeAsCaptureApprovedByServiceId(
-            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathParam("serviceId") String serviceId, // pragma: allowlist secret
-            @Parameter(example = "test", description = "Account type") @PathParam("accountType") GatewayAccountType accountType,
-            @Parameter(example = "spmh0fb7rbi1lebv1j3f7hc3m9", description = "Charge external ID") @PathParam("chargeId") String chargeId
+    public ResponseEntity<?> markChargeAsCaptureApprovedByServiceId(
+            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathVariable("serviceId") String serviceId, // pragma: allowlist secret
+            @Parameter(example = "test", description = "Account type") @PathVariable("accountType") GatewayAccountType accountType,
+            @Parameter(example = "spmh0fb7rbi1lebv1j3f7hc3m9", description = "Charge external ID") @PathVariable("chargeId") String chargeId
     ) {
         delayedCaptureService.markDelayedCaptureChargeAsCaptureApproved(chargeId, serviceId, accountType);
         return ResponseUtil.noContentResponse();
     }
 
-    @POST
-    @Path("/v1/api/accounts/{accountId}/charges/{chargeId}/capture")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/accounts/{accountId}/charges/{chargeId}/capture")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Mark delayed capture charge as eligible for capture and adds charge to capture queue",
             description = "This endpoint should be called to capture a delayed capture charge. The charge needs to have been previously marked as AWAITING CAPTURE REQUEST for this call to succeed. " +
@@ -302,16 +290,15 @@ public class CardResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response markChargeAsCaptureApproved(@PathParam("accountId") Long accountId,
-                                                @PathParam("chargeId") String chargeId,
-                                                @Context UriInfo uriInfo) {
+    public ResponseEntity<?> markChargeAsCaptureApproved(@PathVariable("accountId") Long accountId,
+                                                @PathVariable("chargeId") String chargeId,
+                                                HttpServletRequest request) {
         delayedCaptureService.markDelayedCaptureChargeAsCaptureApproved(chargeId, accountId);
         return ResponseUtil.noContentResponse();
     }
 
-    @POST
-    @Path("/v1/api/accounts/{accountId}/charges/{chargeId}/cancel")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/accounts/{accountId}/charges/{chargeId}/cancel")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Cancel charge",
             responses = {
@@ -322,18 +309,17 @@ public class CardResource {
                     @ApiResponse(responseCode = "404", description = "Not found - charge not found")
             }
     )
-    public Response cancelCharge(@Parameter(example = "1", description = "Gateway account ID")
-                                 @PathParam("accountId") Long accountId,
+    public ResponseEntity<?> cancelCharge(@Parameter(example = "1", description = "Gateway account ID")
+                                 @PathVariable("accountId") Long accountId,
                                  @Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
-                                 @PathParam("chargeId") String chargeId) {
+                                 @PathVariable("chargeId") String chargeId) {
         return chargeCancelService.doSystemCancel(chargeId, accountId)
-                .map(chargeEntity -> Response.noContent().build())
+                .map(chargeEntity -> ResponseEntity.noContent().build())
                 .orElseGet(() -> ResponseUtil.responseWithChargeNotFound(chargeId));
     }
 
-    @POST
-    @Path("/v1/api/service/{serviceId}/account/{accountType}/charges/{chargeId}/cancel")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/service/{serviceId}/account/{accountType}/charges/{chargeId}/cancel")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Cancel charge",
             responses = {
@@ -344,21 +330,20 @@ public class CardResource {
                     @ApiResponse(responseCode = "404", description = "Not found - charge not found")
             }
     )
-    public Response cancelChargeByServiceIdAndAccountType(@Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") // pragma: allowlist secret
-                                                          @PathParam("serviceId") String serviceId,
+    public ResponseEntity<?> cancelChargeByServiceIdAndAccountType(@Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") // pragma: allowlist secret
+                                                          @PathVariable("serviceId") String serviceId,
                                                           @Parameter(example = "test", description = "Account type")
-                                                          @PathParam("accountType") GatewayAccountType accountType,
+                                                          @PathVariable("accountType") GatewayAccountType accountType,
                                                           @Parameter(example = "spmh0fb7rbi1lebv1j3f7hc3m9", description = "Charge external ID")
-                                                          @PathParam("chargeId") String chargeId) {
+                                                          @PathVariable("chargeId") String chargeId) {
         return gatewayAccountService.getGatewayAccountByServiceIdAndAccountType(serviceId, accountType)
                 .flatMap(account -> chargeCancelService.doSystemCancel(chargeId, account.getId())
-                        .map(chargeEntity -> Response.noContent().build())
+                        .map(chargeEntity -> ResponseEntity.noContent().build())
                 ).orElseGet(() -> ResponseUtil.responseWithChargeNotFound(chargeId));
     }
 
-    @POST
-    @Path("/v1/api/charges/authorise")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/api/charges/authorise")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Authorise MOTO (api) payment",
             responses = {
@@ -373,7 +358,7 @@ public class CardResource {
                     @ApiResponse(responseCode = "500", description = "Authorisation error"),
             }
     )
-    public Response authorise(@Valid @NotNull MotoApiAuthoriseRequest motoApiAuthoriseRequest) {
+    public ResponseEntity<?> authorise(@Valid @NotNull @RequestBody(required = false) MotoApiAuthoriseRequest motoApiAuthoriseRequest) {
         // Fields are removed from the MDC when the API responds in LoggingMDCResponseFilter 
         MDC.put(SECURE_TOKEN, motoApiAuthoriseRequest.getOneTimeToken());
         motoApiAuthoriseRequest.validate();
@@ -386,9 +371,8 @@ public class CardResource {
         return handleAuthResponseForMotoApi(response);
     }
 
-    @POST
-    @Path("/v1/frontend/charges/{chargeId}/cancel")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/frontend/charges/{chargeId}/cancel")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Cancel charge (action by user)",
             responses = {
@@ -399,14 +383,14 @@ public class CardResource {
                     @ApiResponse(responseCode = "404", description = "Not found - charge not found")
             }
     )
-    public Response userCancelCharge(@Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
-                                     @PathParam("chargeId") String chargeId) {
+    public ResponseEntity<?> userCancelCharge(@Parameter(example = "b02b63b370fd35418ad66b0101", description = "Charge external ID")
+                                     @PathVariable("chargeId") String chargeId) {
         return chargeCancelService.doUserCancel(chargeId)
-                .map(chargeEntity -> Response.noContent().build())
+                .map(chargeEntity -> ResponseEntity.noContent().build())
                 .orElseGet(() -> ResponseUtil.responseWithChargeNotFound(chargeId));
     }
 
-    private Response handleError(GatewayError error) {
+    private ResponseEntity<?> handleError(GatewayError error) {
         switch (error.getErrorType()) {
             case GATEWAY_CONNECTION_TIMEOUT_ERROR:
             case GATEWAY_ERROR:
@@ -416,13 +400,13 @@ public class CardResource {
         }
     }
 
-    private Response handleAuthResponseForMotoApi(AuthorisationResponse response) {
+    private ResponseEntity<?> handleAuthResponseForMotoApi(AuthorisationResponse response) {
         if (response.getGatewayError().isPresent()) {
             throw new AuthorisationErrorException();
         } else if (response.getAuthoriseStatus().isPresent()) {
             switch (response.getAuthoriseStatus().get().getMappedChargeStatus()) {
                 case AUTHORISATION_SUCCESS:
-                    return Response.noContent().build();
+                    return ResponseEntity.noContent().build();
                 case AUTHORISATION_REJECTED:
                 case AUTHORISATION_CANCELLED:
                     throw new AuthorisationRejectedException();

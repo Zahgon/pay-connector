@@ -1,12 +1,11 @@
 package uk.gov.pay.connector.it.events;
 
-import io.dropwizard.core.setup.Environment;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import uk.gov.pay.connector.app.ConnectorApp;
-import uk.gov.pay.connector.app.ConnectorConfiguration;
-import uk.gov.pay.connector.app.ConnectorModule;
+import org.springframework.context.annotation.Bean;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Primary;
 import uk.gov.pay.connector.extension.AppWithPostgresAndSqsExtension;
 import uk.gov.pay.connector.it.base.ITestBaseExtension;
 import uk.gov.pay.connector.queue.statetransition.StateTransitionQueue;
@@ -17,8 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static io.dropwizard.testing.ConfigOverride.config;
-import static jakarta.ws.rs.core.Response.Status.OK;
+import static uk.gov.pay.connector.app.ConfigOverride.config;
+import static org.springframework.http.HttpStatus.OK;
 import static java.time.temporal.ChronoUnit.MICROS;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -32,7 +31,7 @@ public class EmittedEventResourceIT {
     private static StateTransitionQueue stateTransitionQueue = new StateTransitionQueue();
     @RegisterExtension
     public static AppWithPostgresAndSqsExtension app = new AppWithPostgresAndSqsExtension(
-            EmittedEventResourceIT.ConnectorAppWithCustomStateTransitionQueue.class,
+            EmittedEventResourceIT.CustomStateTransitionQueueConfiguration.class,
             config("emittedEventSweepConfig.notEmittedEventMaxAgeInSeconds", "0")
     );
 
@@ -55,7 +54,7 @@ public class EmittedEventResourceIT {
 
         testBaseExtension.getConnectorRestApiClient()
                 .postEmittedEventsSweepTask()
-                .statusCode(OK.getStatusCode());
+                .statusCode(OK.value());
 
         assertThat(stateTransitionQueue.size(), is(1));
 
@@ -78,7 +77,7 @@ public class EmittedEventResourceIT {
 
         testBaseExtension.getConnectorRestApiClient()
                 .postEmittedEventsSweepTask()
-                .statusCode(OK.getStatusCode());
+                .statusCode(OK.value());
 
         assertThat(stateTransitionQueue.size(), is(1));
 
@@ -102,7 +101,7 @@ public class EmittedEventResourceIT {
 
         testBaseExtension.getConnectorRestApiClient()
                 .postEmittedEventsSweepTask()
-                .statusCode(OK.getStatusCode());
+                .statusCode(OK.value());
 
         assertThat(stateTransitionQueue.size(), is(0));
 
@@ -133,22 +132,15 @@ public class EmittedEventResourceIT {
         );
     }
 
-    public static class ConnectorAppWithCustomStateTransitionQueue extends ConnectorApp {
+    /**
+     * Gives the service the test's state transition queue, so that the test sees what the sweep offers it.
+     */
+    @TestConfiguration(proxyBeanMethods = false)
+    public static class CustomStateTransitionQueueConfiguration {
 
-        @Override
-        protected ConnectorModule getModule(ConnectorConfiguration configuration, Environment environment) {
-            return new EmittedEventResourceIT.ConnectorModuleWithOverrides(configuration, environment);
-        }
-    }
-
-    private static class ConnectorModuleWithOverrides extends ConnectorModule {
-
-        public ConnectorModuleWithOverrides(ConnectorConfiguration configuration, Environment environment) {
-            super(configuration, environment);
-        }
-
-        @Override
-        protected StateTransitionQueue getStateTransitionQueue() {
+        @Bean
+        @Primary
+        public StateTransitionQueue testStateTransitionQueue() {
             return stateTransitionQueue;
         }
     }

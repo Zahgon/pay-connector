@@ -1,8 +1,7 @@
 package uk.gov.pay.connector.app.config;
 
-import io.dropwizard.core.Configuration;
 
-public class TaskQueueConfig extends Configuration {
+public class TaskQueueConfig {
 
     private Boolean taskQueueEnabled;
     private int queueSchedulerNumberOfThreads;

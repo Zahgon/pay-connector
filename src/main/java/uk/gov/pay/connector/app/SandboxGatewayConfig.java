@@ -1,12 +1,11 @@
 package uk.gov.pay.connector.app;
 
-import io.dropwizard.core.Configuration;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
-public class SandboxGatewayConfig extends Configuration {
+public class SandboxGatewayConfig {
     @Valid
     @NotNull
     private List<String> allowedCidrs;

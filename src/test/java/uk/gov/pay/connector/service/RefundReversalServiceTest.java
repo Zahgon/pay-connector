@@ -40,8 +40,8 @@ import uk.gov.pay.connector.refund.service.RefundReversalService;
 import uk.gov.pay.connector.refund.service.RefundReversalStripeConnectTransferRequestBuilder;
 import uk.gov.pay.connector.util.RandomIdGenerator;
 
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
+import org.springframework.http.ResponseEntity;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -201,8 +201,8 @@ public class RefundReversalServiceTest {
         WebApplicationException thrown = assertThrows(WebApplicationException.class, () ->
                 refundReversalService.reverseFailedRefund(gatewayAccountEntity, refund, charge, githubUserId, zendeskId));
 
-        Response response = thrown.getResponse();
-        ErrorResponse errorResponse = (ErrorResponse) response.getEntity();
+        ResponseEntity<?> response = thrown.getResponse();
+        ErrorResponse errorResponse = (ErrorResponse) response.getBody();
         assertThat(errorResponse.messages(), hasItems("Refund with Refund ID: " + refund.getExternalId() + " and Stripe ID: " + stripeRefundId + " is not in a failed state"));
     }
 
@@ -306,11 +306,11 @@ public class RefundReversalServiceTest {
                 .thenReturn(mockedStripeRefund);
         when(mockedStripeRefund.getStatus()).thenReturn("failed");
 
-        when(mockLedgerService.postEvent(anyList())).thenThrow(LedgerException.class);
+        doThrow(LedgerException.class).when(mockLedgerService).postEvent(anyList());
 
         assertThrows(LedgerException.class, () -> mockLedgerService.postEvent(anyList()));
-        Response response = refundReversalService.reverseFailedRefund(gatewayAccountEntity, refund, charge, githubUserId, zendeskId);
-        ErrorResponse actualErrorResponse = (ErrorResponse) response.getEntity();
+        ResponseEntity<?> response = refundReversalService.reverseFailedRefund(gatewayAccountEntity, refund, charge, githubUserId, zendeskId);
+        ErrorResponse actualErrorResponse = (ErrorResponse) response.getBody();
         assertEquals("Stripe transfer successful but error updating payment and refunds",
                 actualErrorResponse.messages().getFirst());
 

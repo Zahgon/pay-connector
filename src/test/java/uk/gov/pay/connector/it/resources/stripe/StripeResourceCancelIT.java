@@ -21,7 +21,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
+import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.eclipse.jetty.http.HttpStatus.NO_CONTENT_204;
@@ -78,7 +78,7 @@ public class StripeResourceCancelIT {
                 .statusCode(NO_CONTENT_204);
 
         app.getStripeWireMockServer().verify(postRequestedFor(urlEqualTo("/v1/payment_intents/" + transactionId + "/cancel"))
-                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED)));
+                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED_VALUE)));
 
         Long chargeId = databaseTestHelper.getChargeIdByExternalId(externalChargeId);
         assertEquals(databaseTestHelper.getChargeStatus(chargeId), ChargeStatus.USER_CANCELLED.getValue());
@@ -101,7 +101,7 @@ public class StripeResourceCancelIT {
                 .statusCode(NO_CONTENT_204);
 
         app.getStripeWireMockServer().verify(postRequestedFor(urlEqualTo("/v1/payment_intents/" + transactionId + "/cancel"))
-                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED)));
+                .withHeader("Content-Type", equalTo(APPLICATION_FORM_URLENCODED_VALUE)));
 
         Long chargeId = databaseTestHelper.getChargeIdByExternalId(externalChargeId);
         assertEquals(ChargeStatus.SYSTEM_CANCELLED.getValue(), databaseTestHelper.getChargeStatus(chargeId));

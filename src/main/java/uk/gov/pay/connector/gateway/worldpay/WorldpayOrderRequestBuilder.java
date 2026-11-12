@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.gateway.worldpay;
 
-import jakarta.ws.rs.core.MediaType;
+import org.springframework.http.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.gateway.OrderRequestBuilder;
@@ -393,7 +393,7 @@ public class WorldpayOrderRequestBuilder extends OrderRequestBuilder {
 
     @Override
     public MediaType getMediaType() {
-        return MediaType.APPLICATION_XML_TYPE;
+        return MediaType.APPLICATION_XML;
     }
 
     public WorldpayTemplateData getWorldpayTemplateData() {

@@ -28,7 +28,7 @@ public class PaymentInstrumentDaoIT {
 
     @BeforeEach
     void setUp() {
-        paymentInstrumentDao = app.getInstanceFromGuiceContainer(PaymentInstrumentDao.class);
+        paymentInstrumentDao = app.getBean(PaymentInstrumentDao.class);
     }
 
     @Test

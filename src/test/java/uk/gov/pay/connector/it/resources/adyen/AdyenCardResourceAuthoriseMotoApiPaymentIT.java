@@ -2,10 +2,8 @@ package uk.gov.pay.connector.it.resources.adyen;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableMap;
-import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import uk.gov.pay.connector.client.cardid.model.CardidCardType;
 import uk.gov.pay.connector.extension.AppWithPostgresAndSqsExtension;
@@ -34,7 +32,6 @@ import static uk.gov.pay.connector.util.TestTemplateResourceLoader.ADYEN_AUTHORI
 import static uk.gov.pay.connector.util.TestTemplateResourceLoader.load;
 import static uk.gov.service.payments.commons.model.AuthorisationMode.MOTO_API;
 
-@ExtendWith(DropwizardExtensionsSupport.class)
 public class AdyenCardResourceAuthoriseMotoApiPaymentIT {
     
     @RegisterExtension

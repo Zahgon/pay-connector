@@ -33,7 +33,7 @@ public class IdempotencyDaoIT {
 
     @BeforeEach
     void setUp() {
-        idempotencyDao = app.getInstanceFromGuiceContainer(IdempotencyDao.class);
+        idempotencyDao = app.getBean(IdempotencyDao.class);
     }
 
     @Test
@@ -54,7 +54,7 @@ public class IdempotencyDaoIT {
     @Test
     void shouldThrowException_whenGatewayAccountIdAndKeyExists() {
         Map<String, Object> requestBody = Map.of("foo", "bar");
-        gatewayAccountDao = app.getInstanceFromGuiceContainer(GatewayAccountDao.class);
+        gatewayAccountDao = app.getBean(GatewayAccountDao.class);
         long gatewayAccountId = secureRandomLong();
         app.getDatabaseTestHelper().addGatewayAccount(anAddGatewayAccountParams()
                 .withAccountId(String.valueOf(gatewayAccountId))

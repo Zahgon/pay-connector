@@ -35,15 +35,15 @@ public class WorldpayCardAuthoriseServiceIT {
                 WORLDPAY_RECURRING_AUTH_TOKEN_TRANSACTION_IDENTIFIER_KEY, "transaction-identifier");
         ChargeUtils.ExternalChargeId userNotPresentChargeId = testBaseExtension.addChargeWithAuthorisationModeAgreement(recurringAuthToken);
 
-        var successCharge = app.getInstanceFromGuiceContainer(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
+        var successCharge = app.getBean(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
 
         app.getWorldpayMockClient().mockAuthorisationSuccess();
 
-        var successResponse = app.getInstanceFromGuiceContainer(CardAuthoriseService.class).doAuthoriseUserNotPresent(successCharge);
+        var successResponse = app.getBean(CardAuthoriseService.class).doAuthoriseUserNotPresent(successCharge);
         assertThat(successResponse.getGatewayError(), is(Optional.empty()));
         assertThat(successResponse.getAuthoriseStatus(), is(Optional.of(BaseAuthoriseResponse.AuthoriseStatus.AUTHORISED)));
 
-        var mergedCharge = app.getInstanceFromGuiceContainer(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
+        var mergedCharge = app.getBean(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
         assertThat(mergedCharge.getRequires3ds(), is(false));
     }
 
@@ -54,12 +54,12 @@ public class WorldpayCardAuthoriseServiceIT {
                 WORLDPAY_RECURRING_AUTH_TOKEN_TRANSACTION_IDENTIFIER_KEY, "transaction-identifier");
         ChargeUtils.ExternalChargeId userNotPresentChargeId = testBaseExtension.addChargeWithAuthorisationModeAgreement(recurringAuthToken);
 
-        var chargeEntity = app.getInstanceFromGuiceContainer(ChargeService.class)
+        var chargeEntity = app.getBean(ChargeService.class)
                 .findChargeByExternalId(userNotPresentChargeId.toString());
 
         app.getWorldpayMockClient().mockAuthorisationFailure();
 
-        var authorisationResponse = app.getInstanceFromGuiceContainer(CardAuthoriseService.class)
+        var authorisationResponse = app.getBean(CardAuthoriseService.class)
                 .doAuthoriseUserNotPresent(chargeEntity);
         assertThat(authorisationResponse.getGatewayError(), is(Optional.empty()));
         assertThat(authorisationResponse.getAuthoriseStatus(), is(Optional.of(BaseAuthoriseResponse.AuthoriseStatus.REJECTED)));
@@ -68,7 +68,7 @@ public class WorldpayCardAuthoriseServiceIT {
 
         assertThat(chargeUpdated.get("can_retry"), is(true));
 
-        var mergedCharge = app.getInstanceFromGuiceContainer(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
+        var mergedCharge = app.getBean(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
         assertThat(mergedCharge.getRequires3ds(), is(false));
     }
 
@@ -79,12 +79,12 @@ public class WorldpayCardAuthoriseServiceIT {
                 WORLDPAY_RECURRING_AUTH_TOKEN_TRANSACTION_IDENTIFIER_KEY, "transaction-identifier");
         ChargeUtils.ExternalChargeId userNotPresentChargeId = testBaseExtension.addChargeWithAuthorisationModeAgreement(recurringAuthToken);
 
-        var chargeEntity = app.getInstanceFromGuiceContainer(ChargeService.class)
+        var chargeEntity = app.getBean(ChargeService.class)
                 .findChargeByExternalId(userNotPresentChargeId.toString());
 
         app.getWorldpayMockClient().mockAuthorisationFailureUserNotPresentNonRetriablePayment();
 
-        var successResponse = app.getInstanceFromGuiceContainer(CardAuthoriseService.class)
+        var successResponse = app.getBean(CardAuthoriseService.class)
                 .doAuthoriseUserNotPresent(chargeEntity);
         assertThat(successResponse.getGatewayError(), is(Optional.empty()));
         assertThat(successResponse.getAuthoriseStatus(), is(Optional.of(BaseAuthoriseResponse.AuthoriseStatus.REJECTED)));
@@ -93,7 +93,7 @@ public class WorldpayCardAuthoriseServiceIT {
 
         assertThat(chargeUpdated.get("can_retry"), is(false));
 
-        var mergedCharge = app.getInstanceFromGuiceContainer(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
+        var mergedCharge = app.getBean(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
         assertThat(mergedCharge.getRequires3ds(), is(false));
     }
 
@@ -104,12 +104,12 @@ public class WorldpayCardAuthoriseServiceIT {
                 WORLDPAY_RECURRING_AUTH_TOKEN_TRANSACTION_IDENTIFIER_KEY, "transaction-identifier");
         ChargeUtils.ExternalChargeId userNotPresentChargeId = testBaseExtension.addChargeWithAuthorisationModeAgreement(recurringAuthToken);
 
-        var chargeEntity = app.getInstanceFromGuiceContainer(ChargeService.class)
+        var chargeEntity = app.getBean(ChargeService.class)
                 .findChargeByExternalId(userNotPresentChargeId.toString());
 
         app.getWorldpayMockClient().mockAuthorisationGatewayError();
 
-        var successResponse = app.getInstanceFromGuiceContainer(CardAuthoriseService.class)
+        var successResponse = app.getBean(CardAuthoriseService.class)
                 .doAuthoriseUserNotPresent(chargeEntity);
         assertThat(successResponse.getGatewayError().get().getMessage(), is("Non-success HTTP status code 404 from gateway"));
         assertThat(successResponse.getAuthoriseStatus(), is(Optional.empty()));
@@ -118,7 +118,7 @@ public class WorldpayCardAuthoriseServiceIT {
 
         assertThat(chargeUpdated.get("can_retry"), is(nullValue()));
 
-        var mergedCharge = app.getInstanceFromGuiceContainer(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
+        var mergedCharge = app.getBean(ChargeService.class).findChargeByExternalId(userNotPresentChargeId.toString());
         assertThat(mergedCharge.getRequires3ds(), is(nullValue()));
     }
 
@@ -134,7 +134,7 @@ public class WorldpayCardAuthoriseServiceIT {
         
         var authCardDetails = AuthCardDetailsFixture.anAuthCardDetails().build();
 
-        var failureResponse = app.getInstanceFromGuiceContainer(CardAuthoriseService.class).doAuthoriseWeb(chargeId, authCardDetails);
+        var failureResponse = app.getBean(CardAuthoriseService.class).doAuthoriseWeb(chargeId, authCardDetails);
         
         assertThat(failureResponse.getAuthoriseStatus(), is(Optional.of(BaseAuthoriseResponse.AuthoriseStatus.REJECTED)));
 

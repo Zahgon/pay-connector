@@ -1,23 +1,14 @@
 package uk.gov.pay.connector.gatewayaccount.resource;
 
-import com.google.inject.Inject;
-import io.dropwizard.jersey.PATCH;
+import jakarta.inject.Inject;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.BadRequestException;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.NotFoundException;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Response;
 import uk.gov.pay.connector.gatewayaccount.exception.GatewayAccountNotFoundException;
 import uk.gov.pay.connector.gatewayaccount.model.AdyenSetupPatchRequest;
 import uk.gov.pay.connector.gatewayaccount.model.AdyenAccountSetupResponse;
@@ -30,11 +21,21 @@ import uk.gov.pay.connector.gatewayaccountcredentials.model.GatewayAccountCreden
 
 import java.util.List;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
-import static uk.gov.pay.connector.gateway.PaymentGatewayName.ADYEN;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import uk.gov.pay.connector.web.MediaTypes;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.http.HttpStatus;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 
-@Path("/")
+import static uk.gov.pay.connector.gateway.PaymentGatewayName.ADYEN;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 @Tag(name = "Gateway accounts")
+@RestController
 public class AdyenAccountSetupResource {
     private final GatewayAccountService gatewayAccountService;
     private final AdyenAccountSetupService adyenAccountSetupService;
@@ -45,9 +46,8 @@ public class AdyenAccountSetupResource {
         this.adyenAccountSetupService = adyenAccountSetupService;
     }
 
-    @GET
-    @Path("/v1/api/service/{serviceId}/account/{accountType}/adyen-setup/{credentialExternalId}")
-    @Produces(APPLICATION_JSON)
+    @GetMapping("/v1/api/service/{serviceId}/account/{accountType}/adyen-setup/{credentialExternalId}")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Retrieve Adyen account setup tasks for a given service ID, account type and credential ID",
             responses = {
@@ -84,9 +84,9 @@ public class AdyenAccountSetupResource {
             }
     )
     public AdyenAccountSetupResponse getAdyenAccountSetup(
-            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathParam("serviceId") String serviceId, // pragma: allowlist secret
-            @Parameter(example = "test", description = "Account type") @PathParam("accountType") GatewayAccountType accountType,
-            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Credential External ID") @PathParam("credentialExternalId") String credentialExternalId) { // pragma: allowlist secret
+            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathVariable("serviceId") String serviceId, // pragma: allowlist secret
+            @Parameter(example = "test", description = "Account type") @PathVariable("accountType") GatewayAccountType accountType,
+            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Credential External ID") @PathVariable("credentialExternalId") String credentialExternalId) { // pragma: allowlist secret
 
         var gatewayAccountEntity = gatewayAccountService.getGatewayAccountByServiceIdAndAccountType(serviceId, accountType)
                 .orElseThrow(() -> new GatewayAccountNotFoundException(serviceId, accountType));
@@ -96,14 +96,13 @@ public class AdyenAccountSetupResource {
         return adyenAccountSetupService.buildResponse(serviceId, gatewayAccountEntity.getId(), gatewayAccountCredentialsEntity);
     }
 
-    @PATCH
-    @Path("/v1/api/service/{serviceId}/account/{accountType}/adyen-setup/{credentialExternalId}")
-    @Produces(APPLICATION_JSON)
+    @PatchMapping("/v1/api/service/{serviceId}/account/{accountType}/adyen-setup/{credentialExternalId}")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Update Adyen account setup tasks for a given service ID, account type and credential ID",
             description = "Support patching following paths: <br>" +
                     "bank_account, responsible_person, vat_number, company_number, director, government_entity_document, organisation_details",
-            requestBody = @RequestBody(
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     content = @Content(
                             schema = @Schema(implementation = AdyenSetupPatchRequest.class),
                             examples = @ExampleObject(
@@ -130,11 +129,11 @@ public class AdyenAccountSetupResource {
                     @ApiResponse(responseCode = "400", description = "Bad Request"),
             }
     )
-    public Response patchAdyenAccountSetup(
-            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathParam("serviceId") String serviceId, // pragma: allowlist secret
-            @Parameter(example = "test", description = "Account type") @PathParam("accountType") GatewayAccountType accountType,
-            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Credential External ID") @PathParam("credentialExternalId") String credentialExternalId, // pragma: allowlist secret
-            @Valid List<AdyenSetupPatchRequest> requests) {
+    public ResponseEntity<?> patchAdyenAccountSetup(
+            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Service ID") @PathVariable("serviceId") String serviceId, // pragma: allowlist secret
+            @Parameter(example = "test", description = "Account type") @PathVariable("accountType") GatewayAccountType accountType,
+            @Parameter(example = "46eb1b601348499196c99de90482ee68", description = "Credential External ID") @PathVariable("credentialExternalId") String credentialExternalId, // pragma: allowlist secret
+            @Valid @RequestBody(required = false) List<AdyenSetupPatchRequest> requests) {
 
         var gatewayAccountEntity = gatewayAccountService.getGatewayAccountByServiceIdAndAccountType(serviceId, accountType)
                 .orElseThrow(() -> new GatewayAccountNotFoundException(serviceId, accountType));
@@ -145,16 +144,16 @@ public class AdyenAccountSetupResource {
             adyenAccountSetupService.update(gatewayAccountEntity, updateRequest, gatewayAccountCredentialsEntity);
         });
         
-        return Response.ok().build();
+        return ResponseEntity.ok().build();
     }
     
     private GatewayAccountCredentialsEntity validateGatewayAccountCredentialsEntity(String credentialExternalId, GatewayAccountEntity gatewayAccountEntity) {
         var gatewayAccountCredentialsEntity = gatewayAccountEntity.getGatewayAccountCredentials().stream().filter(credentialsEntity ->
                         credentialsEntity.getExternalId().equals(credentialExternalId)).findFirst()
-                .orElseThrow(NotFoundException::new);
+                .orElseThrow(() -> new WebApplicationException(HttpStatus.NOT_FOUND));
 
         if (!gatewayAccountCredentialsEntity.getPaymentProvider().equals(ADYEN.getName())) {
-            throw new BadRequestException("Credential is not associated with payment provider Adyen");
+            throw new WebApplicationException("Credential is not associated with payment provider Adyen", HttpStatus.BAD_REQUEST);
         }
 
         return gatewayAccountCredentialsEntity;

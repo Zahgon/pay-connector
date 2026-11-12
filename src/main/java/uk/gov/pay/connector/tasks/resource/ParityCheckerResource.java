@@ -7,23 +7,24 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import uk.gov.pay.connector.tasks.RecordType;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.Response;
 import uk.gov.pay.connector.tasks.service.ParityCheckerService;
 
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
-import static jakarta.ws.rs.core.Response.Status.OK;
-import static uk.gov.pay.connector.tasks.RecordType.CHARGE;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+import uk.gov.pay.connector.web.QueryParam;
+import uk.gov.pay.connector.web.MediaTypes;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 
-@Path("/")
+import static uk.gov.pay.connector.tasks.RecordType.CHARGE;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 @Tag(name = "Tasks")
+@RestController
 public class ParityCheckerResource {
 
     private final ParityCheckerService parityCheckerService;
@@ -33,9 +34,8 @@ public class ParityCheckerResource {
         this.parityCheckerService = parityCheckerService;
     }
 
-    @POST
-    @Path("/v1/tasks/parity-checker")
-    @Produces(APPLICATION_JSON)
+    @PostMapping("/v1/tasks/parity-checker")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Parity check charges or refunds with ledger",
             description = "Task to parity check charges or refunds with ledger for a given start_id and max_id range or by parity_check_status." +
@@ -47,7 +47,7 @@ public class ParityCheckerResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response parityCheck(@Parameter(example = "1", description = "Charge/Refund ID (from database) to start with for parity checking. Defaults to 0")
+    public ResponseEntity<?> parityCheck(@Parameter(example = "1", description = "Charge/Refund ID (from database) to start with for parity checking. Defaults to 0")
                                 @QueryParam("start_id") Long startId,
                                 @Parameter(example = "10", description = "Charge/Refund ID until which the records to be parity checked. If not provided, this is set to maximum ID available.")
                                 @QueryParam("max_id") Long maybeMaxId,
@@ -70,6 +70,6 @@ public class ParityCheckerResource {
             executor.execute(() -> parityCheckerService.checkParityForRefundsOnly(startId, Optional.of(maybeMaxId).orElse(null), doNotReprocessValidRecords,
                     Optional.ofNullable(maybeParityCheckStatus).orElse(null), doNotRetryEmitUntilDuration));
         }
-        return Response.status(OK).build();
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 }

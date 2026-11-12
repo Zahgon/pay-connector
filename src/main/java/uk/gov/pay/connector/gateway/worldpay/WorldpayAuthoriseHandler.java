@@ -1,8 +1,8 @@
 package uk.gov.pay.connector.gateway.worldpay;
 
-import com.google.inject.name.Named;
+import jakarta.inject.Named;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.MediaType;
+import org.springframework.http.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.gateway.GatewayClient;
@@ -27,15 +27,17 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringJoiner;
+import org.springframework.stereotype.Component;
 
-import static jakarta.ws.rs.core.Response.Status.Family.CLIENT_ERROR;
-import static jakarta.ws.rs.core.Response.Status.Family.SERVER_ERROR;
+import static uk.gov.pay.connector.gateway.GatewayException.Family.CLIENT_ERROR;
+import static uk.gov.pay.connector.gateway.GatewayException.Family.SERVER_ERROR;
 import static java.lang.String.format;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.WORLDPAY;
 import static uk.gov.pay.connector.gateway.model.GatewayError.gatewayConnectionError;
 import static uk.gov.pay.connector.gateway.util.AuthUtil.getAuthHeader;
 import static uk.gov.pay.connector.gateway.util.AuthUtil.getWorldpayAuthHeader;
 
+@Component
 public class WorldpayAuthoriseHandler implements WorldpayGatewayResponseGenerator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WorldpayAuthoriseHandler.class);
@@ -106,7 +108,7 @@ public class WorldpayAuthoriseHandler implements WorldpayGatewayResponseGenerato
                                                                   GatewayAccountType gatewayAccountType) {
         Map<String, String> headers = getAuthHeader(worldpayAuthoriseRequest.username(), worldpayAuthoriseRequest.password());
         String body = worldpayRequestTemplateBuilder.buildWith(MOTO_TEMPLATE_PATH, worldpayAuthoriseRequest);
-        GatewayOrder gatewayOrder = new GatewayOrder(OrderRequestType.AUTHORISE, body, MediaType.APPLICATION_XML_TYPE);
+        GatewayOrder gatewayOrder = new GatewayOrder(OrderRequestType.AUTHORISE, body, MediaType.APPLICATION_XML);
         return getGatewayResponse(gatewayAccountType.toString(), gatewayOrder, headers);
     }
 

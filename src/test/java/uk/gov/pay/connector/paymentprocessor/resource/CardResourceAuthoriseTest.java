@@ -1,14 +1,13 @@
 package uk.gov.pay.connector.paymentprocessor.resource;
 
+import uk.gov.pay.connector.rules.ResourceTestExtension;
+import uk.gov.pay.connector.rules.ResourceTestResponse;
+import uk.gov.pay.connector.rules.ResourceTestEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
-import io.dropwizard.testing.junit5.ResourceExtension;
 import io.github.netmikey.logunit.api.LogCapturer;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
+import org.springframework.http.MediaType;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,7 +40,6 @@ import uk.gov.pay.connector.paymentprocessor.api.AuthorisationResponse;
 import uk.gov.pay.connector.paymentprocessor.model.MotoApiAuthoriseRequest;
 import uk.gov.pay.connector.paymentprocessor.service.Card3dsResponseAuthService;
 import uk.gov.pay.connector.paymentprocessor.service.CardAuthoriseService;
-import uk.gov.pay.connector.rules.ResourceTestRuleWithCustomExceptionMappersBuilder;
 import uk.gov.pay.connector.token.TokenService;
 import uk.gov.pay.connector.token.model.domain.TokenEntity;
 import uk.gov.pay.connector.wallets.WalletService;
@@ -78,7 +76,6 @@ import static uk.gov.service.payments.commons.model.ErrorIdentifier.INVALID_ATTR
 import static uk.gov.service.payments.commons.model.ErrorIdentifier.ONE_TIME_TOKEN_ALREADY_USED;
 import static uk.gov.service.payments.commons.model.ErrorIdentifier.ONE_TIME_TOKEN_INVALID;
 
-@ExtendWith(DropwizardExtensionsSupport.class)
 class CardResourceAuthoriseTest {
 
     @RegisterExtension
@@ -94,9 +91,8 @@ class CardResourceAuthoriseTest {
     private static final MotoApiCardNumberValidationService mockMotoApiCardNumberValidationService = mock(MotoApiCardNumberValidationService.class);
     private static final GatewayAccountService mockGatewayAccountService = mock(GatewayAccountService.class);
 
-    private static final ResourceExtension resources = ResourceTestRuleWithCustomExceptionMappersBuilder
-            .getBuilder()
-            .addResource(new CardResource(mockCardAuthoriseService,
+    @RegisterExtension
+    private static final ResourceTestExtension resources = ResourceTestExtension.withResources(new CardResource(mockCardAuthoriseService,
                     mockCard3dsResponseAuthService,
                     mockChargeEligibleForCaptureService,
                     mockDelayedCaptureService,
@@ -104,16 +100,7 @@ class CardResourceAuthoriseTest {
                     mockWalletService,
                     mockTokenService,
                     mockMotoApiCardNumberValidationService,
-                    mockGatewayAccountService))
-            .setRegisterDefaultExceptionMappers(false)
-            .addProvider(OneTimeTokenInvalidExceptionMapper.class)
-            .addProvider(OneTimeTokenAlreadyUsedExceptionMapper.class)
-            .addProvider(OneTimeTokenUsageInvalidForMotoApiExceptionMapper.class)
-            .addProvider(InvalidAttributeValueExceptionMapper.class)
-            .addProvider(CardNumberRejectedExceptionMapper.class)
-            .addProvider(AuthorisationRejectedExceptionMapper.class)
-            .addProvider(AuthorisationErrorExceptionMapper.class)
-            .build();
+                    mockGatewayAccountService));
 
     private final ChargeEntity chargeEntity = aValidChargeEntity().build();
     private TokenEntity tokenEntity;
@@ -170,8 +157,8 @@ class CardResourceAuthoriseTest {
         MotoApiAuthoriseRequest request =
                 new MotoApiAuthoriseRequest(oneTimeToken, cardNumber, cvc, expiryDate, cardHolderName);
 
-        Response response = resources.target("/v1/api/charges/authorise")
-                .request().post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+        ResourceTestResponse response = resources.target("/v1/api/charges/authorise")
+                .request().post(ResourceTestEntity.entity(request, MediaType.APPLICATION_JSON));
 
         assertThat(response.getStatus(), is(422));
 
@@ -203,8 +190,8 @@ class CardResourceAuthoriseTest {
 
         mockAuthorisationResponse(AUTHORISED);
 
-        Response response = resources.target("/v1/api/charges/authorise")
-                .request().post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+        ResourceTestResponse response = resources.target("/v1/api/charges/authorise")
+                .request().post(ResourceTestEntity.entity(request, MediaType.APPLICATION_JSON));
 
         assertThat(response.getStatus(), is(expectedResponseCode));
 
@@ -225,8 +212,8 @@ class CardResourceAuthoriseTest {
         doReturn(tokenEntity).when(mockTokenService).validateAndMarkTokenAsUsedForMotoApi(token);
         mockAuthorisationResponse(AUTHORISED);
 
-        Response response = resources.target("/v1/api/charges/authorise")
-                .request().post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+        ResourceTestResponse response = resources.target("/v1/api/charges/authorise")
+                .request().post(ResourceTestEntity.entity(request, MediaType.APPLICATION_JSON));
 
         assertThat(response.getStatus(), is(204));
     }
@@ -238,8 +225,8 @@ class CardResourceAuthoriseTest {
 
         doThrow(new OneTimeTokenInvalidException()).when(mockTokenService).validateAndMarkTokenAsUsedForMotoApi("one-time-token-123");
 
-        Response response = resources.target("/v1/api/charges/authorise")
-                .request().post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+        ResourceTestResponse response = resources.target("/v1/api/charges/authorise")
+                .request().post(ResourceTestEntity.entity(request, MediaType.APPLICATION_JSON));
 
         assertThat(response.getStatus(), is(400));
 
@@ -255,8 +242,8 @@ class CardResourceAuthoriseTest {
 
         doThrow(new OneTimeTokenAlreadyUsedException()).when(mockTokenService).validateAndMarkTokenAsUsedForMotoApi("one-time-token-123");
 
-        Response response = resources.target("/v1/api/charges/authorise")
-                .request().post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+        ResourceTestResponse response = resources.target("/v1/api/charges/authorise")
+                .request().post(ResourceTestEntity.entity(request, MediaType.APPLICATION_JSON));
 
         assertThat(response.getStatus(), is(400));
 
@@ -272,8 +259,8 @@ class CardResourceAuthoriseTest {
 
         doThrow(new OneTimeTokenUsageInvalidForMotoApiException()).when(mockTokenService).validateAndMarkTokenAsUsedForMotoApi("one-time-token-123");
 
-        Response response = resources.target("/v1/api/charges/authorise")
-                .request().post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+        ResourceTestResponse response = resources.target("/v1/api/charges/authorise")
+                .request().post(ResourceTestEntity.entity(request, MediaType.APPLICATION_JSON));
 
         assertThat(response.getStatus(), is(400));
 
@@ -292,8 +279,8 @@ class CardResourceAuthoriseTest {
         doReturn(tokenEntity).when(mockTokenService).validateAndMarkTokenAsUsedForMotoApi(token);
         doThrow(new CardNumberRejectedException("Card number rejected")).when(mockMotoApiCardNumberValidationService).validateCardNumber(chargeEntity, cardNumber);
 
-        Response response = resources.target("/v1/api/charges/authorise")
-                .request().post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+        ResourceTestResponse response = resources.target("/v1/api/charges/authorise")
+                .request().post(ResourceTestEntity.entity(request, MediaType.APPLICATION_JSON));
 
         assertThat(response.getStatus(), is(402));
 
@@ -325,8 +312,8 @@ class CardResourceAuthoriseTest {
         doReturn(tokenEntity).when(mockTokenService).validateAndMarkTokenAsUsedForMotoApi(token);
         mockAuthorisationResponse(authoriseStatus);
 
-        Response response = resources.target("/v1/api/charges/authorise")
-                .request().post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+        ResourceTestResponse response = resources.target("/v1/api/charges/authorise")
+                .request().post(ResourceTestEntity.entity(request, MediaType.APPLICATION_JSON));
 
         assertThat(response.getStatus(), is(expectedResponseCode));
         ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
@@ -351,8 +338,8 @@ class CardResourceAuthoriseTest {
         doReturn(tokenEntity).when(mockTokenService).validateAndMarkTokenAsUsedForMotoApi(token);
         mockGatewayError(gatewayError);
 
-        Response response = resources.target("/v1/api/charges/authorise")
-                .request().post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+        ResourceTestResponse response = resources.target("/v1/api/charges/authorise")
+                .request().post(ResourceTestEntity.entity(request, MediaType.APPLICATION_JSON));
 
         assertThat(response.getStatus(), is(500));
         ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
@@ -369,8 +356,8 @@ class CardResourceAuthoriseTest {
         doReturn(tokenEntity).when(mockTokenService).validateAndMarkTokenAsUsedForMotoApi(token);
         mockAuthorisationResponse(REQUIRES_3DS);
 
-        Response response = resources.target("/v1/api/charges/authorise")
-                .request().post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+        ResourceTestResponse response = resources.target("/v1/api/charges/authorise")
+                .request().post(ResourceTestEntity.entity(request, MediaType.APPLICATION_JSON));
 
         assertThat(response.getStatus(), is(500));
         ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
@@ -394,8 +381,8 @@ class CardResourceAuthoriseTest {
 
         when(mockCardAuthoriseService.doAuthoriseMotoApi(any(), any(), any())).thenReturn(authorisationResponse);
 
-        Response response = resources.target("/v1/api/charges/authorise")
-                .request().post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+        ResourceTestResponse response = resources.target("/v1/api/charges/authorise")
+                .request().post(ResourceTestEntity.entity(request, MediaType.APPLICATION_JSON));
 
         assertThat(response.getStatus(), is(500));
         ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
@@ -408,8 +395,8 @@ class CardResourceAuthoriseTest {
         String payloadStr = load("googlepay/example-auth-request.json").replace("Example Name", "A".repeat(256));
         JsonNode payload = objectMapper.readTree(payloadStr);
 
-        Response response = resources.target("/v1/frontend/charges/a-valid-chargeId/wallets/google")
-                .request().post(Entity.entity(payload, MediaType.APPLICATION_JSON_TYPE));
+        ResourceTestResponse response = resources.target("/v1/frontend/charges/a-valid-chargeId/wallets/google")
+                .request().post(ResourceTestEntity.entity(payload, MediaType.APPLICATION_JSON));
 
         verify422AndErrorMessage(response, "Card holder name must be a maximum of 255 chars");
         verifyReceiptOfPayloadNotLogged();
@@ -421,8 +408,8 @@ class CardResourceAuthoriseTest {
 
         JsonNode payload = objectMapper.readTree(payloadStr);
 
-        Response response = resources.target("/v1/frontend/charges/a-valid-chargeId/wallets/google")
-                .request().post(Entity.entity(payload, MediaType.APPLICATION_JSON_TYPE));
+        ResourceTestResponse response = resources.target("/v1/frontend/charges/a-valid-chargeId/wallets/google")
+                .request().post(ResourceTestEntity.entity(payload, MediaType.APPLICATION_JSON));
 
         verify422AndErrorMessage(response, "Email must be a maximum of 254 chars");
         verifyReceiptOfPayloadNotLogged();
@@ -433,8 +420,8 @@ class CardResourceAuthoriseTest {
         String payloadStr = load("googlepay/example-auth-request.json").replace("aSignedMessage", "");
         JsonNode payload = objectMapper.readTree(payloadStr);
 
-        Response response = resources.target("/v1/frontend/charges/a-valid-chargeId/wallets/google")
-                .request().post(Entity.entity(payload, MediaType.APPLICATION_JSON_TYPE));
+        ResourceTestResponse response = resources.target("/v1/frontend/charges/a-valid-chargeId/wallets/google")
+                .request().post(ResourceTestEntity.entity(payload, MediaType.APPLICATION_JSON));
 
         verify422AndErrorMessage(response, "Field [signed_message] must not be empty");
         verifyReceiptOfPayloadNotLogged();
@@ -445,8 +432,8 @@ class CardResourceAuthoriseTest {
         String payloadStr = load("googlepay/example-auth-request.json").replace("MEYCIQC+a+AzSpQGr42UR1uTNX91DQM2r7SeKwzNs0UPoeSrrQIhAPpSzHjYTvvJGGzWwli8NRyHYE/diQMLL8aXqm9VIrwl", "");
         JsonNode payload = objectMapper.readTree(payloadStr);
 
-        Response response = resources.target("/v1/frontend/charges/a-valid-chargeId/wallets/google")
-                .request().post(Entity.entity(payload, MediaType.APPLICATION_JSON_TYPE));
+        ResourceTestResponse response = resources.target("/v1/frontend/charges/a-valid-chargeId/wallets/google")
+                .request().post(ResourceTestEntity.entity(payload, MediaType.APPLICATION_JSON));
 
         verify422AndErrorMessage(response, "Field [signature] must not be empty");
         verifyReceiptOfPayloadNotLogged();
@@ -457,8 +444,8 @@ class CardResourceAuthoriseTest {
         String payloadStr = load("googlepay/example-auth-request-stripe.json").replace("Example Name", "A".repeat(256));
         JsonNode payload = objectMapper.readTree(payloadStr);
 
-        Response response = resources.target("/v1/frontend/charges/a-valid-chargeId/wallets/google")
-                .request().post(Entity.entity(payload, MediaType.APPLICATION_JSON_TYPE));
+        ResourceTestResponse response = resources.target("/v1/frontend/charges/a-valid-chargeId/wallets/google")
+                .request().post(ResourceTestEntity.entity(payload, MediaType.APPLICATION_JSON));
 
         verify422AndErrorMessage(response, "Card holder name must be a maximum of 255 chars");
         verifyReceiptOfPayloadNotLogged();
@@ -469,14 +456,14 @@ class CardResourceAuthoriseTest {
         String payloadStr = load("googlepay/example-auth-request-stripe.json").replace("example@test.example", "A".repeat(250) + "@" + "email.com");
         JsonNode payload = objectMapper.readTree(payloadStr);
 
-        Response response = resources.target("/v1/frontend/charges/a-valid-chargeId/wallets/google")
-                .request().post(Entity.entity(payload, MediaType.APPLICATION_JSON_TYPE));
+        ResourceTestResponse response = resources.target("/v1/frontend/charges/a-valid-chargeId/wallets/google")
+                .request().post(ResourceTestEntity.entity(payload, MediaType.APPLICATION_JSON));
 
         verify422AndErrorMessage(response, "Email must be a maximum of 254 chars");
         verifyReceiptOfPayloadNotLogged();
     }
 
-    private void verify422AndErrorMessage(Response response, String expectedErrorMessage) {
+    private void verify422AndErrorMessage(ResourceTestResponse response, String expectedErrorMessage) {
         assertThat(response.getStatus(), is(422));
         ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
         assertThat(errorResponse.messages(), hasItem(expectedErrorMessage));

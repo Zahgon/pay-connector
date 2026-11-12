@@ -1,5 +1,6 @@
 package uk.gov.pay.connector.it.resources;
 
+import org.springframework.http.HttpStatus;
 import com.google.common.collect.ImmutableMap;
 import io.restassured.response.ValidatableResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,13 +24,10 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 import static io.restassured.http.ContentType.JSON;
-import static jakarta.ws.rs.HttpMethod.GET;
-import static jakarta.ws.rs.HttpMethod.POST;
-import static jakarta.ws.rs.core.Response.Status;
-import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
-import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
-import static jakarta.ws.rs.core.Response.Status.NO_CONTENT;
-import static jakarta.ws.rs.core.Response.Status.OK;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.NO_CONTENT;
+import static org.springframework.http.HttpStatus.OK;
 import static java.lang.String.format;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -111,9 +109,9 @@ public class ChargesFrontendResourceIT {
 
         validateGetCharge(expectedAmount, chargeId, CREATED, true)
                 .body("links", hasSize(3))
-                .body("links", containsLink("self", GET, expectedLocation))
-                .body("links", containsLink("cardAuth", POST, expectedLocation + "/cards"))
-                .body("links", containsLink("cardCapture", POST, expectedLocation + "/capture")).extract().response();
+                .body("links", containsLink("self", "GET", expectedLocation))
+                .body("links", containsLink("cardAuth", "POST", expectedLocation + "/cards"))
+                .body("links", containsLink("cardCapture", "POST", expectedLocation + "/capture")).extract().response();
     }
 
     @Test
@@ -124,7 +122,7 @@ public class ChargesFrontendResourceIT {
         databaseTestHelper.updateCorporateSurcharge(chargeId, corporateCreditCardSurchargeAmount);
 
         getChargeFromResource(chargeExternalId)
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("charge_id", is(chargeExternalId))
                 .body("containsKey('reference')", is(false))
@@ -142,9 +140,9 @@ public class ChargesFrontendResourceIT {
                 .body("total_amount", is(6447))
                 .body("moto", is(false))
                 .body("links", hasSize(3))
-                .body("links", containsLink("self", GET, expectedLocation))
-                .body("links", containsLink("cardAuth", POST, expectedLocation + "/cards"))
-                .body("links", containsLink("cardCapture", POST, expectedLocation + "/capture"));
+                .body("links", containsLink("self", "GET", expectedLocation))
+                .body("links", containsLink("cardAuth", "POST", expectedLocation + "/cards"))
+                .body("links", containsLink("cardCapture", "POST", expectedLocation + "/capture"));
     }
 
     @Test
@@ -163,7 +161,7 @@ public class ChargesFrontendResourceIT {
         databaseTestHelper.updateCorporateSurcharge(chargeId, corporateCreditCardSurchargeAmount);
 
         getChargeFromResource(chargeExternalId)
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("charge_id", is(chargeExternalId))
                 .body("containsKey('reference')", is(false))
@@ -188,9 +186,9 @@ public class ChargesFrontendResourceIT {
                 .body("agreement.service_id", is(agreementServiceId))
                 .body("save_payment_instrument_to_agreement", is(true))
                 .body("links", hasSize(3))
-                .body("links", containsLink("self", GET, expectedLocation))
-                .body("links", containsLink("cardAuth", POST, expectedLocation + "/cards"))
-                .body("links", containsLink("cardCapture", POST, expectedLocation + "/capture"));
+                .body("links", containsLink("self", "GET", expectedLocation))
+                .body("links", containsLink("cardAuth", "POST", expectedLocation + "/cards"))
+                .body("links", containsLink("cardCapture", "POST", expectedLocation + "/capture"));
     }
 
     @Test
@@ -200,7 +198,7 @@ public class ChargesFrontendResourceIT {
         databaseTestHelper.updateCorporateSurcharge(chargeId, corporateCreditCardSurchargeAmount);
 
         getChargeFromResource(chargeExternalId)
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("charge_id", is(chargeExternalId))
                 .body("containsKey('agreement_id')", is(false));
@@ -214,7 +212,7 @@ public class ChargesFrontendResourceIT {
         databaseTestHelper.addWalletType(chargeId, WalletType.APPLE_PAY);
 
         getChargeFromResource(externalChargeId)
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("charge_id", is(externalChargeId))
                 .body("wallet_type", is(WalletType.APPLE_PAY.toString()));
@@ -228,7 +226,7 @@ public class ChargesFrontendResourceIT {
         databaseTestHelper.addFee(RandomIdGenerator.newId(), chargeId, 100L, feeCollected, ZonedDateTime.now(), "irrelevant_id", FeeType.TRANSACTION);
 
         getChargeFromResource(externalChargeId)
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("charge_id", is(externalChargeId))
                 .body("fee", is(100));
@@ -253,7 +251,7 @@ public class ChargesFrontendResourceIT {
         databaseTestHelper.addFee(RandomIdGenerator.newId(), chargeId, 100L, feeCollected, ZonedDateTime.now(), "irrelevant_id", FeeType.TRANSACTION);
 
         getChargeFromResource(externalChargeId)
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("charge_id", is(externalChargeId))
                 .body("net_amount", is(6134));
@@ -323,7 +321,7 @@ public class ChargesFrontendResourceIT {
         connectorRestApi
                 .withChargeId(externalChargeId)
                 .getFrontendCharge()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("auth_3ds_data.paRequest", is(paRequest))
                 .body("auth_3ds_data.issuerUrl", is(issuerUrl));
@@ -347,7 +345,7 @@ public class ChargesFrontendResourceIT {
         connectorRestApi
                 .withChargeId(externalChargeId)
                 .getFrontendCharge()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("$card_details", not(hasKey("billing_address")));
     }
@@ -371,7 +369,7 @@ public class ChargesFrontendResourceIT {
                 .build());
 
         getChargeFromResource(externalChargeId)
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("state.status", is(ExternalChargeState.EXTERNAL_FAILED_REJECTED.getStatus()))
                 .body("state.finished", is(ExternalChargeState.EXTERNAL_FAILED_REJECTED.isFinished()))
@@ -389,7 +387,7 @@ public class ChargesFrontendResourceIT {
                 .withAccountId(accountId)
                 .withChargeId(chargeId)
                 .putChargeStatus(putBody)
-                .statusCode(NO_CONTENT.getStatusCode())
+                .statusCode(NO_CONTENT.value())
                 .body(emptyOrNullString());
 
         validateGetCharge(expectedAmount, chargeId, ENTERING_CARD_DETAILS, true);
@@ -401,7 +399,7 @@ public class ChargesFrontendResourceIT {
         connectorRestApi
                 .withChargeId(chargeId)
                 .getCharge()
-                .statusCode(NOT_FOUND.getStatusCode())
+                .statusCode(NOT_FOUND.value())
                 .contentType(JSON)
                 .body("message", contains(format("Charge with id [%s] not found.", chargeId)))
                 .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
@@ -418,7 +416,7 @@ public class ChargesFrontendResourceIT {
                 .withChargeId(chargeId)
                 .patchCharge(patchBody);
 
-        response.statusCode(OK.getStatusCode())
+        response.statusCode(OK.value())
                 .contentType(JSON)
                 .body("email", is(email));
     }
@@ -432,7 +430,7 @@ public class ChargesFrontendResourceIT {
                 .withChargeId(chargeId)
                 .patchCharge(patchBody);
 
-        response.statusCode(BAD_REQUEST.getStatusCode())
+        response.statusCode(BAD_REQUEST.value())
                 .contentType(JSON)
                 .body("message", contains("Bad patch parameters{op=delete, path=email, value=a@b.c}"))
                 .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
@@ -448,7 +446,7 @@ public class ChargesFrontendResourceIT {
                 .withChargeId(chargeId)
                 .patchCharge(patchBody);
 
-        response.statusCode(BAD_REQUEST.getStatusCode())
+        response.statusCode(BAD_REQUEST.value())
                 .contentType(JSON)
                 .body("message", contains(format("Invalid patch parameters{op=replace, path=email, value=%s}", tooLongEmail)))
                 .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
@@ -463,7 +461,7 @@ public class ChargesFrontendResourceIT {
                 .withChargeId(chargeId)
                 .patchCharge(patchBody);
 
-        response.statusCode(BAD_REQUEST.getStatusCode())
+        response.statusCode(BAD_REQUEST.value())
                 .contentType(JSON)
                 .body("message", contains("Bad patch parameters{op=replace, path=amount, value=1}"))
                 .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
@@ -475,7 +473,7 @@ public class ChargesFrontendResourceIT {
         ValidatableResponse response = connectorRestApi
                 .withAccountId(accountId)
                 .postCreateCharge(postBody)
-                .statusCode(Status.CREATED.getStatusCode())
+                .statusCode(HttpStatus.CREATED.value())
                 .body("charge_id", is(notNullValue()))
                 .body("reference", is(reference))
                 .body("description", is(description))
@@ -498,7 +496,7 @@ public class ChargesFrontendResourceIT {
         ValidatableResponse response = connectorRestApi
                 .withAccountId(accountId)
                 .postCreateCharge(postBody)
-                .statusCode(Status.CREATED.getStatusCode())
+                .statusCode(HttpStatus.CREATED.value())
                 .body("charge_id", is(notNullValue()))
                 .body("reference", is(reference))
                 .body("description", is(description))
@@ -528,7 +526,7 @@ public class ChargesFrontendResourceIT {
         ValidatableResponse response = connectorRestApi
                 .withChargeId(chargeId)
                 .getFrontendCharge()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("charge_id", is(chargeId))
                 .body("containsKey('reference')", is(false))

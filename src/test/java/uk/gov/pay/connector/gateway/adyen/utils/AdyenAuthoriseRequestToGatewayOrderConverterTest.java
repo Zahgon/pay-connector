@@ -2,7 +2,7 @@ package uk.gov.pay.connector.gateway.adyen.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonassert.JsonAssert;
-import jakarta.ws.rs.core.MediaType;
+import org.springframework.http.MediaType;
 import org.junit.jupiter.api.Test;
 import uk.gov.pay.connector.gateway.GatewayOrder;
 import uk.gov.pay.connector.gateway.adyen.AdyenBrowserInfoFactory;
@@ -46,7 +46,7 @@ class AdyenAuthoriseRequestToGatewayOrderConverterTest {
         GatewayOrder gatewayOrder = adyenAuthoriseRequestToGatewayOrderConverter.convert(request);
 
         assertThat(gatewayOrder.orderRequestType(), is(OrderRequestType.AUTHORISE_APPLE_PAY));
-        assertThat(gatewayOrder.mediaType(), is(MediaType.APPLICATION_JSON_TYPE));
+        assertThat(gatewayOrder.mediaType(), is(MediaType.APPLICATION_JSON));
         JsonAssert.with(gatewayOrder.payload())
                 .assertThat("$.merchantAccount", is(MERCHANT_ACCOUNT))
                 .assertThat("$.store", is(STORE))
@@ -72,7 +72,7 @@ class AdyenAuthoriseRequestToGatewayOrderConverterTest {
         GatewayOrder gatewayOrder = adyenAuthoriseRequestToGatewayOrderConverter.convert(request);
 
         assertThat(gatewayOrder.orderRequestType(), is(OrderRequestType.AUTHORISE_GOOGLE_PAY));
-        assertThat(gatewayOrder.mediaType(), is(MediaType.APPLICATION_JSON_TYPE));
+        assertThat(gatewayOrder.mediaType(), is(MediaType.APPLICATION_JSON));
         JsonAssert.with(gatewayOrder.payload())
                 .assertThat("$.merchantAccount", is(MERCHANT_ACCOUNT))
                 .assertThat("$.store", is(STORE))

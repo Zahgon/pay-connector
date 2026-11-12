@@ -22,6 +22,7 @@ import uk.gov.pay.connector.queue.tasks.model.ServiceArchivedTaskData;
 import uk.gov.service.payments.commons.queue.exception.QueueException;
 
 import java.util.List;
+import org.springframework.stereotype.Component;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static uk.gov.service.payments.logging.LoggingKeys.AGREEMENT_EXTERNAL_ID;
@@ -31,6 +32,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.RESOURCE_EXTERNAL_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.SERVICE_EXTERNAL_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.STRIPE_EVENT_ID;
 
+@Component
 public class TaskQueueMessageHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskQueueMessageHandler.class);

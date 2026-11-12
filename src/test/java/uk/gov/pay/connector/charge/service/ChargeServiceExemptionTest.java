@@ -41,7 +41,7 @@ import uk.gov.pay.connector.refund.service.RefundService;
 import uk.gov.pay.connector.token.dao.TokenDao;
 import uk.gov.service.payments.commons.model.AuthorisationMode;
 
-import jakarta.ws.rs.core.UriInfo;
+import uk.gov.pay.connector.web.BaseUri;
 import java.time.Instant;
 import java.time.InstantSource;
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static jakarta.ws.rs.core.UriBuilder.fromUri;
+import static org.springframework.web.util.UriComponentsBuilder.fromUriString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -97,7 +97,7 @@ class ChargeServiceExemptionTest {
     private ConnectorConfiguration mockConfig;
 
     @Mock
-    private UriInfo mockUriInfo;
+    private BaseUri mockBaseUri;
 
     @Mock
     private LinksConfig mockLinksConfig;
@@ -172,7 +172,7 @@ class ChargeServiceExemptionTest {
         externalId = newCharge.getExternalId();
 
         when(mockConfig.getLinks()).thenReturn(mockLinksConfig);
-        doAnswer(invocation -> fromUri(SERVICE_HOST)).when(this.mockUriInfo).getBaseUriBuilder();
+        doAnswer(invocation -> fromUriString(SERVICE_HOST)).when(this.mockBaseUri).getBaseUriBuilder();
         when(mockProviders.byName(any(PaymentGatewayName.class))).thenReturn(mockPaymentProvider);
         when(mockLinksConfig.getFrontendUrl()).thenReturn("http://frontend.test");
         when(mockPaymentProvider.getExternalChargeRefundAvailability(any(Charge.class), anyList())).thenReturn(EXTERNAL_AVAILABLE);
@@ -190,7 +190,7 @@ class ChargeServiceExemptionTest {
 
     @Test
     void shouldFindChargeWithOutExemptionObject_whenNoExemption3dsInformationAvailable() {
-        ChargeResponse response = chargeService.findChargeForAccount(externalId, GATEWAY_ACCOUNT_ID, mockUriInfo).get();
+        ChargeResponse response = chargeService.findChargeForAccount(externalId, GATEWAY_ACCOUNT_ID, mockBaseUri).get();
 
         assertThat(response.getExemption(), is(nullValue()));
     }
@@ -200,7 +200,7 @@ class ChargeServiceExemptionTest {
         newCharge.setExemption3ds(EXEMPTION_NOT_REQUESTED);
         newCharge.setExemption3dsRequested(null);
 
-        ChargeResponse response = chargeService.findChargeForAccount(externalId, GATEWAY_ACCOUNT_ID, mockUriInfo).get();
+        ChargeResponse response = chargeService.findChargeForAccount(externalId, GATEWAY_ACCOUNT_ID, mockBaseUri).get();
 
         assertThat(response.getExemption(), is(notNullValue()));
         assertThat(response.getExemption().isRequested(), is(false));
@@ -219,7 +219,7 @@ class ChargeServiceExemptionTest {
         newCharge.setExemption3ds(null);
         newCharge.setExemption3dsRequested(exemption3DsRequested);
 
-        ChargeResponse response = chargeService.findChargeForAccount(externalId, GATEWAY_ACCOUNT_ID, mockUriInfo).get();
+        ChargeResponse response = chargeService.findChargeForAccount(externalId, GATEWAY_ACCOUNT_ID, mockBaseUri).get();
 
         assertThat(response.getExemption(), is(notNullValue()));
         assertThat(response.getExemption().isRequested(), is(true));
@@ -242,7 +242,7 @@ class ChargeServiceExemptionTest {
         newCharge.setExemption3ds(exemption3dsOutcome);
         newCharge.setExemption3dsRequested(exemption3DsRequested);
 
-        ChargeResponse response = chargeService.findChargeForAccount(externalId, GATEWAY_ACCOUNT_ID, mockUriInfo).get();
+        ChargeResponse response = chargeService.findChargeForAccount(externalId, GATEWAY_ACCOUNT_ID, mockBaseUri).get();
 
         assertThat(response.getExemption(), is(notNullValue()));
         assertThat(response.getExemption().isRequested(), is(true));
@@ -262,7 +262,7 @@ class ChargeServiceExemptionTest {
         newCharge.setExemption3ds(exemption3dsOutcome);
         newCharge.setExemption3dsRequested(null);
 
-        ChargeResponse response = chargeService.findChargeForAccount(externalId, GATEWAY_ACCOUNT_ID, mockUriInfo).get();
+        ChargeResponse response = chargeService.findChargeForAccount(externalId, GATEWAY_ACCOUNT_ID, mockBaseUri).get();
 
         assertThat(response.getExemption(), is(notNullValue()));
         assertThat(response.getExemption().isRequested(), is(true));

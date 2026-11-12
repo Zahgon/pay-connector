@@ -2,7 +2,6 @@ package uk.gov.pay.connector.usernotification.service;
 
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
-import io.dropwizard.core.setup.Environment;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -38,8 +37,6 @@ class UserNotificationServiceEmailCollectionModeTest {
     @Mock
     private ConnectorConfiguration connectorConfig;
     
-    @Mock
-    private Environment environment;
 
     @Mock
     private NotifyClientFactory notifyClientFactory;
@@ -73,9 +70,8 @@ class UserNotificationServiceEmailCollectionModeTest {
         when(connectorConfig.getExecutorServiceConfig()).thenReturn(mockExecutorConfiguration);
         when(mockExecutorConfiguration.getThreadsPerCpu()).thenReturn(2);
 
-        when(environment.metrics()).thenReturn(metricRegistry);
 
-        userNotificationService = new UserNotificationService(notifyClientFactory, connectorConfig, environment, mockTaskQueueService, InstantSource.system());
+        userNotificationService = new UserNotificationService(notifyClientFactory, connectorConfig, metricRegistry, mockTaskQueueService, InstantSource.system());
     }
 
     @ParameterizedTest

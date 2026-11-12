@@ -2,7 +2,9 @@ package uk.gov.pay.connector.gateway.util;
 
 import jakarta.inject.Inject;
 import uk.gov.pay.connector.app.ConnectorConfiguration;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ChargeFrontendUrlHelper {
 
     private final ConnectorConfiguration configuration;

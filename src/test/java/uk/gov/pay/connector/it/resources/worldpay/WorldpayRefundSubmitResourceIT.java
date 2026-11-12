@@ -28,9 +28,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToXml;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static jakarta.ws.rs.core.Response.Status.ACCEPTED;
-import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
-import static jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.ACCEPTED;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -117,7 +117,7 @@ public class WorldpayRefundSubmitResourceIT {
 
             app.getWorldpayMockClient().mockRefundSuccess();
             ValidatableResponse validatableResponse = postRefundFor(defaultAccountId, defaultTestCharge.getExternalChargeId(), refundAmount, defaultTestCharge.getAmount());
-            String refundId = assertRefundResponseWith(defaultAccountId, defaultTestCharge.getExternalChargeId(), refundAmount, validatableResponse, ACCEPTED.getStatusCode());
+            String refundId = assertRefundResponseWith(defaultAccountId, defaultTestCharge.getExternalChargeId(), refundAmount, validatableResponse, ACCEPTED.value());
 
             List<Map<String, Object>> refundsFoundByChargeExternalId = (app.getDatabaseTestHelper()).getRefundsByChargeExternalId(defaultTestCharge.getExternalChargeId());
             assertThat(refundsFoundByChargeExternalId.size(), is(1));
@@ -134,7 +134,7 @@ public class WorldpayRefundSubmitResourceIT {
             app.getWorldpayMockClient().mockRefundSuccess();
 
             ValidatableResponse validatableResponse = postRefundFor(defaultAccountId, defaultTestCharge.getExternalChargeId(), refundAmount, defaultTestCharge.getAmount());
-            String refundId = assertRefundResponseWith(defaultAccountId, defaultTestCharge.getExternalChargeId(), refundAmount, validatableResponse, ACCEPTED.getStatusCode());
+            String refundId = assertRefundResponseWith(defaultAccountId, defaultTestCharge.getExternalChargeId(), refundAmount, validatableResponse, ACCEPTED.value());
 
             List<Map<String, Object>> refundsFoundByChargeExternalId = (app.getDatabaseTestHelper()).getRefundsByChargeExternalId(defaultTestCharge.getExternalChargeId());
             assertThat(refundsFoundByChargeExternalId.size(), is(1));
@@ -189,7 +189,7 @@ public class WorldpayRefundSubmitResourceIT {
             Long refundAmount = 100L;
 
             ValidatableResponse validatableResponse = postRefundFor(accountId, charge.getExternalChargeId(), refundAmount, charge.getAmount());
-            assertRefundResponseWith(accountId, charge.getExternalChargeId(), refundAmount, validatableResponse, ACCEPTED.getStatusCode());
+            assertRefundResponseWith(accountId, charge.getExternalChargeId(), refundAmount, validatableResponse, ACCEPTED.value());
 
             app.getWorldpayWireMockServer().verify(postRequestedFor(urlPathEqualTo(WORLDPAY_URL)));
         }
@@ -202,11 +202,11 @@ public class WorldpayRefundSubmitResourceIT {
 
             app.getWorldpayMockClient().mockRefundSuccess();
             ValidatableResponse firstValidatableResponse = postRefundFor(defaultAccountId, externalChargeId, firstRefundAmount, defaultTestCharge.getAmount());
-            String firstRefundId = assertRefundResponseWith(defaultAccountId, externalChargeId, firstRefundAmount, firstValidatableResponse, ACCEPTED.getStatusCode());
+            String firstRefundId = assertRefundResponseWith(defaultAccountId, externalChargeId, firstRefundAmount, firstValidatableResponse, ACCEPTED.value());
 
             app.getWorldpayMockClient().mockRefundSuccess();
             ValidatableResponse secondValidatableResponse = postRefundFor(defaultAccountId, externalChargeId, secondRefundAmount, defaultTestCharge.getAmount() - firstRefundAmount);
-            String secondRefundId = assertRefundResponseWith(defaultAccountId, externalChargeId, secondRefundAmount, secondValidatableResponse, ACCEPTED.getStatusCode());
+            String secondRefundId = assertRefundResponseWith(defaultAccountId, externalChargeId, secondRefundAmount, secondValidatableResponse, ACCEPTED.value());
 
             List<Map<String, Object>> refundsFoundByChargeExternalId = (app.getDatabaseTestHelper()).getRefundsByChargeExternalId(externalChargeId);
             assertThat(refundsFoundByChargeExternalId.size(), is(2));
@@ -240,7 +240,7 @@ public class WorldpayRefundSubmitResourceIT {
 
             app.getWorldpayMockClient().mockRefundSuccess();
             postRefundFor(defaultAccountId, testCharge.getExternalChargeId(), refundAmount, defaultTestCharge.getAmount())
-                    .statusCode(BAD_REQUEST.getStatusCode())
+                    .statusCode(BAD_REQUEST.value())
                     .body("reason", is("pending"))
                     .body("message", contains(format("Charge with id [%s] not available for refund.", testCharge.getExternalChargeId())))
                     .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -257,10 +257,10 @@ public class WorldpayRefundSubmitResourceIT {
 
             app.getWorldpayMockClient().mockRefundSuccess();
             postRefundFor(defaultAccountId, externalChargeId, refundAmount, defaultTestCharge.getAmount())
-                    .statusCode(ACCEPTED.getStatusCode());
+                    .statusCode(ACCEPTED.value());
 
             postRefundFor(defaultAccountId, externalChargeId, 1L, 0L)
-                    .statusCode(BAD_REQUEST.getStatusCode())
+                    .statusCode(BAD_REQUEST.value())
                     .body("reason", is("full"))
                     .body("message", contains(format("Charge with id [%s] not available for refund.", externalChargeId)))
                     .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -274,7 +274,7 @@ public class WorldpayRefundSubmitResourceIT {
             Long refundAmount = defaultTestCharge.getAmount() + 20;
             app.getWorldpayMockClient().mockRefundSuccess();
             postRefundFor(defaultAccountId, defaultTestCharge.getExternalChargeId(), refundAmount, defaultTestCharge.getAmount())
-                    .statusCode(BAD_REQUEST.getStatusCode())
+                    .statusCode(BAD_REQUEST.value())
                     .body("reason", is("amount_not_available"))
                     .body("message", contains("Not sufficient amount available for refund"))
                     .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -288,7 +288,7 @@ public class WorldpayRefundSubmitResourceIT {
             Long refundAmount = 10000001L;
 
             postRefundFor(defaultAccountId, defaultTestCharge.getExternalChargeId(), refundAmount, defaultTestCharge.getAmount())
-                    .statusCode(BAD_REQUEST.getStatusCode())
+                    .statusCode(BAD_REQUEST.value())
                     .body("reason", is("amount_not_available"))
                     .body("message", contains("Not sufficient amount available for refund"))
                     .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -302,7 +302,7 @@ public class WorldpayRefundSubmitResourceIT {
             Long refundAmount = 0L;
 
             postRefundFor(defaultAccountId, defaultTestCharge.getExternalChargeId(), refundAmount, defaultTestCharge.getAmount())
-                    .statusCode(BAD_REQUEST.getStatusCode())
+                    .statusCode(BAD_REQUEST.value())
                     .body("reason", is("amount_min_validation"))
                     .body("message", contains("Validation error for amount. Minimum amount for a refund is 1"))
                     .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -318,7 +318,7 @@ public class WorldpayRefundSubmitResourceIT {
 
             app.getWorldpayMockClient().mockRefundSuccess();
             ValidatableResponse validatableResponse = postRefundFor(defaultAccountId, defaultTestCharge.getExternalChargeId(), firstRefundAmount, defaultTestCharge.getAmount());
-            String firstRefundId = assertRefundResponseWith(defaultAccountId, defaultTestCharge.getExternalChargeId(), firstRefundAmount, validatableResponse, ACCEPTED.getStatusCode());
+            String firstRefundId = assertRefundResponseWith(defaultAccountId, defaultTestCharge.getExternalChargeId(), firstRefundAmount, validatableResponse, ACCEPTED.value());
 
             List<Map<String, Object>> refundsFoundByChargeExternalId = (app.getDatabaseTestHelper()).getRefundsByChargeExternalId(defaultTestCharge.getExternalChargeId());
             assertThat(refundsFoundByChargeExternalId.size(), is(1));
@@ -342,7 +342,7 @@ public class WorldpayRefundSubmitResourceIT {
 
             app.getWorldpayMockClient().mockRefundError();
             postRefundFor(defaultAccountId, defaultTestCharge.getExternalChargeId(), refundAmount, defaultTestCharge.getAmount())
-                    .statusCode(INTERNAL_SERVER_ERROR.getStatusCode())
+                    .statusCode(INTERNAL_SERVER_ERROR.value())
                     .body("message", contains("Worldpay refund response (error code: 2, error: Something went wrong.)"))
                     .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
 
@@ -622,7 +622,7 @@ public class WorldpayRefundSubmitResourceIT {
                             "refund_amount_available", testCharge.getAmount()
                     )))
                     .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, testCharge.getExternalChargeId()))
-                    .then().statusCode(BAD_REQUEST.getStatusCode())
+                    .then().statusCode(BAD_REQUEST.value())
                     .body("message", contains(format("Charge with id [%s] not available for refund.", testCharge.getExternalChargeId())))
                     .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
 
@@ -653,7 +653,7 @@ public class WorldpayRefundSubmitResourceIT {
                             "refund_amount_available", defaultTestCharge.getAmount()
                     )))
                     .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
-                    .then().statusCode(ACCEPTED.getStatusCode());
+                    .then().statusCode(ACCEPTED.value());
 
             // Verify first request to Worldpay
             app.getWorldpayWireMockServer().verify(1, postRequestedFor(urlPathEqualTo(WORLDPAY_URL)));
@@ -669,7 +669,7 @@ public class WorldpayRefundSubmitResourceIT {
                             "refund_amount_available", 0
                     )))
                     .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
-                    .then().statusCode(BAD_REQUEST.getStatusCode())
+                    .then().statusCode(BAD_REQUEST.value())
                     .body("reason", is("full"))
                     .body("message", contains(format("Charge with id [%s] not available for refund.", defaultTestCharge.getExternalChargeId())))
                     .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -694,7 +694,7 @@ public class WorldpayRefundSubmitResourceIT {
                             "refund_amount_available", defaultTestCharge.getAmount()
                     )))
                     .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
-                    .then().statusCode(BAD_REQUEST.getStatusCode())
+                    .then().statusCode(BAD_REQUEST.value())
                     .body("reason", is("amount_not_available"))
                     .body("message", contains("Not sufficient amount available for refund"))
                     .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -719,7 +719,7 @@ public class WorldpayRefundSubmitResourceIT {
                             "refund_amount_available", defaultTestCharge.getAmount()
                     )))
                     .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
-                    .then().statusCode(BAD_REQUEST.getStatusCode())
+                    .then().statusCode(BAD_REQUEST.value())
                     .body("reason", is("amount_not_available"))
                     .body("message", contains("Not sufficient amount available for refund"))
                     .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -744,7 +744,7 @@ public class WorldpayRefundSubmitResourceIT {
                             "refund_amount_available", defaultTestCharge.getAmount()
                     )))
                     .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
-                    .then().statusCode(BAD_REQUEST.getStatusCode())
+                    .then().statusCode(BAD_REQUEST.value())
                     .body("reason", is("amount_min_validation"))
                     .body("message", contains("Validation error for amount. Minimum amount for a refund is 1"))
                     .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -772,7 +772,7 @@ public class WorldpayRefundSubmitResourceIT {
                             "refund_amount_available", defaultTestCharge.getAmount()
                     )))
                     .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
-                    .then().statusCode(ACCEPTED.getStatusCode())
+                    .then().statusCode(ACCEPTED.value())
                     .body("amount", is(firstRefundAmount))
                     .body("status", is("submitted"));
 
@@ -790,7 +790,7 @@ public class WorldpayRefundSubmitResourceIT {
                             "refund_amount_available", defaultTestCharge.getAmount() - firstRefundAmount
                     )))
                     .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
-                    .then().statusCode(BAD_REQUEST.getStatusCode())
+                    .then().statusCode(BAD_REQUEST.value())
                     .body("reason", is("amount_not_available"))
                     .body("message", contains("Not sufficient amount available for refund"))
                     .body("error_identifier", is(ErrorIdentifier.REFUND_NOT_AVAILABLE.toString()));
@@ -816,7 +816,7 @@ public class WorldpayRefundSubmitResourceIT {
                             "refund_amount_available", defaultTestCharge.getAmount()
                     )))
                     .post(format("/v1/api/service/%s/account/%s/charges/%s/refunds", SERVICE_ID, TEST, defaultTestCharge.getExternalChargeId()))
-                    .then().statusCode(INTERNAL_SERVER_ERROR.getStatusCode())
+                    .then().statusCode(INTERNAL_SERVER_ERROR.value())
                     .body("message", contains("Worldpay refund response (error code: 2, error: Something went wrong.)"))
                     .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
 

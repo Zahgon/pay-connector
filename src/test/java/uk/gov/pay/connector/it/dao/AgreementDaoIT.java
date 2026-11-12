@@ -29,7 +29,7 @@ public class AgreementDaoIT {
 
     @BeforeEach
     void setUp() {
-        agreementDao = app.getInstanceFromGuiceContainer(AgreementDao.class);
+        agreementDao = app.getBean(AgreementDao.class);
 
         DatabaseFixtures.TestAccount testAccount1 = insertTestAccount();
         gatewayAccount1 = new GatewayAccountEntity(TEST);

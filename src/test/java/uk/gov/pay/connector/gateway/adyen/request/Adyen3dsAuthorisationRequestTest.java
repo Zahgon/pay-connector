@@ -9,7 +9,7 @@ import uk.gov.pay.connector.util.JsonObjectMapper;
 import java.net.URI;
 import java.util.Map;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.ADYEN;
 import static uk.gov.pay.connector.gateway.model.OrderRequestType.AUTHORISE_3DS;
@@ -40,7 +40,7 @@ class Adyen3dsAuthorisationRequestTest {
 
         GatewayOrder gatewayOrder = request.getGatewayOrder();
         assertEquals(AUTHORISE_3DS, gatewayOrder.orderRequestType());
-        assertEquals(APPLICATION_JSON_TYPE, gatewayOrder.mediaType());
+        assertEquals(APPLICATION_JSON, gatewayOrder.mediaType());
 
         String expectedPayload = jsonObjectMapper.objectToString(payload);
         assertEquals(expectedPayload, gatewayOrder.payload());

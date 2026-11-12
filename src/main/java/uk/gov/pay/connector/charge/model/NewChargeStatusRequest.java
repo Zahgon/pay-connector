@@ -2,7 +2,7 @@ package uk.gov.pay.connector.charge.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.dropwizard.validation.ValidationMethod;
+import jakarta.validation.constraints.AssertTrue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import uk.gov.pay.connector.charge.model.domain.ChargeStatus;
@@ -22,7 +22,7 @@ public class NewChargeStatusRequest {
         return newStatus;
     }
 
-    @ValidationMethod(message = "invalid new status")
+    @AssertTrue(message = "invalid new status")
     @JsonIgnore
     public boolean isValidNewStatus() {
         return ChargeStatus.ENTERING_CARD_DETAILS.toString().equals(newStatus);

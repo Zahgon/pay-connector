@@ -11,7 +11,7 @@ import uk.gov.pay.connector.util.JsonObjectMapper;
 import java.net.URI;
 import java.util.Map;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static uk.gov.pay.connector.gateway.model.OrderRequestType.CAPTURE;
@@ -32,7 +32,7 @@ class AdyenCaptureRequestTest {
         var request = buildValidCaptureRequest();
 
         assertThat(request.getGatewayOrder().orderRequestType(), is(CAPTURE));
-        assertThat(request.getGatewayOrder().mediaType(), is(APPLICATION_JSON_TYPE));
+        assertThat(request.getGatewayOrder().mediaType(), is(APPLICATION_JSON));
         JsonAssert.with(request.getGatewayOrder().payload())
                 .assertThat("$.amount.value", is(500))
                 .assertThat("$.amount.currency", is("GBP"))

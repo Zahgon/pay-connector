@@ -7,9 +7,11 @@ import uk.gov.pay.connector.gateway.worldpay.WorldpayPaymentProvider;
 
 import jakarta.inject.Inject;
 import java.util.Map;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.collect.Maps.newHashMap;
 
+@Component
 public class PaymentProviders {
 
     private final Map<PaymentGatewayName, PaymentProvider> paymentProviders = newHashMap();

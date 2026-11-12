@@ -2,10 +2,9 @@ package uk.gov.pay.connector.gatewayaccountcredentials.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.BadRequestException;
-import jakarta.ws.rs.WebApplicationException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.charge.exception.ConflictWebApplicationException;
@@ -34,6 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
 
 import static java.lang.String.format;
 import static java.util.Comparator.comparing;
@@ -62,6 +63,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.GATEWAY_ACCOUNT_TYPE;
 import static uk.gov.service.payments.logging.LoggingKeys.PROVIDER;
 import static uk.gov.service.payments.logging.LoggingKeys.USER_EXTERNAL_ID;
 
+@Service
 public class GatewayAccountCredentialsService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GatewayAccountCredentialsService.class);
@@ -176,7 +178,7 @@ public class GatewayAccountCredentialsService {
                 gatewayAccountCredentialsEntity.setCredentials(credentials);
                 break;
             default:
-                throw new BadRequestException("Unexpected path for patch operation: " + patchRequest.getPath());
+                throw new WebApplicationException("Unexpected path for patch operation: " + patchRequest.getPath(), HttpStatus.BAD_REQUEST);
         }
     }
 

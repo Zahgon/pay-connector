@@ -37,6 +37,7 @@ import uk.gov.pay.connector.wallets.googlepay.GooglePayAuthorisationGatewayReque
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
 import static java.util.UUID.randomUUID;
 import static uk.gov.pay.connector.gateway.CaptureResponse.ChargeState.COMPLETE;
@@ -45,6 +46,7 @@ import static uk.gov.pay.connector.gateway.PaymentGatewayName.SANDBOX;
 import static uk.gov.pay.connector.gateway.model.response.GatewayResponse.GatewayResponseBuilder.responseBuilder;
 import static uk.gov.pay.connector.gateway.sandbox.SandboxCardNumbers.RECURRING_FIRST_AUTHORISE_SUCCESS_SUBSEQUENT_DECLINE;
 
+@Component
 public class SandboxPaymentProvider implements PaymentProvider {
 
     private final ExternalRefundAvailabilityCalculator externalRefundAvailabilityCalculator;

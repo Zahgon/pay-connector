@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.queue.tasks.handlers;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Inject;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.charge.model.domain.ChargeEntity;
@@ -11,13 +11,15 @@ import uk.gov.pay.connector.gateway.GatewayException;
 import uk.gov.pay.connector.paymentprocessor.service.QueryService;
 import uk.gov.pay.connector.queue.tasks.model.PaymentTaskData;
 
-import jakarta.ws.rs.WebApplicationException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
+import org.springframework.stereotype.Component;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.CAPTURED;
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.CAPTURE_SUBMITTED;
 import static uk.gov.service.payments.logging.LoggingKeys.PROVIDER;
 
+@Component
 public class QueryAndUpdatePaymentInSubmittedStateTaskHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(QueryAndUpdatePaymentInSubmittedStateTaskHandler.class);

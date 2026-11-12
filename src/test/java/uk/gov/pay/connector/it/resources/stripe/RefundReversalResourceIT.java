@@ -1,5 +1,6 @@
 package uk.gov.pay.connector.it.resources.stripe;
 
+import org.springframework.http.HttpStatus;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.stripe.exception.ApiException;
 import com.stripe.exception.CardException;
@@ -7,7 +8,6 @@ import com.stripe.exception.IdempotencyException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Refund;
 import com.stripe.model.StripeError;
-import io.dropwizard.core.setup.Environment;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import org.junit.jupiter.api.AfterEach;
@@ -17,9 +17,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import uk.gov.pay.connector.app.ConnectorApp;
-import uk.gov.pay.connector.app.ConnectorConfiguration;
-import uk.gov.pay.connector.app.ConnectorModule;
+import org.springframework.context.annotation.Bean;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Primary;
 import uk.gov.pay.connector.charge.model.ChargeResponse;
 import uk.gov.pay.connector.client.ledger.model.LedgerTransaction;
 import uk.gov.pay.connector.common.model.api.ExternalRefundStatus;
@@ -30,8 +30,7 @@ import uk.gov.pay.connector.gateway.stripe.StripeSdkClientFactory;
 import uk.gov.pay.connector.it.base.ITestBaseExtension;
 import uk.gov.pay.connector.util.RandomIdGenerator;
 
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 import java.util.List;
 import java.util.Map;
 
@@ -53,7 +52,7 @@ public class RefundReversalResourceIT {
 
     // App must be instantiated after mock is set
     @RegisterExtension
-    public static AppWithPostgresAndSqsExtension app = new AppWithPostgresAndSqsExtension(RefundReversalResourceIT.ConnectorAppWithCustomInjector.class);
+    public static AppWithPostgresAndSqsExtension app = new AppWithPostgresAndSqsExtension(RefundReversalResourceIT.MockedStripeConfiguration.class);
     @RegisterExtension
     public static ITestBaseExtension testBaseExtension = new ITestBaseExtension("stripe", app.getLocalPort(), app.getDatabaseTestHelper());
     private static final StripeSdkClient mockStripeSdkClient = mock(StripeSdkClient.class);
@@ -133,7 +132,7 @@ public class RefundReversalResourceIT {
                         .replace("{chargeId}", CHARGE_EXTERNAL_ID)
                         .replace("{refundId}", REFUND_EXTERNAL_ID))
                 .then();
-        response.statusCode(Response.Status.OK.getStatusCode());
+        response.statusCode(HttpStatus.OK.value());
     }
 
     @Test
@@ -151,7 +150,7 @@ public class RefundReversalResourceIT {
                         .replace("{chargeId}", CHARGE_EXTERNAL_ID)
                         .replace("{refundId}", REFUND_EXTERNAL_ID))
                 .then()
-                .statusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
     }
 
     @Test
@@ -190,7 +189,7 @@ public class RefundReversalResourceIT {
                         .replace("{refundId}", REFUND_EXTERNAL_ID))
                 .then()
               .body("message", is("There was an error trying to create transfer with id: " + REFUND_EXTERNAL_ID + " from Stripe: " + "error connecting to Stripe; request-id: request_123"))
-                .statusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value()
                 );
     }
 
@@ -254,7 +253,7 @@ public class RefundReversalResourceIT {
                         .replace("{refundId}", REFUND_EXTERNAL_ID))
                 .then()
                 .body("message[0]", is("Transfer failed due to insufficient funds for refund with " + REFUND_EXTERNAL_ID + " error with stripe because of insufficient funds; code: insufficient_funds_error; request-id: req_12345"))
-                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
+                .statusCode(HttpStatus.BAD_REQUEST.value());
     }
 
     @Test
@@ -317,31 +316,25 @@ public class RefundReversalResourceIT {
                         .replace("{refundId}", REFUND_EXTERNAL_ID))
                 .then()
                 .body("message[0]", is("failed transfer due to idempotency error for refund with " + REFUND_EXTERNAL_ID + " error because idempotency key already used; request-id: request_123"))
-                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
+                .statusCode(HttpStatus.BAD_REQUEST.value());
     }
 
-    public static class ConnectorAppWithCustomInjector extends ConnectorApp {
-        @Override
-        protected ConnectorModule getModule(ConnectorConfiguration configuration, Environment environment) {
-            return new ConnectorModuleWithOverrides(configuration, environment);
-        }
-    }
+    /**
+     * Replaces the Stripe SDK client factory and the random id generator with the test's mocks.
+     */
+    @TestConfiguration(proxyBeanMethods = false)
+    public static class MockedStripeConfiguration {
 
-    private static class ConnectorModuleWithOverrides extends ConnectorModule {
-
-        public ConnectorModuleWithOverrides(ConnectorConfiguration configuration, Environment environment) {
-            super(configuration, environment);
-        }
-
-        @Override
-        protected StripeSdkClientFactory getStripeSdkClientFactory(ConnectorConfiguration connectorConfiguration) {
+        @Bean
+        @Primary
+        public StripeSdkClientFactory mockedStripeSdkClientFactory() {
             return mockStripeSdkClientFactory;
         }
 
-        @Override
-        protected RandomIdGenerator getRandomIdGenerator() {
+        @Bean
+        @Primary
+        public RandomIdGenerator mockedRandomIdGenerator() {
             return mockRandomIdGenerator;
         }
-
     }
 }

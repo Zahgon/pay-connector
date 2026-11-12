@@ -9,7 +9,9 @@ import uk.gov.pay.connector.gateway.model.request.DeleteStoredPaymentDetailsGate
 import uk.gov.pay.connector.paymentinstrument.service.PaymentInstrumentService;
 
 import jakarta.inject.Inject;
+import org.springframework.stereotype.Component;
 
+@Component
 public class DeleteStoredPaymentDetailsTaskHandler {
 
     private AgreementService agreementService;

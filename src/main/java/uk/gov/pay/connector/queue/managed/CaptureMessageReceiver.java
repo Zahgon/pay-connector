@@ -1,9 +1,8 @@
 package uk.gov.pay.connector.queue.managed;
 
-import io.dropwizard.lifecycle.Managed;
-import io.dropwizard.core.setup.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.SmartLifecycle;
 import uk.gov.pay.connector.app.CaptureProcessConfig;
 import uk.gov.pay.connector.app.ConnectorConfiguration;
 import uk.gov.pay.connector.paymentprocessor.service.CardCaptureProcess;
@@ -12,7 +11,7 @@ import jakarta.inject.Inject;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class CaptureMessageReceiver implements Managed {
+public class CaptureMessageReceiver implements SmartLifecycle {
 
     private static final String SQS_MESSAGE_RECEIVER_THREAD_NAME = "sqs-message-chargeCaptureMessageReceiver";
 
@@ -22,9 +21,10 @@ public class CaptureMessageReceiver implements Managed {
     private final int queueSchedulerShutdownTimeoutInSeconds;
     private final CardCaptureProcess cardCaptureProcess;
     private ScheduledExecutorService chargeCaptureMessageExecutorService;
+    private volatile boolean running;
 
     @Inject
-    public CaptureMessageReceiver(CardCaptureProcess cardCaptureProcess, Environment environment,
+    public CaptureMessageReceiver(CardCaptureProcess cardCaptureProcess,
                                   ConnectorConfiguration connectorConfiguration) {
         this.cardCaptureProcess = cardCaptureProcess;
 
@@ -32,11 +32,7 @@ public class CaptureMessageReceiver implements Managed {
         int queueScheduleNumberOfThreads = captureProcessConfig
                 .getQueueSchedulerNumberOfThreads();
 
-        chargeCaptureMessageExecutorService = environment
-                .lifecycle()
-                .scheduledExecutorService(SQS_MESSAGE_RECEIVER_THREAD_NAME)
-                .threads(queueScheduleNumberOfThreads)
-                .build();
+        chargeCaptureMessageExecutorService = ScheduledExecutors.create(SQS_MESSAGE_RECEIVER_THREAD_NAME, queueScheduleNumberOfThreads);
 
         queueSchedulerThreadDelayInSeconds = captureProcessConfig.getQueueSchedulerThreadDelayInSeconds();
         queueSchedulerShutdownTimeoutInSeconds = captureProcessConfig.getQueueSchedulerShutdownTimeoutInSeconds();
@@ -44,6 +40,7 @@ public class CaptureMessageReceiver implements Managed {
 
     @Override
     public void start() {
+        running = true;
         int initialDelay = queueSchedulerThreadDelayInSeconds;
         chargeCaptureMessageExecutorService.scheduleWithFixedDelay(
                 this::chargeCaptureMessageReceiver,
@@ -53,7 +50,13 @@ public class CaptureMessageReceiver implements Managed {
     }
 
     @Override
+    public boolean isRunning() {
+        return running;
+    }
+
+    @Override
     public void stop() {
+        running = false;
         LOGGER.info("Shutting down card capture service");
         chargeCaptureMessageExecutorService.shutdown();
         try {

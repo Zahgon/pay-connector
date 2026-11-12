@@ -1,11 +1,10 @@
 package uk.gov.pay.connector.app;
 
-import io.dropwizard.core.Configuration;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
-public class StripeAuthTokens extends Configuration {
+public class StripeAuthTokens {
 
     @Valid
     @NotNull

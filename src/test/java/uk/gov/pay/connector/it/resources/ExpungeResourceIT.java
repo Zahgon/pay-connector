@@ -52,8 +52,8 @@ public class ExpungeResourceIT {
 
     @BeforeEach
     void setUp() {
-        emittedEventDao = app.getInstanceFromGuiceContainer(EmittedEventDao.class);
-        refundDao = app.getInstanceFromGuiceContainer(RefundDao.class);
+        emittedEventDao = app.getBean(EmittedEventDao.class);
+        refundDao = app.getBean(RefundDao.class);
         databaseTestHelper = app.getDatabaseTestHelper();
         insertTestAccount();
     }

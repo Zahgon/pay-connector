@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.gatewayaccount.service;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Inject;
+import org.springframework.transaction.annotation.Transactional;
 import uk.gov.pay.connector.gatewayaccount.dao.AdyenAccountSetupDao;
 import uk.gov.pay.connector.gatewayaccount.model.AdyenAccountSetupResponse;
 import uk.gov.pay.connector.gatewayaccount.model.AdyenAccountSetupStatus;
@@ -16,9 +16,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
 
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.ADYEN;
 
+@Service
 public class AdyenAccountSetupService {
 
     private final AdyenAccountSetupDao adyenAccountSetupDao;

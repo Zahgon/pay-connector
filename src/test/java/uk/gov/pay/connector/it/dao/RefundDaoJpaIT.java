@@ -55,8 +55,8 @@ public class RefundDaoJpaIT {
 
     @BeforeEach
     void setUp() throws Exception {
-        refundDao = app.getInstanceFromGuiceContainer(RefundDao.class);
-        emittedEventDao = app.getInstanceFromGuiceContainer(EmittedEventDao.class);
+        refundDao = app.getBean(RefundDao.class);
+        emittedEventDao = app.getBean(EmittedEventDao.class);
 
         DatabaseFixtures.TestAccount testAccount = app.getDatabaseFixtures()
                 .aTestAccount();

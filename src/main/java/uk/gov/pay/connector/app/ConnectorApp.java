@@ -1,245 +1,112 @@
 package uk.gov.pay.connector.app;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
-import io.dropwizard.configuration.SubstitutingSourceProvider;
-import io.dropwizard.core.Application;
-import io.dropwizard.core.setup.Bootstrap;
-import io.dropwizard.core.setup.Environment;
-import io.dropwizard.db.DataSourceFactory;
-import io.dropwizard.jersey.errors.EarlyEofExceptionMapper;
-import io.dropwizard.jersey.errors.LoggingExceptionMapper;
-import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper;
-import io.dropwizard.migrations.MigrationsBundle;
-import io.prometheus.client.CollectorRegistry;
-import io.prometheus.client.dropwizard.DropwizardExports;
-import io.prometheus.client.servlet.jakarta.exporter.MetricsServlet;
-import org.dhatim.dropwizard.sentry.logging.SentryAppenderFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import uk.gov.pay.connector.agreement.exception.AgreementNotFoundExceptionMapper;
-import uk.gov.pay.connector.agreement.exception.RecurringCardPaymentsNotAllowedExceptionMapper;
-import uk.gov.pay.connector.agreement.resource.AgreementsApiResource;
-import uk.gov.pay.connector.cardtype.resource.CardTypesResource;
-import uk.gov.pay.connector.charge.exception.ChargeExceptionMapper;
-import uk.gov.pay.connector.charge.exception.ConflictWebApplicationExceptionMapper;
-import uk.gov.pay.connector.charge.exception.GatewayAccountDisabledExceptionMapper;
-import uk.gov.pay.connector.charge.exception.IdempotencyKeyUsedExceptionMapper;
-import uk.gov.pay.connector.charge.exception.IncorrectAuthorisationModeForSavePaymentToAgreementExceptionMapper;
-import uk.gov.pay.connector.charge.exception.InvalidAttributeValueExceptionMapper;
-import uk.gov.pay.connector.charge.exception.MissingMandatoryAttributeExceptionMapper;
-import uk.gov.pay.connector.charge.exception.TelephonePaymentNotificationsNotAllowedExceptionMapper;
-import uk.gov.pay.connector.charge.exception.UnexpectedAttributeExceptionMapper;
-import uk.gov.pay.connector.charge.exception.ZeroAmountNotAllowedForGatewayAccountExceptionMapper;
-import uk.gov.pay.connector.charge.exception.motoapi.AuthorisationApiNotAllowedForGatewayAccountExceptionMapper;
-import uk.gov.pay.connector.charge.exception.motoapi.AuthorisationErrorExceptionMapper;
-import uk.gov.pay.connector.charge.exception.motoapi.AuthorisationRejectedExceptionMapper;
-import uk.gov.pay.connector.charge.exception.motoapi.AuthorisationTimedOutExceptionMapper;
-import uk.gov.pay.connector.charge.exception.motoapi.CardNumberRejectedExceptionMapper;
-import uk.gov.pay.connector.charge.exception.motoapi.OneTimeTokenAlreadyUsedExceptionMapper;
-import uk.gov.pay.connector.charge.exception.motoapi.OneTimeTokenInvalidExceptionMapper;
-import uk.gov.pay.connector.charge.exception.motoapi.OneTimeTokenUsageInvalidForMotoApiExceptionMapper;
-import uk.gov.pay.connector.charge.resource.ChargesApiResource;
-import uk.gov.pay.connector.charge.resource.ChargesFrontendResource;
-import uk.gov.pay.connector.charge.resource.GatewayCleanupResource;
-import uk.gov.pay.connector.chargeevent.resource.ChargeEventsResource;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.WebApplicationType;
+import org.springframework.boot.actuate.autoconfigure.web.ManagementContextConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.TypeExcludeFilter;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import uk.gov.pay.connector.app.commands.DatabaseMigrationCommand;
+import uk.gov.pay.connector.app.commands.DependentResourceWaitCommand;
 import uk.gov.pay.connector.command.RenderStateTransitionGraphCommand;
-import uk.gov.pay.connector.common.exception.ConstraintViolationExceptionMapper;
-import uk.gov.pay.connector.common.exception.UnsupportedOperationExceptionMapper;
-import uk.gov.pay.connector.common.exception.ValidationExceptionMapper;
-import uk.gov.pay.connector.events.resource.EmittedEventResource;
-import uk.gov.pay.connector.expunge.resource.ExpungeResource;
-import uk.gov.pay.connector.filters.LoggingMDCRequestFilter;
-import uk.gov.pay.connector.filters.LoggingMDCResponseFilter;
-import uk.gov.pay.connector.filters.SchemeRewriteFilter;
-import uk.gov.pay.connector.gatewayaccount.resource.AdyenAccountResource;
-import uk.gov.pay.connector.gatewayaccount.resource.AdyenAccountSetupResource;
-import uk.gov.pay.connector.gatewayaccount.resource.GatewayAccountResource;
-import uk.gov.pay.connector.gatewayaccount.resource.StripeAccountResource;
-import uk.gov.pay.connector.gatewayaccount.resource.StripeAccountSetupResource;
-import uk.gov.pay.connector.gatewayaccountcredentials.exception.CredentialsNotFoundBadRequestExceptionMapper;
-import uk.gov.pay.connector.gatewayaccountcredentials.exception.MissingCredentialsForRecurringPaymentExceptionMapper;
-import uk.gov.pay.connector.gatewayaccountcredentials.exception.NoCredentialsExistForProviderExceptionMapper;
-import uk.gov.pay.connector.gatewayaccountcredentials.exception.NoCredentialsInUsableStateExceptionMapper;
-import uk.gov.pay.connector.gatewayaccountcredentials.resource.GatewayAccountCredentialsResource;
-import uk.gov.pay.connector.healthcheck.CardExecutorServiceHealthCheck;
-import uk.gov.pay.connector.healthcheck.Ping;
-import uk.gov.pay.connector.healthcheck.SQSHealthCheck;
-import uk.gov.pay.connector.healthcheck.resource.HealthCheckResource;
-import uk.gov.pay.connector.paymentprocessor.resource.CardResource;
-import uk.gov.pay.connector.paymentprocessor.resource.DiscrepancyResource;
-import uk.gov.pay.connector.queue.managed.CaptureMessageReceiver;
-import uk.gov.pay.connector.queue.managed.PayoutReconcileMessageReceiver;
-import uk.gov.pay.connector.queue.managed.StateTransitionMessageReceiver;
-import uk.gov.pay.connector.queue.managed.TaskQueueMessageReceiver;
-import uk.gov.pay.connector.refund.resource.RefundReversalResource;
-import uk.gov.pay.connector.refund.resource.RefundsResource;
-import uk.gov.pay.connector.tasks.resource.ParityCheckerResource;
-import uk.gov.pay.connector.token.exception.TokenNotFoundExceptionMapper;
-import uk.gov.pay.connector.token.resource.SecurityTokensResource;
-import uk.gov.pay.connector.usernotification.resource.EmailNotificationResource;
-import uk.gov.pay.connector.util.DependentResourceWaitCommand;
-import uk.gov.pay.connector.util.JsonMappingExceptionMapper;
-import uk.gov.pay.connector.webhook.resource.NotificationResource;
-import uk.gov.service.payments.commons.utils.healthchecks.DatabaseHealthCheck;
-import uk.gov.service.payments.commons.utils.metrics.DatabaseMetricsService;
-import uk.gov.service.payments.logging.GovUkPayDropwizardRequestJsonLogLayoutFactory;
-import uk.gov.service.payments.logging.LoggingFilter;
-import uk.gov.service.payments.logging.LogstashConsoleAppenderFactory;
+import uk.gov.pay.connector.app.config.ServerConfig;
 
-import java.util.concurrent.TimeUnit;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.util.List;
+import java.util.Map;
 
-import static jakarta.servlet.DispatcherType.REQUEST;
-import static java.util.EnumSet.of;
+/**
+ * Entry point of the connector. The first arguments name the command to run, as they always have: {@code server} runs
+ * the service, {@code db migrate} applies the Liquibase change log, {@code waitOnDependencies} waits until the
+ * database accepts connections and {@code render-state-transition-graph} writes the payment state transitions as a
+ * graphviz file. A trailing configuration file argument is accepted and ignored: the settings are those of
+ * {@code config/config.yaml} on the class path, with the environment variables it names (see
+ * {@link ConfigurationLoader}). Errors without an entity are rendered by the servlet container itself, so Spring
+ * Boot's error controller stays off; migrations run only on request.
+ */
+@SpringBootConfiguration
+@EnableAutoConfiguration(exclude = {ErrorMvcAutoConfiguration.class, LiquibaseAutoConfiguration.class,
+        DataSourceAutoConfiguration.class, FreeMarkerAutoConfiguration.class})
+@ComponentScan(basePackages = "uk.gov.pay.connector", excludeFilters = {
+        @ComponentScan.Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
+        // The commands run in contexts of their own.
+        @ComponentScan.Filter(type = FilterType.REGEX, pattern = "uk\\.gov\\.pay\\.connector\\.(app\\.commands|command)\\.[A-Za-z]*Command"),
+        // The admin port's beans belong to the management context only.
+        @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = ManagementContextConfiguration.class)})
+public class ConnectorApp {
 
-public class ConnectorApp extends Application<ConnectorConfiguration> {
+    private static final String USAGE = "usage: java -jar pay-connector-0.1-SNAPSHOT-allinone.jar "
+            + "{server | db migrate | waitOnDependencies | render-state-transition-graph} [config file]";
 
-    private static final Logger logger = LoggerFactory.getLogger(ConnectorApp.class);
-
-    public static final boolean NON_STRICT_VARIABLE_SUBSTITUTOR = false;
-    
-    private static final int METRICS_SENDING_PERIOD_SECONDS = 5;
-
-    @Override
-    public void initialize(Bootstrap<ConnectorConfiguration> bootstrap) {
-        bootstrap.setConfigurationSourceProvider(
-                new SubstitutingSourceProvider(bootstrap.getConfigurationSourceProvider(),
-                        new EnvironmentVariableSubstitutor(NON_STRICT_VARIABLE_SUBSTITUTOR)
-                )
-        );
-
-        bootstrap.addBundle(new MigrationsBundle<ConnectorConfiguration>() {
-            @Override
-            public DataSourceFactory getDataSourceFactory(ConnectorConfiguration configuration) {
-                return configuration.getDataSourceFactory();
-            }
-        });
-
-        bootstrap.addCommand(new DependentResourceWaitCommand());
-        bootstrap.addCommand(new RenderStateTransitionGraphCommand());
-        bootstrap.getObjectMapper().getSubtypeResolver().registerSubtypes(LogstashConsoleAppenderFactory.class);
-        bootstrap.getObjectMapper().getSubtypeResolver().registerSubtypes(SentryAppenderFactory.class);
-        bootstrap.getObjectMapper().getSubtypeResolver().registerSubtypes(GovUkPayDropwizardRequestJsonLogLayoutFactory.class);
-    }
-
-    @Override
-    public void run(ConnectorConfiguration configuration, Environment environment) {
-        final Injector injector = createInjector(environment, getModule(configuration, environment));
-
-        injector.getInstance(PersistenceServiceInitialiser.class);
-
-        initialiseMetrics(configuration, environment);
-
-        environment.jersey().register(new ConstraintViolationExceptionMapper());
-        environment.jersey().register(new ValidationExceptionMapper());
-        environment.jersey().register(new UnsupportedOperationExceptionMapper());
-        environment.jersey().register(new LoggingExceptionMapper<>() {
-        });
-        environment.jersey().register(new JsonProcessingExceptionMapper());
-        environment.jersey().register(new EarlyEofExceptionMapper());
-        environment.jersey().register(new JsonMappingExceptionMapper());
-        environment.jersey().register(new JsonMappingExceptionMapper());
-        environment.jersey().register(new ZeroAmountNotAllowedForGatewayAccountExceptionMapper());
-        environment.jersey().register(new ConflictWebApplicationExceptionMapper());
-        environment.jersey().register(new ChargeExceptionMapper());
-        environment.jersey().register(new IdempotencyKeyUsedExceptionMapper());
-        environment.jersey().register(new TelephonePaymentNotificationsNotAllowedExceptionMapper());
-        environment.jersey().register(new NoCredentialsExistForProviderExceptionMapper());
-        environment.jersey().register(new CredentialsNotFoundBadRequestExceptionMapper());
-        environment.jersey().register(new NoCredentialsInUsableStateExceptionMapper());
-        environment.jersey().register(new IncorrectAuthorisationModeForSavePaymentToAgreementExceptionMapper());
-        environment.jersey().register(new AgreementNotFoundExceptionMapper());
-        environment.jersey().register(new OneTimeTokenInvalidExceptionMapper());
-        environment.jersey().register(new OneTimeTokenAlreadyUsedExceptionMapper());
-        environment.jersey().register(new OneTimeTokenUsageInvalidForMotoApiExceptionMapper());
-        environment.jersey().register(new InvalidAttributeValueExceptionMapper());
-        environment.jersey().register(new MissingMandatoryAttributeExceptionMapper());
-        environment.jersey().register(new UnexpectedAttributeExceptionMapper());
-        environment.jersey().register(new CardNumberRejectedExceptionMapper());
-        environment.jersey().register(new AuthorisationApiNotAllowedForGatewayAccountExceptionMapper());
-        environment.jersey().register(new AuthorisationErrorExceptionMapper());
-        environment.jersey().register(new AuthorisationRejectedExceptionMapper());
-        environment.jersey().register(new AuthorisationTimedOutExceptionMapper());
-        environment.jersey().register(new GatewayAccountDisabledExceptionMapper());
-        environment.jersey().register(new RecurringCardPaymentsNotAllowedExceptionMapper());
-        environment.jersey().register(new MissingCredentialsForRecurringPaymentExceptionMapper());
-        environment.jersey().register(new TokenNotFoundExceptionMapper());
-
-        environment.jersey().register(injector.getInstance(GatewayAccountResource.class));
-        environment.jersey().register(injector.getInstance(StripeAccountSetupResource.class));
-        environment.jersey().register(injector.getInstance(StripeAccountResource.class));
-        environment.jersey().register(injector.getInstance(ChargeEventsResource.class));
-        environment.jersey().register(injector.getInstance(SecurityTokensResource.class));
-        environment.jersey().register(injector.getInstance(ChargesApiResource.class));
-        environment.jersey().register(injector.getInstance(ExpungeResource.class));
-        environment.jersey().register(injector.getInstance(ChargesFrontendResource.class));
-        environment.jersey().register(injector.getInstance(RefundsResource.class));
-        environment.jersey().register(injector.getInstance(RefundReversalResource.class));
-        environment.jersey().register(injector.getInstance(NotificationResource.class));
-        environment.jersey().register(injector.getInstance(CardResource.class));
-        environment.jersey().register(injector.getInstance(CardTypesResource.class));
-        environment.jersey().register(injector.getInstance(HealthCheckResource.class));
-        environment.jersey().register(injector.getInstance(EmailNotificationResource.class));
-        environment.jersey().register(injector.getInstance(SchemeRewriteFilter.class));
-        environment.jersey().register(injector.getInstance(DiscrepancyResource.class));
-        environment.jersey().register(injector.getInstance(EmittedEventResource.class));
-        environment.jersey().register(injector.getInstance(GatewayAccountCredentialsResource.class));
-        environment.jersey().register(injector.getInstance(GatewayCleanupResource.class));
-        environment.jersey().register(injector.getInstance(ParityCheckerResource.class));
-        environment.jersey().register(injector.getInstance(LoggingMDCRequestFilter.class));
-        environment.jersey().register(injector.getInstance(LoggingMDCResponseFilter.class));
-        environment.jersey().register(injector.getInstance(AgreementsApiResource.class));
-        environment.jersey().register(injector.getInstance(AdyenAccountResource.class));
-        environment.jersey().register(injector.getInstance(AdyenAccountSetupResource.class));
-
-        if (configuration.getCaptureProcessConfig().getBackgroundProcessingEnabled()) {
-            setupSchedulers(environment, injector);
+    public static void main(String[] args) {
+        List<String> arguments = List.of(args);
+        if (startsWith(arguments, "server")) {
+            run(ConnectorApp.class, WebApplicationType.SERVLET);
+        } else if (startsWith(arguments, "db", "migrate")) {
+            exit(run(DatabaseMigrationCommand.class, WebApplicationType.NONE));
+        } else if (startsWith(arguments, "waitOnDependencies")) {
+            exit(run(DependentResourceWaitCommand.class, WebApplicationType.NONE));
+        } else if (startsWith(arguments, "render-state-transition-graph")) {
+            exit(run(RenderStateTransitionGraphCommand.class, WebApplicationType.NONE));
+        } else if (arguments.isEmpty()) {
+            System.out.println(USAGE);
+        } else {
+            System.err.println(USAGE);
+            System.exit(1);
         }
-        environment.lifecycle().manage(injector.getInstance(PayoutReconcileMessageReceiver.class));
-        environment.lifecycle().manage(injector.getInstance(TaskQueueMessageReceiver.class));
-
-        environment.servlets().addFilter("LoggingFilter", injector.getInstance(LoggingFilter.class))
-                .addMappingForUrlPatterns(of(REQUEST), true, "/v1/*");
-
-        environment.healthChecks().register("ping", new Ping());
-        environment.healthChecks().register("database", new DatabaseHealthCheck(configuration.getDataSourceFactory()));
-        environment.healthChecks().register("cardExecutorService", injector.getInstance(CardExecutorServiceHealthCheck.class));
-        environment.healthChecks().register("sqsQueue", injector.getInstance(SQSHealthCheck.class));
     }
 
-    protected ConnectorModule getModule(ConnectorConfiguration configuration, Environment environment) {
-        return new ConnectorModule(configuration, environment);
+    /**
+     * Starts a context for the given configuration class with the service's settings as a bean and the ports and
+     * addresses they name.
+     */
+    public static ConfigurableApplicationContext run(Class<?> source, WebApplicationType webApplicationType) {
+        ConnectorConfiguration configuration = ConfigurationLoader.load();
+        ServerConfig.Connector application = configuration.getServerConfig().getApplicationConnector();
+        ServerConfig.Connector admin = configuration.getServerConfig().getAdminConnector();
+        return new SpringApplicationBuilder(source)
+                .web(webApplicationType)
+                .properties(Map.of(
+                        "server.port", application.getPort(),
+                        "server.address", application.getBindHost(),
+                        "management.server.port", adminPort(application, admin),
+                        "management.server.address", admin.getBindHost()))
+                .initializers(context -> context.getBeanFactory()
+                        .registerSingleton("connectorConfiguration", configuration))
+                .run();
     }
 
-    private Injector createInjector(Environment environment, Module module) {
-        final Injector injector = Guice.createInjector(module);
-        environment.lifecycle().manage(InjectorLookup.registerInjector(this, injector));
-        return injector;
+    /**
+     * The admin port; when it is to be chosen at random (0) like the application port, a free port is chosen now, as
+     * the two always are distinct servers.
+     */
+    private static int adminPort(ServerConfig.Connector application, ServerConfig.Connector admin) {
+        if (admin.getPort() != 0 || application.getPort() != 0) {
+            return admin.getPort();
+        }
+        try (ServerSocket socket = new ServerSocket(0, 1, InetAddress.getByName(admin.getBindHost()))) {
+            return socket.getLocalPort();
+        } catch (IOException e) {
+            throw new UncheckedIOException("No free port for the admin server", e);
+        }
     }
 
-    private void initialiseMetrics(ConnectorConfiguration configuration, Environment environment) {
-        DatabaseMetricsService metricsService = new DatabaseMetricsService(configuration.getDataSourceFactory(), environment.metrics(), "connector");
-
-        environment
-                .lifecycle()
-                .scheduledExecutorService("metricscollector")
-                .threads(1)
-                .build()
-                .scheduleAtFixedRate(metricsService::updateMetricData, 0, METRICS_SENDING_PERIOD_SECONDS, TimeUnit.SECONDS);
-
-        CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
-        collectorRegistry.register(new DropwizardExports(environment.metrics()));
-        environment.admin().addServlet("prometheusMetrics", new MetricsServlet(collectorRegistry.defaultRegistry)).addMapping("/metrics");
+    private static boolean startsWith(List<String> arguments, String... command) {
+        return arguments.size() >= command.length && arguments.subList(0, command.length).equals(List.of(command));
     }
 
-    public static void main(String[] args) throws Exception {
-        new ConnectorApp().run(args);
-    }
-
-    private void setupSchedulers(Environment environment, Injector injector) {
-        environment.lifecycle().manage(injector.getInstance(CaptureMessageReceiver.class));
-        environment.lifecycle().manage(injector.getInstance(StateTransitionMessageReceiver.class));
+    private static void exit(ConfigurableApplicationContext context) {
+        System.exit(SpringApplication.exit(context));
     }
 }

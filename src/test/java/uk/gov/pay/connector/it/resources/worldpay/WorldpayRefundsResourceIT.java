@@ -15,8 +15,8 @@ import uk.gov.service.payments.commons.model.ErrorIdentifier;
 import java.util.List;
 import java.util.Map;
 
-import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
-import static jakarta.ws.rs.core.Response.Status.OK;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.OK;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -106,7 +106,7 @@ public class WorldpayRefundsResourceIT {
 
                 ValidatableResponse validatableResponse = getRefundFor(
                         defaultTestAccount.getAccountId(), defaultTestCharge.getExternalChargeId(), testRefund.getExternalRefundId());
-                String refundId = assertRefundResponseWith(testRefund.getAmount(), validatableResponse, OK.getStatusCode());
+                String refundId = assertRefundResponseWith(testRefund.getAmount(), validatableResponse, OK.value());
 
 
                 List<Map<String, Object>> refundsFoundByChargeExternalId = (app.getDatabaseTestHelper()).getRefundsByChargeExternalId(defaultTestCharge.getExternalChargeId());
@@ -128,7 +128,7 @@ public class WorldpayRefundsResourceIT {
                 ValidatableResponse validatableResponse = getRefundFor(
                         nonExistentAccountId, defaultTestCharge.getExternalChargeId(), testRefund.getExternalRefundId());
 
-                validatableResponse.statusCode(NOT_FOUND.getStatusCode())
+                validatableResponse.statusCode(NOT_FOUND.value())
                         .body("message", contains(format("Charge with id [%s] not found.", defaultTestCharge.getExternalChargeId())))
                         .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
             }
@@ -147,7 +147,7 @@ public class WorldpayRefundsResourceIT {
                 ValidatableResponse validatableResponse = getRefundFor(
                         defaultTestAccount.getAccountId(), nonExistentChargeId, testRefund.getExternalRefundId());
 
-                validatableResponse.statusCode(NOT_FOUND.getStatusCode())
+                validatableResponse.statusCode(NOT_FOUND.value())
                         .body("message", contains(format("Charge with id [%s] not found.", nonExistentChargeId)))
                         .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
             }
@@ -166,7 +166,7 @@ public class WorldpayRefundsResourceIT {
                 ValidatableResponse validatableResponse = getRefundFor(
                         defaultTestAccount.getAccountId(), defaultTestCharge.getExternalChargeId(), nonExistentRefundId);
 
-                validatableResponse.statusCode(NOT_FOUND.getStatusCode())
+                validatableResponse.statusCode(NOT_FOUND.value())
                         .body("message", contains(format("Refund with id [%s] not found.", nonExistentRefundId)))
                         .body("error_identifier", is(ErrorIdentifier.GENERIC.toString()));
             }

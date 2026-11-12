@@ -9,7 +9,7 @@ import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
-import static jakarta.ws.rs.core.Response.Status.OK;
+import static org.springframework.http.HttpStatus.OK;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -58,7 +58,7 @@ public class GatewayCleanupResourceIT {
         given().port(app.getLocalPort())
                 .post("/v1/tasks/gateway-cleanup-sweep?limit=10")
                 .then()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("cleanup-success", is(3))
                 .body("cleanup-failed", is(0));
@@ -96,7 +96,7 @@ public class GatewayCleanupResourceIT {
         given().port(app.getLocalPort())
                 .post("/v1/tasks/gateway-cleanup-sweep?limit=2")
                 .then()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("cleanup-success", is(2))
                 .body("cleanup-failed", is(0));

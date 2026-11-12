@@ -2,7 +2,7 @@ package uk.gov.pay.connector.charge;
 
 import com.codahale.metrics.CachedGauge;
 import com.codahale.metrics.MetricRegistry;
-import io.dropwizard.core.setup.Environment;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.app.CaptureProcessConfig;
@@ -11,7 +11,9 @@ import uk.gov.pay.connector.charge.service.ChargeService;
 
 import jakarta.inject.Inject;
 import java.util.concurrent.TimeUnit;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ChargesAwaitingCaptureMetricEmitter {
 
     private static final Logger logger = LoggerFactory.getLogger(ChargesAwaitingCaptureMetricEmitter.class);
@@ -22,14 +24,14 @@ public class ChargesAwaitingCaptureMetricEmitter {
 
     @Inject
     public ChargesAwaitingCaptureMetricEmitter(
-            Environment environment,
+            MetricRegistry metricRegistry,
             ConnectorConfiguration connectorConfiguration,
             ChargeService chargeService) {
 
         this.chargeService = chargeService;
         this.captureConfig = connectorConfiguration.getCaptureProcessConfig();
 
-        metricRegistry = environment.metrics();
+        this.metricRegistry = metricRegistry;
     }
 
     public void register() {

@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.gateway.stripe;
 
 import com.stripe.exception.StripeException;
-import io.dropwizard.core.setup.Environment;
+import com.codahale.metrics.MetricRegistry;
 import jakarta.inject.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,12 +60,14 @@ import jakarta.inject.Singleton;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
 import static java.lang.String.format;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.STRIPE;
 import static uk.gov.pay.connector.gateway.stripe.StripeAuthorisationResponse.STRIPE_RECURRING_AUTH_TOKEN_CUSTOMER_ID_KEY;
 
 @Singleton
+@Component
 public class StripePaymentProvider implements PaymentProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(StripePaymentProvider.class);
@@ -88,12 +90,12 @@ public class StripePaymentProvider implements PaymentProvider {
     public StripePaymentProvider(GatewayClientFactory gatewayClientFactory,
                                  ConnectorConfiguration configuration,
                                  JsonObjectMapper jsonObjectMapper,
-                                 Environment environment,
+                                 MetricRegistry metricRegistry,
                                  @Named("DefaultRefundEntityFactory") RefundEntityFactory refundEntityFactory,
                                  StripeSdkClient stripeSDKClient) {
         this.stripeGatewayConfig = configuration.getStripeConfig();
         this.stripeSDKClient = stripeSDKClient;
-        this.client = gatewayClientFactory.createGatewayClient(STRIPE, environment.metrics());
+        this.client = gatewayClientFactory.createGatewayClient(STRIPE, metricRegistry);
         this.jsonObjectMapper = jsonObjectMapper;
         this.externalRefundAvailabilityCalculator = new DefaultExternalRefundAvailabilityCalculator();
         stripeCaptureHandler = new StripeCaptureHandler(client, stripeGatewayConfig, jsonObjectMapper);

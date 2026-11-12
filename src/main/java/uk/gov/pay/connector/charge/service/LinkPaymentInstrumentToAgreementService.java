@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.charge.service;
 
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,11 +17,13 @@ import uk.gov.pay.connector.queue.tasks.TaskQueueService;
 import java.time.InstantSource;
 import java.util.List;
 import java.util.Map;
+import org.springframework.stereotype.Service;
 
 import static java.util.function.Predicate.not;
 import static uk.gov.service.payments.logging.LoggingKeys.AGREEMENT_EXTERNAL_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_INSTRUMENT_EXTERNAL_ID;
 
+@Service
 public class LinkPaymentInstrumentToAgreementService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LinkPaymentInstrumentToAgreementService.class);

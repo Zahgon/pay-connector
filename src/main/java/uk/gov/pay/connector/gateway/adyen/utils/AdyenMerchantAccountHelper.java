@@ -3,7 +3,9 @@ package uk.gov.pay.connector.gateway.adyen.utils;
 import jakarta.inject.Inject;
 import uk.gov.pay.connector.app.ConnectorConfiguration;
 import uk.gov.pay.connector.gatewayaccount.model.GatewayAccountEntity;
+import org.springframework.stereotype.Component;
 
+@Component
 public class AdyenMerchantAccountHelper {
 
     private final ConnectorConfiguration configuration;

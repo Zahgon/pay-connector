@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.springframework.stereotype.Component;
 
 import static java.lang.String.format;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.ADYEN;
@@ -25,6 +26,7 @@ import static uk.gov.pay.connector.gatewayaccount.model.GatewayAccountCredential
 import static uk.gov.pay.connector.gatewayaccountcredentials.model.GatewayAccountCredentialState.VERIFIED_WITH_LIVE_PAYMENT;
 import static uk.gov.service.payments.commons.api.validation.JsonPatchRequestValidator.throwIfValueNotString;
 
+@Component
 public class GatewayAccountCredentialsRequestValidator {
 
     private static final Pattern WORLDPAY_MERCHANT_ID_PATTERN = Pattern.compile("[0-9a-f]{15}");

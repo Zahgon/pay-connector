@@ -2,7 +2,7 @@ package uk.gov.pay.connector.wallets.applepay;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
+import jakarta.inject.Inject;
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,10 +33,12 @@ import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.temporal.ChronoUnit.DAYS;
 
+@Component
 public class ApplePayDecrypter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplePayDecrypter.class);

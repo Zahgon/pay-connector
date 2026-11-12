@@ -1,16 +1,13 @@
 package uk.gov.pay.connector.gateway.worldpay;
 
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.springframework.http.HttpHeaders;
+import uk.gov.pay.connector.util.HttpClientStubs;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import io.github.netmikey.logunit.api.LogCapturer;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.client.Invocation;
-import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.NewCookie;
-import jakarta.ws.rs.core.Response;
+import org.springframework.http.MediaType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -182,7 +179,7 @@ class WorldpayAuthoriseHandlerTest {
                 worldpayAuthoriseRequest)).thenReturn(worldpayRequestBody);
 
         GatewayOrder gatewayOrder = new GatewayOrder(OrderRequestType.AUTHORISE, worldpayRequestBody,
-                MediaType.APPLICATION_XML_TYPE);
+                MediaType.APPLICATION_XML);
 
         Map<String, String> headers = Map.of("Authorization",
                 "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes(UTF_8)));
@@ -934,25 +931,25 @@ class WorldpayAuthoriseHandlerTest {
 
     @Test
     void should_send_successfully_an_order_for_merchant() {
-        Client mockClient = mockWorldpaySuccessfulOrderSubmitResponse();
+        CloseableHttpClient mockClient = mockWorldpaySuccessfulOrderSubmitResponse();
 
-        var handlerWithRealJerseyClient = new WorldpayAuthoriseHandler(createGatewayClient(mockClient), GATEWAY_URL_MAP,
+        var handlerWithRealGatewayClient = new WorldpayAuthoriseHandler(createGatewayClient(mockClient), GATEWAY_URL_MAP,
                 new AcceptLanguageHeaderParser(), worldpayRequestTemplateBuilder);
 
-        GatewayResponse<WorldpayOrderStatusResponse> response = handlerWithRealJerseyClient.authorise(getCardAuthorisationRequest(chargeEntityFixture.build()), DO_NOT_SEND_EXEMPTION_REQUEST);
+        GatewayResponse<WorldpayOrderStatusResponse> response = handlerWithRealGatewayClient.authorise(getCardAuthorisationRequest(chargeEntityFixture.build()), DO_NOT_SEND_EXEMPTION_REQUEST);
         assertTrue(response.getBaseResponse().isPresent());
         assertTrue(response.getSessionIdentifier().isPresent());
     }
 
     @Test
     void should_error_if_worldpay_returns_401() {
-        Client mockClient = mockWorldpayResponse(401, load(WORLDPAY_AUTHORISATION_PARES_PARSE_ERROR_RESPONSE));
+        CloseableHttpClient mockClient = mockWorldpayResponse(401, load(WORLDPAY_AUTHORISATION_PARES_PARSE_ERROR_RESPONSE));
 
-        var handlerWithRealJerseyClient = new WorldpayAuthoriseHandler(createGatewayClient(mockClient), GATEWAY_URL_MAP,
+        var handlerWithRealGatewayClient = new WorldpayAuthoriseHandler(createGatewayClient(mockClient), GATEWAY_URL_MAP,
                 new AcceptLanguageHeaderParser(), worldpayRequestTemplateBuilder);
 
         GatewayResponse<WorldpayOrderStatusResponse> response =
-                handlerWithRealJerseyClient.authorise(getCardAuthorisationRequest(chargeEntityFixture.build()), DO_NOT_SEND_EXEMPTION_REQUEST);
+                handlerWithRealGatewayClient.authorise(getCardAuthorisationRequest(chargeEntityFixture.build()), DO_NOT_SEND_EXEMPTION_REQUEST);
         assertTrue(response.getGatewayError().isPresent());
         assertGatewayErrorEquals(response.getGatewayError().get(),
                 new GatewayError("Non-success HTTP status code 401 from gateway", ErrorType.GATEWAY_ERROR));
@@ -960,13 +957,13 @@ class WorldpayAuthoriseHandlerTest {
 
     @Test
     void should_error_if_worldpay_returns_500() {
-        Client mockClient = mockWorldpayResponse(500, load(WORLDPAY_AUTHORISATION_PARES_PARSE_ERROR_RESPONSE));
+        CloseableHttpClient mockClient = mockWorldpayResponse(500, load(WORLDPAY_AUTHORISATION_PARES_PARSE_ERROR_RESPONSE));
 
-        var handlerWithRealJerseyClient = new WorldpayAuthoriseHandler(createGatewayClient(mockClient), GATEWAY_URL_MAP,
+        var handlerWithRealGatewayClient = new WorldpayAuthoriseHandler(createGatewayClient(mockClient), GATEWAY_URL_MAP,
                 new AcceptLanguageHeaderParser(), worldpayRequestTemplateBuilder);
 
         GatewayResponse<WorldpayOrderStatusResponse> response =
-                handlerWithRealJerseyClient.authorise(getCardAuthorisationRequest(chargeEntityFixture.build()), DO_NOT_SEND_EXEMPTION_REQUEST);
+                handlerWithRealGatewayClient.authorise(getCardAuthorisationRequest(chargeEntityFixture.build()), DO_NOT_SEND_EXEMPTION_REQUEST);
         assertTrue(response.getGatewayError().isPresent());
         assertGatewayErrorEquals(response.getGatewayError().get(),
                 new GatewayError("Non-success HTTP status code 500 from gateway", ErrorType.GATEWAY_ERROR));
@@ -1091,10 +1088,10 @@ class WorldpayAuthoriseHandlerTest {
         assertThat(actual.getErrorType(), is(expected.getErrorType()));
     }
 
-    private GatewayClient createGatewayClient(Client mockClient) {
+    private GatewayClient createGatewayClient(CloseableHttpClient mockClient) {
         ClientFactory mockClientFactory = mock(ClientFactory.class);
         GatewayClientFactory gatewayClientFactory = new GatewayClientFactory(mockClientFactory);
-        when(mockClientFactory.createWithDropwizardClient(eq(PaymentGatewayName.WORLDPAY), any(GatewayOperation.class), any(MetricRegistry.class)))
+        when(mockClientFactory.createHttpClient(eq(PaymentGatewayName.WORLDPAY), any(GatewayOperation.class), any(MetricRegistry.class)))
                 .thenReturn(mockClient);
         MetricRegistry mockMetricRegistry = mock(MetricRegistry.class);
         lenient().when(mockMetricRegistry.counter(anyString())).thenReturn(mock(Counter.class));
@@ -1103,32 +1100,14 @@ class WorldpayAuthoriseHandlerTest {
         return gatewayClientFactory.createGatewayClient(WORLDPAY, AUTHORISE, mockMetricRegistry);
     }
 
-    private Client mockWorldpaySuccessfulOrderSubmitResponse() {
+    private CloseableHttpClient mockWorldpaySuccessfulOrderSubmitResponse() {
         String successAuthoriseResponse = load(WORLDPAY_AUTHORISATION_SUCCESS_RESPONSE);
         return mockWorldpayResponse(200, successAuthoriseResponse);
     }
 
-    private Client mockWorldpayResponse(int httpStatus, String responsePayload) {
-        WebTarget mockTarget = mock(WebTarget.class);
-        Client mockClient = mock(Client.class);
-        when(mockClient.target(any(URI.class))).thenReturn(mockTarget);
-        Invocation.Builder mockBuilder = mock(Invocation.Builder.class);
-        when(mockTarget.request()).thenReturn(mockBuilder);
-        when(mockBuilder.header(anyString(), anyString())).thenReturn(mockBuilder);
-
-        Map<String, NewCookie> responseCookies =
-                Collections.singletonMap(
-                        WORLDPAY_MACHINE_COOKIE_NAME,
-                        new NewCookie.Builder(WORLDPAY_MACHINE_COOKIE_NAME).value("value-from-worldpay").build()
-                );
-
-        Response response = mock(Response.class);
-        when(response.readEntity(String.class)).thenReturn(responsePayload);
-        when(mockBuilder.post(any(Entity.class))).thenReturn(response);
-        when(response.getCookies()).thenReturn(responseCookies);
-        when(response.getStatus()).thenReturn(httpStatus);
-
-        return mockClient;
+    private CloseableHttpClient mockWorldpayResponse(int httpStatus, String responsePayload) {
+        return HttpClientStubs.respondingWith(httpStatus, responsePayload,
+                Map.of(HttpHeaders.SET_COOKIE, WORLDPAY_MACHINE_COOKIE_NAME + "=value-from-worldpay"));
     }
 
     private GatewayAccountEntity aServiceAccount() {

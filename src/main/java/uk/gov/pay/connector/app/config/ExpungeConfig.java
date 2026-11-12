@@ -1,12 +1,11 @@
 package uk.gov.pay.connector.app.config;
 
-import io.dropwizard.core.Configuration;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
-public class ExpungeConfig extends Configuration {
+public class ExpungeConfig {
 
     @Valid
     @NotNull

@@ -10,7 +10,7 @@ import uk.gov.pay.connector.gateway.GatewayException;
 import uk.gov.pay.connector.gatewayaccount.model.GatewayAccountEntity;
 import uk.gov.pay.connector.gatewayaccountcredentials.model.GatewayAccountCredentialsEntity;
 import uk.gov.pay.connector.gatewayaccountcredentials.model.GatewayAccountCredentialsEntityFixture;
-import uk.gov.pay.connector.rules.DropwizardAppWithPostgresRule;
+import uk.gov.pay.connector.rules.AppWithPostgresRule;
 import uk.gov.pay.connector.rules.StripeMockClient;
 import uk.gov.service.payments.commons.model.AuthorisationMode;
 
@@ -27,7 +27,7 @@ import static uk.gov.pay.connector.gatewayaccount.model.GatewayAccountEntityFixt
 public class StripePaymentProviderIT {
 
     @ClassRule
-    public static DropwizardAppWithPostgresRule app = new DropwizardAppWithPostgresRule();
+    public static AppWithPostgresRule app = new AppWithPostgresRule();
 
     @ClassRule
     public static WireMockRule wireMockRule = new WireMockRule(app.getWireMockPort());
@@ -39,7 +39,7 @@ public class StripePaymentProviderIT {
 
     @Before
     public void setUp() throws Exception {
-        stripePaymentProvider = app.getInstanceFromGuiceContainer(StripePaymentProvider.class);
+        stripePaymentProvider = app.getBean(StripePaymentProvider.class);
         stripeMockClient = new StripeMockClient(wireMockRule);
         gatewayAccountCredentialsEntity = GatewayAccountCredentialsEntityFixture
                 .aGatewayAccountCredentialsEntity()

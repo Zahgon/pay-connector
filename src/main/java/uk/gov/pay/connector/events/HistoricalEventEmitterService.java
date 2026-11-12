@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.events;
 
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.inject.Inject;
 import org.apache.commons.lang3.RandomUtils;
 import org.slf4j.Logger;
@@ -25,10 +25,12 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
+import org.springframework.stereotype.Service;
 
 import static uk.gov.service.payments.logging.LoggingKeys.MDC_REQUEST_ID_KEY;
 import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 
+@Service
 public class HistoricalEventEmitterService {
 
     private static final Logger logger = LoggerFactory.getLogger(HistoricalEventEmitterService.class);

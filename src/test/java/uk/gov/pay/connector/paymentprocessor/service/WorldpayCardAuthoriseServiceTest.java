@@ -1,8 +1,8 @@
 package uk.gov.pay.connector.paymentprocessor.service;
 
+import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Counter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.dropwizard.core.setup.Environment;
 import io.github.netmikey.logunit.api.LogCapturer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
@@ -132,9 +132,7 @@ class WorldpayCardAuthoriseServiceTest extends CardServiceTest {
 
     @BeforeEach
     void setup() {
-        Environment environment = mock(Environment.class);
 
-        when(environment.metrics()).thenReturn(mockMetricRegistry);
         when(mockMetricRegistry.counter(anyString())).thenReturn(mock(Counter.class));
 
         charge = createNewChargeWith(1L, ENTERING_CARD_DETAILS);
@@ -155,13 +153,13 @@ class WorldpayCardAuthoriseServiceTest extends CardServiceTest {
         cardAuthorisationService = new CardAuthoriseService(
                 mockedCardTypeDao,
                 mockedProviders,
-                new AuthorisationService(mockExecutorService, environment, mockConfiguration),
+                new AuthorisationService(mockExecutorService, mockMetricRegistry, mockConfiguration),
                 chargeService,
                 mockCardAuthoriseRequestFactory,
                 new AuthorisationLogger(new AuthorisationRequestSummaryStringifier(), new AuthorisationRequestSummaryStructuredLogging(), new AdyenAuthoriseRequestLogGenerator(), new WorldpayAuthoriseRequestLogGenerator()),
                 mockChargeEligibleForCaptureService,
                 mock(PaymentInstrumentEntityToAuthCardDetailsConverter.class),
-                environment);
+                mockMetricRegistry);
 
         mockExecutorServiceWillReturnCompletedResultWithSupplierReturnValue();
 

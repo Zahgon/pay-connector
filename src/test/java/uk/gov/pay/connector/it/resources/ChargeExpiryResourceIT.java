@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.restassured.http.ContentType.JSON;
-import static jakarta.ws.rs.core.Response.Status.OK;
+import static org.springframework.http.HttpStatus.OK;
 import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.util.Arrays.asList;
@@ -70,7 +70,7 @@ public class ChargeExpiryResourceIT {
 
         testBaseExtension.getConnectorRestApiClient()
                 .postChargeExpiryTask()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("expiry-success", is(6))
                 .body("expiry-failed", is(0));
@@ -80,7 +80,7 @@ public class ChargeExpiryResourceIT {
                         .withAccountId(testBaseExtension.getAccountId())
                         .withChargeId(chargeId)
                         .getCharge()
-                        .statusCode(OK.getStatusCode())
+                        .statusCode(OK.value())
                         .contentType(JSON)
                         .body(JSON_CHARGE_KEY, is(chargeId))
                         .body(JSON_STATE_KEY, is(EXPIRED.toExternal().getStatus())));
@@ -131,7 +131,7 @@ public class ChargeExpiryResourceIT {
 
         testBaseExtension.getConnectorRestApiClient()
                 .postChargeExpiryTask()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("expiry-success", is(1))
                 .body("expiry-failed", is(0));
@@ -140,7 +140,7 @@ public class ChargeExpiryResourceIT {
                 .withAccountId(testBaseExtension.getAccountId())
                 .withChargeId(shouldExpireCreatedChargeId)
                 .getCharge()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body(JSON_CHARGE_KEY, is(shouldExpireCreatedChargeId))
                 .body(JSON_STATE_KEY, is(EXPIRED.toExternal().getStatus()));
@@ -176,7 +176,7 @@ public class ChargeExpiryResourceIT {
 
         testBaseExtension.getConnectorRestApiClient()
                 .postChargeExpiryTask()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("expiry-success", is(1))
                 .body("expiry-failed", is(0));
@@ -185,7 +185,7 @@ public class ChargeExpiryResourceIT {
                 .withAccountId(testBaseExtension.getAccountId())
                 .withChargeId(chargeExternalIdForChargeThatShouldBeExpired)
                 .getCharge()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body(JSON_CHARGE_KEY, is(chargeExternalIdForChargeThatShouldBeExpired))
                 .body(JSON_STATE_KEY, is(EXPIRED.toExternal().getStatus()));
@@ -194,7 +194,7 @@ public class ChargeExpiryResourceIT {
                 .withAccountId(testBaseExtension.getAccountId())
                 .withChargeId(chargeExternalIdForChargeThatShouldNotBeExpired)
                 .getCharge()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body(JSON_CHARGE_KEY, is(chargeExternalIdForChargeThatShouldNotBeExpired))
                 .body(JSON_STATE_KEY, is(CREATED.toExternal().getStatus()));
@@ -214,7 +214,7 @@ public class ChargeExpiryResourceIT {
 
         testBaseExtension.getConnectorRestApiClient()
                 .postChargeExpiryTask()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("expiry-success", is(0))
                 .body("expiry-failed", is(1));
@@ -223,7 +223,7 @@ public class ChargeExpiryResourceIT {
                 .withAccountId(testBaseExtension.getAccountId())
                 .withChargeId(extChargeId1)
                 .getCharge()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body(JSON_CHARGE_KEY, is(extChargeId1))
                 .body(JSON_STATE_KEY, is(EXPIRE_CANCEL_FAILED.toExternal().getStatus()));
@@ -256,7 +256,7 @@ public class ChargeExpiryResourceIT {
 
         testBaseExtension.getConnectorRestApiClient()
                 .postChargeExpiryTask()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("expiry-success", is(1))
                 .body("expiry-failed", is(1));
@@ -265,7 +265,7 @@ public class ChargeExpiryResourceIT {
                 .withAccountId(testBaseExtension.getAccountId())
                 .withChargeId(extChargeId1)
                 .getCharge()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body(JSON_CHARGE_KEY, is(extChargeId1))
                 .body(JSON_STATE_KEY, is(EXPIRED.toExternal().getStatus()));
@@ -274,7 +274,7 @@ public class ChargeExpiryResourceIT {
                 .withAccountId(testBaseExtension.getAccountId())
                 .withChargeId(extChargeId2)
                 .getCharge()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body(JSON_CHARGE_KEY, is(extChargeId2))
                 .body(JSON_STATE_KEY, is(EXPIRE_CANCEL_FAILED.toExternal().getStatus()));
@@ -303,7 +303,7 @@ public class ChargeExpiryResourceIT {
 
         testBaseExtension.getConnectorRestApiClient()
                 .postChargeExpiryTask()
-                .statusCode(OK.getStatusCode());
+                .statusCode(OK.value());
 
         chargeCardDetails = app.getDatabaseTestHelper().getChargeCardDetailsByChargeId(chargeId);
         assertThat(chargeCardDetails, is(notNullValue()));
@@ -333,7 +333,7 @@ public class ChargeExpiryResourceIT {
 
         testBaseExtension.getConnectorRestApiClient()
                 .postChargeExpiryTask()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("expiry-success", is(1))
                 .body("expiry-failed", is(0));
@@ -342,7 +342,7 @@ public class ChargeExpiryResourceIT {
                 .withAccountId(testBaseExtension.getAccountId())
                 .withChargeId(chargeToBeExpiredCreatedStatus)
                 .getCharge()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body(JSON_CHARGE_KEY, is(chargeToBeExpiredCreatedStatus))
                 .body(JSON_STATE_KEY, is(EXPIRED.toExternal().getStatus()));
@@ -351,7 +351,7 @@ public class ChargeExpiryResourceIT {
                 .withAccountId(testBaseExtension.getAccountId())
                 .withChargeId(chargeToBeExpiredAwaitingCaptureRequest)
                 .getCharge()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body(JSON_CHARGE_KEY, is(chargeToBeExpiredAwaitingCaptureRequest))
                 .body(JSON_STATE_KEY, is(AWAITING_CAPTURE_REQUEST.toExternal().getStatus()));
@@ -378,7 +378,7 @@ public class ChargeExpiryResourceIT {
 
         testBaseExtension.getConnectorRestApiClient()
                 .postChargeExpiryTask()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body("expiry-success", is(2))
                 .body("expiry-failed", is(0));
@@ -387,7 +387,7 @@ public class ChargeExpiryResourceIT {
                 .withAccountId(testBaseExtension.getAccountId())
                 .withChargeId(chargeToBeExpiredCreatedStatus)
                 .getCharge()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body(JSON_CHARGE_KEY, is(chargeToBeExpiredCreatedStatus))
                 .body(JSON_STATE_KEY, is(EXPIRED.toExternal().getStatus()));
@@ -396,7 +396,7 @@ public class ChargeExpiryResourceIT {
                 .withAccountId(testBaseExtension.getAccountId())
                 .withChargeId(chargeToBeExpiredAwaitingCaptureRequest)
                 .getCharge()
-                .statusCode(OK.getStatusCode())
+                .statusCode(OK.value())
                 .contentType(JSON)
                 .body(JSON_CHARGE_KEY, is(chargeToBeExpiredAwaitingCaptureRequest))
                 .body(JSON_STATE_KEY, is(EXPIRED.toExternal().getStatus()));

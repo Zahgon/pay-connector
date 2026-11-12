@@ -5,7 +5,7 @@ import com.adyen.model.notification.NotificationRequestItem;
 import com.adyen.notification.WebhookHandler;
 import com.adyen.util.HMACValidator;
 import io.github.netmikey.logunit.api.LogCapturer;
-import jakarta.ws.rs.WebApplicationException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -155,7 +155,7 @@ class AdyenNotificationServiceTest {
         verify(mockTaskQueueService).add(any(Task.class));
         assertThat(exception
                 .getResponse()
-                .getStatus(), is(500));
+                .getStatusCode().value(), is(500));
         logs.assertContains("Error sending Adyen webhook notification to task SQS queue");
     }
 
@@ -171,7 +171,7 @@ class AdyenNotificationServiceTest {
         verifyNoInteractions(mockTaskQueueService);
         assertThat(exception
                 .getResponse()
-                .getStatus(), is(500));
+                .getStatusCode().value(), is(500));
         logs.assertContains("Unabled to parse Adyen notification - No recognised field in the payload to process Adyen notification");
     }
 

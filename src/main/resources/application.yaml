@@ -1,0 +1,26 @@
+# Spring Boot's own settings. The service's settings are in config/config.yaml (see ConfigurationLoader), which also
+# names the ports and addresses the application and admin servers listen on.
+server:
+  compression:
+    # entities of at least 256 bytes are gzip-compressed for clients that accept it
+    enabled: true
+    min-response-size: 256
+
+management:
+  endpoints:
+    access:
+      default: none
+    web:
+      exposure:
+        exclude: "*"
+
+spring:
+  main:
+    banner-mode: off
+  web:
+    resources:
+      add-mappings: false
+  servlet:
+    multipart:
+      # request entities are never parsed as multipart forms
+      enabled: false

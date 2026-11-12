@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.queue.tasks.handlers.adyen;
 
 import com.adyen.model.notification.NotificationRequestItem;
-import com.google.inject.Inject;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -12,6 +12,7 @@ import uk.gov.pay.connector.refund.model.domain.RefundStatus;
 import uk.gov.pay.connector.refund.service.RefundService;
 
 import java.util.List;
+import org.springframework.stereotype.Component;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.ADYEN;
@@ -24,6 +25,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.PROVIDER;
 import static uk.gov.service.payments.logging.LoggingKeys.REFUND_EXTERNAL_ID;
 
+@Component
 public class AdyenRefundNotificationHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AdyenRefundNotificationHandler.class);

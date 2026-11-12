@@ -1,11 +1,9 @@
 package uk.gov.pay.connector.it.resources.adyen;
 
-import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import uk.gov.pay.connector.charge.dao.ChargeDao;
 import uk.gov.pay.connector.extension.AppWithPostgresAndSqsExtension;
@@ -25,7 +23,6 @@ import static org.hamcrest.Matchers.is;
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.AUTHORISATION_3DS_REQUIRED;
 import static uk.gov.pay.connector.it.base.ITestBaseExtension.authorise3dsChargeUrlFor;
 
-@ExtendWith(DropwizardExtensionsSupport.class)
 class AdyenCardResourceAuthorise3dsIT {
 
     private static final String REDIRECT_RESULT = "eyJ0cmFuc1N0YXR1cyI6IlkifQ==";
@@ -42,7 +39,7 @@ class AdyenCardResourceAuthorise3dsIT {
 
     @BeforeEach
     void setUp() {
-        chargeDao = app.getInstanceFromGuiceContainer(ChargeDao.class);
+        chargeDao = app.getBean(ChargeDao.class);
     }
 
     private static Stream<Arguments> authorise3dsOutcomeResponses() {

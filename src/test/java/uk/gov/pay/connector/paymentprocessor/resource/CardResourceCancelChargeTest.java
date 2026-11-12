@@ -1,7 +1,9 @@
 package uk.gov.pay.connector.paymentprocessor.resource;
 
-import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
-import io.dropwizard.testing.junit5.ResourceExtension;
+import uk.gov.pay.connector.rules.ResourceTestExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import uk.gov.pay.connector.rules.ResourceTestResponse;
+import uk.gov.pay.connector.rules.ResourceTestEntity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,12 +24,9 @@ import uk.gov.pay.connector.gatewayaccount.service.GatewayAccountService;
 import uk.gov.pay.connector.paymentprocessor.service.Card3dsResponseAuthService;
 import uk.gov.pay.connector.paymentprocessor.service.CardAuthoriseService;
 import uk.gov.pay.connector.paymentprocessor.service.QueryService;
-import uk.gov.pay.connector.rules.ResourceTestRuleWithCustomExceptionMappersBuilder;
 import uk.gov.pay.connector.token.TokenService;
 import uk.gov.pay.connector.wallets.WalletService;
 
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.Response;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -45,7 +44,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.pay.connector.charge.model.domain.ChargeEntityFixture.aValidChargeEntity;
 import static uk.gov.pay.connector.gatewayaccount.model.GatewayAccountEntityFixture.aGatewayAccountEntity;
 
-@ExtendWith(DropwizardExtensionsSupport.class)
 public class CardResourceCancelChargeTest {
 
     private static final ChargeDao mockChargeDao = mock(ChargeDao.class);
@@ -72,8 +70,8 @@ public class CardResourceCancelChargeTest {
     private static final Long A_GATEWAY_ACCOUNT_ID = 1234L;
     private static final GatewayAccountType A_GATEWAY_ACCOUNT_TYPE = GatewayAccountType.TEST;
 
-    private final ResourceExtension cardResource = ResourceTestRuleWithCustomExceptionMappersBuilder.getBuilder()
-            .addResource(new CardResource(
+    @RegisterExtension
+    private final ResourceTestExtension cardResource = ResourceTestExtension.withResources(new CardResource(
                     mockCardAuthoriseService,
                     mockCard3dsResponseAuthService,
                     mockChargeEligibleForCaptureService,
@@ -83,8 +81,7 @@ public class CardResourceCancelChargeTest {
                     mockTokenService,
                     mockMotoApiCardNumberValidationService,
                     mockGatewayAccountService
-            ))
-            .build();
+            ));
     
     @AfterEach
     void teardown() {
@@ -103,10 +100,10 @@ public class CardResourceCancelChargeTest {
             @DisplayName("Should return 404 if charge is not found")
             void chargeNotFound_shouldReturn404() {
                 when(mockChargeDao.findByExternalIdAndGatewayAccount(any(), any())).thenReturn(Optional.empty());
-                try (Response response = cardResource
+                try (ResourceTestResponse response = cardResource
                         .target(String.format("/v1/api/accounts/%d/charges/%s/cancel", A_GATEWAY_ACCOUNT_ID, A_CHARGE_ID))
                         .request()
-                        .post(Entity.json(Collections.emptyMap()))) {
+                        .post(ResourceTestEntity.json(Collections.emptyMap()))) {
 
                     assertErrorResponse(response, 404, format("Charge with id [%s] not found.", A_CHARGE_ID));
                 }
@@ -122,10 +119,10 @@ public class CardResourceCancelChargeTest {
                                 .withStatus(ChargeStatus.CAPTURE_QUEUED)
                                 .build()
                 ));
-                try (Response response = cardResource
+                try (ResourceTestResponse response = cardResource
                         .target(String.format("/v1/api/accounts/%d/charges/%s/cancel", A_GATEWAY_ACCOUNT_ID, A_CHARGE_ID))
                         .request()
-                        .post(Entity.json(Collections.emptyMap()))) {
+                        .post(ResourceTestEntity.json(Collections.emptyMap()))) {
 
                     assertErrorResponse(response, 400, format("Charge not in correct state to be processed, %s", "bad-charge-state"));
                 }
@@ -141,10 +138,10 @@ public class CardResourceCancelChargeTest {
                                 .withStatus(ChargeStatus.CREATED)
                                 .build()
                 ));
-                try (Response response = cardResource
+                try (ResourceTestResponse response = cardResource
                         .target(String.format("/v1/api/accounts/%d/charges/%s/cancel", A_GATEWAY_ACCOUNT_ID, A_CHARGE_ID))
                         .request()
-                        .post(Entity.json(Collections.emptyMap()))) {
+                        .post(ResourceTestEntity.json(Collections.emptyMap()))) {
 
                     assertThat(response.getStatus(), is(204));
                 }
@@ -160,10 +157,10 @@ public class CardResourceCancelChargeTest {
                                 .withStatus(ChargeStatus.SYSTEM_CANCEL_SUBMITTED)
                                 .build()
                 ));
-                try (Response response = cardResource
+                try (ResourceTestResponse response = cardResource
                         .target(String.format("/v1/api/accounts/%d/charges/%s/cancel", A_GATEWAY_ACCOUNT_ID, A_CHARGE_ID))
                         .request()
-                        .post(Entity.json(Collections.emptyMap()))) {
+                        .post(ResourceTestEntity.json(Collections.emptyMap()))) {
 
                     assertThat(response.getStatus(), is(202));
                 }
@@ -185,10 +182,10 @@ public class CardResourceCancelChargeTest {
             @DisplayName("Should return 404 if account is not found")
             void accountNotFound_shouldReturn404() {
                 when(mockGatewayAccountService.getGatewayAccountByServiceIdAndAccountType(any(), any())).thenReturn(Optional.empty());
-                try (Response response = cardResource
+                try (ResourceTestResponse response = cardResource
                         .target(String.format("/v1/api/service/%s/account/%s/charges/%s/cancel", A_SERVICE_ID, A_GATEWAY_ACCOUNT_TYPE, A_CHARGE_ID))
                         .request()
-                        .post(Entity.json(Collections.emptyMap()))) {
+                        .post(ResourceTestEntity.json(Collections.emptyMap()))) {
 
                     assertErrorResponse(response, 404, format("Charge with id [%s] not found.", A_CHARGE_ID));
                 }
@@ -204,10 +201,10 @@ public class CardResourceCancelChargeTest {
                                 .build()
                 ));
                 when(mockChargeDao.findByExternalIdAndGatewayAccount(A_CHARGE_ID, A_GATEWAY_ACCOUNT_ID)).thenReturn(Optional.empty());
-                try (Response response = cardResource
+                try (ResourceTestResponse response = cardResource
                         .target(String.format("/v1/api/service/%s/account/%s/charges/%s/cancel", A_SERVICE_ID, A_GATEWAY_ACCOUNT_TYPE, A_CHARGE_ID))
                         .request()
-                        .post(Entity.json(Collections.emptyMap()))) {
+                        .post(ResourceTestEntity.json(Collections.emptyMap()))) {
 
                     assertErrorResponse(response, 404, format("Charge with id [%s] not found.", A_CHARGE_ID));
                 }
@@ -228,10 +225,10 @@ public class CardResourceCancelChargeTest {
                                 .withStatus(ChargeStatus.CAPTURE_QUEUED)
                                 .build()
                 ));
-                try (Response response = cardResource
+                try (ResourceTestResponse response = cardResource
                         .target(String.format("/v1/api/service/%s/account/%s/charges/%s/cancel", A_SERVICE_ID, A_GATEWAY_ACCOUNT_TYPE, A_CHARGE_ID))
                         .request()
-                        .post(Entity.json(Collections.emptyMap()))) {
+                        .post(ResourceTestEntity.json(Collections.emptyMap()))) {
 
                     assertErrorResponse(response, 400, format("Charge not in correct state to be processed, %s", A_CHARGE_ID));
                 }
@@ -252,10 +249,10 @@ public class CardResourceCancelChargeTest {
                                 .withStatus(ChargeStatus.CREATED)
                                 .build()
                 ));
-                try (Response response = cardResource
+                try (ResourceTestResponse response = cardResource
                         .target(String.format("/v1/api/service/%s/account/%s/charges/%s/cancel", A_SERVICE_ID, A_GATEWAY_ACCOUNT_TYPE, A_CHARGE_ID))
                         .request()
-                        .post(Entity.json(Collections.emptyMap()))) {
+                        .post(ResourceTestEntity.json(Collections.emptyMap()))) {
                     
                     assertThat(response.getStatus(), is(204));
                 }
@@ -275,10 +272,10 @@ public class CardResourceCancelChargeTest {
                                 .withStatus(ChargeStatus.SYSTEM_CANCEL_SUBMITTED)
                                 .build()
                 ));
-                try (Response response = cardResource
+                try (ResourceTestResponse response = cardResource
                         .target(String.format("/v1/api/service/%s/account/%s/charges/%s/cancel", A_SERVICE_ID, A_GATEWAY_ACCOUNT_TYPE, A_CHARGE_ID))
                         .request()
-                        .post(Entity.json(Collections.emptyMap()))) {
+                        .post(ResourceTestEntity.json(Collections.emptyMap()))) {
 
                     assertThat(response.getStatus(), is(202));
                 }
@@ -287,7 +284,7 @@ public class CardResourceCancelChargeTest {
         }
     }
 
-    private void assertErrorResponse(Response response, int status, String errorMessage) {
+    private void assertErrorResponse(ResourceTestResponse response, int status, String errorMessage) {
         assertThat(response.getStatus(), is(status));
         ErrorResponse errorResponse = response.readEntity(ErrorResponse.class);
         assertThat(errorResponse.messages(), hasItem(errorMessage));

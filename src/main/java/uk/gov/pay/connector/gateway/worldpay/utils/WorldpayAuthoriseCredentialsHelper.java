@@ -4,7 +4,9 @@ import uk.gov.pay.connector.gateway.model.request.CardAuthorisationGatewayReques
 import uk.gov.pay.connector.gateway.util.AuthUtil;
 import uk.gov.pay.connector.gatewayaccount.model.WorldpayMerchantCodeCredentials;
 import uk.gov.service.payments.commons.model.AuthorisationMode;
+import org.springframework.stereotype.Component;
 
+@Component
 public class WorldpayAuthoriseCredentialsHelper {
     public WorldpayMerchantCodeCredentials getOneOffCredentials(CardAuthorisationGatewayRequest cardAuthorisationGatewayRequest){
         return AuthUtil.getWorldpayMerchantCodeCredentials(cardAuthorisationGatewayRequest.getGatewayCredentials(), AuthorisationMode.WEB, false);

@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.chargeevent.dao;
 
-import com.google.inject.Provider;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Provider;
+import org.springframework.transaction.annotation.Transactional;
 import uk.gov.pay.connector.charge.model.domain.ChargeEntity;
 import uk.gov.pay.connector.charge.model.domain.ChargeStatus;
 import uk.gov.pay.connector.chargeevent.model.domain.ChargeEventEntity;
@@ -11,10 +11,12 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import java.time.ZonedDateTime;
 import java.util.List;
+import org.springframework.stereotype.Repository;
 
 import static uk.gov.pay.connector.chargeevent.model.domain.ChargeEventEntity.ChargeEventEntityBuilder.aChargeEventEntity;
 
 @Transactional
+@Repository
 public class ChargeEventDao extends JpaDao<ChargeEventEntity> {
 
     @Inject

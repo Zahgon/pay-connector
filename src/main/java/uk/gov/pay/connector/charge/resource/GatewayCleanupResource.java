@@ -10,18 +10,21 @@ import uk.gov.pay.connector.charge.service.AuthorisationErrorGatewayCleanupServi
 
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotNull;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.Response;
 import java.util.Map;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
-import static uk.gov.pay.connector.util.ResponseUtil.successResponseWithEntity;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+import uk.gov.pay.connector.web.QueryParam;
+import uk.gov.pay.connector.web.MediaTypes;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 
-@Path("/")
+import static uk.gov.pay.connector.util.ResponseUtil.successResponseWithEntity;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 @Tag(name = "Tasks")
+@RestController
+@Validated
 public class GatewayCleanupResource {
 
     private AuthorisationErrorGatewayCleanupService cleanupService;
@@ -30,8 +33,8 @@ public class GatewayCleanupResource {
     public GatewayCleanupResource(AuthorisationErrorGatewayCleanupService cleanupService) {
         this.cleanupService = cleanupService;
     }
-    @POST
-    @Path("/v1/tasks/gateway-cleanup-sweep")
+    @PostMapping("/v1/tasks/gateway-cleanup-sweep")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Cleanup charges with Gateway",
             description = "Finds all charges (ePDQ, Worldpay, Stripe) which have a status of AUTHORISATION ERROR, AUTHORISATION UNEXPECTED ERROR, AUTHORISATION TIMEOUT " +
@@ -50,8 +53,7 @@ public class GatewayCleanupResource {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    @Produces(APPLICATION_JSON)
-    public Response cleanupChargesInAuthErrorWithGateway(
+    public ResponseEntity<?> cleanupChargesInAuthErrorWithGateway(
             @Parameter(example = "100", description = "The maximum number of charges in an error state that will be processed by the task")
             @QueryParam("limit") @NotNull(message = "Parameter [limit] is required") Integer limit) {
         Map<String, Integer> resultMap = cleanupService.sweepAndCleanupAuthorisationErrors(limit);

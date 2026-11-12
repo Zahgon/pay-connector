@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.gatewayaccount.service;
 
-import jakarta.ws.rs.BadRequestException;
-import jakarta.ws.rs.NotFoundException;
+import org.springframework.http.HttpStatus;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -76,7 +76,8 @@ class GatewayAccountSwitchPaymentProviderServiceTest {
                             .withState(VERIFIED_WITH_LIVE_PAYMENT)
                             .build()
                     ));
-            var thrown = assertThrows(BadRequestException.class, () -> gatewayAccountSwitchPaymentProviderService.switchPaymentProviderForAccount(gatewayAccountEntity, null));
+            var thrown = assertThrows(WebApplicationException.class, () -> gatewayAccountSwitchPaymentProviderService.switchPaymentProviderForAccount(gatewayAccountEntity, null));
+            assertThat(thrown.getResponse().getStatusCode(), is(HttpStatus.BAD_REQUEST));
             assertThat(thrown.getMessage(), is("Multiple ACTIVE credentials found"));
         }
 
@@ -86,7 +87,8 @@ class GatewayAccountSwitchPaymentProviderServiceTest {
                     .withState(ACTIVE)
                     .build();
             gatewayAccountEntity.setGatewayAccountCredentials(List.of(gatewayAccountCredentialsEntity));
-            var thrown = assertThrows(BadRequestException.class, () -> gatewayAccountSwitchPaymentProviderService.switchPaymentProviderForAccount(gatewayAccountEntity, null));
+            var thrown = assertThrows(WebApplicationException.class, () -> gatewayAccountSwitchPaymentProviderService.switchPaymentProviderForAccount(gatewayAccountEntity, null));
+            assertThat(thrown.getResponse().getStatusCode(), is(HttpStatus.BAD_REQUEST));
             assertThat(thrown.getMessage(), is("Account has no credential to switch to/from"));
         }
 
@@ -99,7 +101,8 @@ class GatewayAccountSwitchPaymentProviderServiceTest {
                     .withState(RETIRED)
                     .build();
             gatewayAccountEntity.setGatewayAccountCredentials(List.of(gatewayAccountCredentialsEntity1, gatewayAccountCredentialsEntity2));
-            var thrown = assertThrows(BadRequestException.class, () -> gatewayAccountSwitchPaymentProviderService.switchPaymentProviderForAccount(gatewayAccountEntity, request));
+            var thrown = assertThrows(WebApplicationException.class, () -> gatewayAccountSwitchPaymentProviderService.switchPaymentProviderForAccount(gatewayAccountEntity, request));
+            assertThat(thrown.getResponse().getStatusCode(), is(HttpStatus.BAD_REQUEST));
             assertThat(thrown.getMessage(), is("Credential with ACTIVE state not found"));
         }
 
@@ -112,7 +115,8 @@ class GatewayAccountSwitchPaymentProviderServiceTest {
                     .withState(VERIFIED_WITH_LIVE_PAYMENT)
                     .build();
             gatewayAccountEntity.setGatewayAccountCredentials(List.of(gatewayAccountCredentialsEntity1, gatewayAccountCredentialsEntity2));
-            var thrown = assertThrows(NotFoundException.class, () -> gatewayAccountSwitchPaymentProviderService.switchPaymentProviderForAccount(gatewayAccountEntity, request));
+            var thrown = assertThrows(WebApplicationException.class, () -> gatewayAccountSwitchPaymentProviderService.switchPaymentProviderForAccount(gatewayAccountEntity, request));
+            assertThat(thrown.getResponse().getStatusCode(), is(HttpStatus.NOT_FOUND));
             assertThat(thrown.getMessage(), is(format("Credential with external id [%s] not found", request.getGatewayAccountCredentialExternalId())));
         }
 
@@ -126,7 +130,8 @@ class GatewayAccountSwitchPaymentProviderServiceTest {
                     .withState(ENTERED)
                     .build();
             gatewayAccountEntity.setGatewayAccountCredentials(List.of(gatewayAccountCredentialsEntity1, gatewayAccountCredentialsEntity2));
-            var thrown = assertThrows(BadRequestException.class, () -> gatewayAccountSwitchPaymentProviderService.switchPaymentProviderForAccount(gatewayAccountEntity, request));
+            var thrown = assertThrows(WebApplicationException.class, () -> gatewayAccountSwitchPaymentProviderService.switchPaymentProviderForAccount(gatewayAccountEntity, request));
+            assertThat(thrown.getResponse().getStatusCode(), is(HttpStatus.BAD_REQUEST));
             assertThat(thrown.getMessage(), is("Credential with VERIFIED_WITH_LIVE_PAYMENT state not found"));
         }
 
@@ -323,7 +328,8 @@ class GatewayAccountSwitchPaymentProviderServiceTest {
                     .build();
             gatewayAccountEntity.setType(GatewayAccountType.TEST);
             gatewayAccountEntity.setGatewayAccountCredentials(List.of(gatewayAccountCredentialsEntity1));
-            var thrown = assertThrows(BadRequestException.class, () -> gatewayAccountSwitchPaymentProviderService.revertStripeTestAccountToSandbox(gatewayAccountEntity, request));
+            var thrown = assertThrows(WebApplicationException.class, () -> gatewayAccountSwitchPaymentProviderService.revertStripeTestAccountToSandbox(gatewayAccountEntity, request));
+            assertThat(thrown.getResponse().getStatusCode(), is(HttpStatus.BAD_REQUEST));
             assertThat(thrown.getMessage(), is(format("Stripe credential with ACTIVE state not found for account [gateway account id: %s]", gatewayAccountEntity.getId())));
         }
     }
@@ -371,7 +377,8 @@ class GatewayAccountSwitchPaymentProviderServiceTest {
             gatewayAccountEntity.setType(GatewayAccountType.TEST);
             gatewayAccountEntity.setGatewayAccountCredentials(List.of(worldpayGatewayAccountCredentialsEntity));
             
-            var thrown = assertThrows(BadRequestException.class, () -> gatewayAccountSwitchPaymentProviderService.switchStripeTestAccountToAdyen(gatewayAccountEntity, adyenCredentials));
+            var thrown = assertThrows(WebApplicationException.class, () -> gatewayAccountSwitchPaymentProviderService.switchStripeTestAccountToAdyen(gatewayAccountEntity, adyenCredentials));
+            assertThat(thrown.getResponse().getStatusCode(), is(HttpStatus.BAD_REQUEST));
             assertThat(thrown.getMessage(), is(format("Stripe credential with ACTIVE state not found for account [gateway account id: %s]", gatewayAccountEntity.getId())));
         }
 

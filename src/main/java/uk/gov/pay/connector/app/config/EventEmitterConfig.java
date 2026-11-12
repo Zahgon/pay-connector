@@ -1,8 +1,7 @@
 package uk.gov.pay.connector.app.config;
 
-import io.dropwizard.core.Configuration;
 
-public class EventEmitterConfig extends Configuration {
+public class EventEmitterConfig {
     
     private long defaultDoNotRetryEmittingEventUntilDurationInSeconds;
 

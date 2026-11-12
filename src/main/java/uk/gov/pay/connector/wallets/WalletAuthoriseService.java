@@ -1,9 +1,8 @@
 package uk.gov.pay.connector.wallets;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-import io.dropwizard.core.setup.Environment;
+import jakarta.inject.Inject;
+import org.springframework.transaction.annotation.Transactional;
 import io.prometheus.client.Counter;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -38,9 +37,11 @@ import uk.gov.pay.connector.wallets.googlepay.api.GooglePayAuthorisationRequest;
 import uk.gov.service.payments.commons.model.CardExpiryDate;
 
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 import static java.lang.String.format;
 
+@Service
 public class WalletAuthoriseService {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(WalletAuthoriseService.class);
@@ -72,7 +73,7 @@ public class WalletAuthoriseService {
                                   GooglePayAuthoriseRequestFactory googlePayAuthoriseRequestFactory,
                                   WalletPaymentInfoToAuthCardDetailsConverter walletPaymentInfoToAuthCardDetailsConverter,
                                   AuthorisationLogger authorisationLogger,
-                                  Environment environment) {
+                                  MetricRegistry metricRegistry) {
         this.paymentProviders = paymentProviders;
         this.authorisationService = authorisationService;
         this.applePayAuthoriseRequestFactory = applePayAuthoriseRequestFactory;
@@ -80,7 +81,7 @@ public class WalletAuthoriseService {
         this.walletPaymentInfoToAuthCardDetailsConverter = walletPaymentInfoToAuthCardDetailsConverter;
         this.chargeService = chargeService;
         this.authorisationLogger = authorisationLogger;
-        this.metricRegistry = environment.metrics();
+        this.metricRegistry = metricRegistry;
     }
 
     public GatewayResponse<BaseAuthoriseResponse> authorise(String chargeId, WalletAuthorisationRequest walletAuthorisationRequest) {

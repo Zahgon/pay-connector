@@ -1,44 +1,42 @@
 package uk.gov.pay.connector.rules;
 
-import com.google.inject.Injector;
-import io.dropwizard.db.DataSourceFactory;
-import io.dropwizard.core.setup.Environment;
-import io.dropwizard.testing.ConfigOverride;
-import liquibase.Liquibase;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.exception.LiquibaseException;
-import liquibase.resource.ClassLoaderResourceAccessor;
 import org.jdbi.v3.core.Jdbi;
-import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.gov.service.payments.commons.testing.db.PostgresDockerRule;
-import uk.gov.service.payments.commons.testing.port.PortFactory;
+import uk.gov.pay.connector.app.ConfigOverride;
 import uk.gov.pay.connector.app.ConnectorConfiguration;
+import uk.gov.pay.connector.app.ConnectorTestApplication;
+import uk.gov.pay.connector.app.config.DatabaseConfig;
 import uk.gov.pay.connector.util.DatabaseTestHelper;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.ServerSocket;
+import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.common.collect.Lists.newArrayList;
-import static io.dropwizard.testing.ConfigOverride.config;
-import static io.dropwizard.testing.ResourceHelpers.resourceFilePath;
-import static java.sql.DriverManager.getConnection;
+import static uk.gov.pay.connector.app.ConfigOverride.config;
+import static uk.gov.pay.connector.rules.PostgresTestDocker.getConnectionUrl;
+import static uk.gov.pay.connector.rules.PostgresTestDocker.getDbPassword;
+import static uk.gov.pay.connector.rules.PostgresTestDocker.getDbUsername;
+import static uk.gov.pay.connector.rules.PostgresTestDocker.getOrCreate;
 
-abstract public class AppWithPostgresRule implements TestRule {
+/**
+ * Runs the tests of a class against the connector started on a freshly migrated PostgreSQL database, with the payment
+ * gateways, ledger, card id and the capture queue pointed at a WireMock port of the test's choosing.
+ */
+public class AppWithPostgresRule implements TestRule {
     private static final Logger logger = LoggerFactory.getLogger(AppWithPostgresRule.class);
 
-    private final String configFilePath;
-    private final PostgresDockerRule postgres;
-    private final AppRule<ConnectorConfiguration> appRule;
-    private final RuleChain rules;
+    private final String configPath;
+    private final List<ConfigOverride> configOverrides;
+    private final int wireMockPort = findFreePort();
 
+    private ConnectorTestApplication application;
     private DatabaseTestHelper databaseTestHelper;
-    private final int wireMockPort = PortFactory.findFreePort();
 
     public AppWithPostgresRule(ConfigOverride... configOverrides) {
         this(true, configOverrides);
@@ -53,107 +51,73 @@ abstract public class AppWithPostgresRule implements TestRule {
     }
 
     public AppWithPostgresRule(String configPath, boolean stubPaymentGateways, ConfigOverride... configOverrides) {
-        configFilePath = resourceFilePath(configPath);
-        postgres = new PostgresDockerRule("15.2");
-
-        ConfigOverride[] newConfigOverrides = overrideDatabaseConfig(configOverrides, postgres);
-        newConfigOverrides = overrideSqsConfig(newConfigOverrides);
-        newConfigOverrides = overrideUrlsConfig(newConfigOverrides, stubPaymentGateways);
-        appRule = newApplication(configFilePath, newConfigOverrides);
-
-        rules = RuleChain.outerRule(postgres).around(appRule);
+        getOrCreate();
+        this.configPath = configPath;
+        this.configOverrides = new ArrayList<>(List.of(configOverrides));
+        this.configOverrides.add(config("database.url", getConnectionUrl()));
+        this.configOverrides.add(config("database.user", getDbUsername()));
+        this.configOverrides.add(config("database.password", getDbPassword()));
+        this.configOverrides.add(config("sqsConfig.endpoint", "http://localhost:" + wireMockPort));
+        this.configOverrides.add(config("sqsConfig.captureQueueUrl", "http://localhost:" + wireMockPort + "/capture-queue"));
+        if (stubPaymentGateways) {
+            this.configOverrides.add(config("worldpay.urls.test", "http://localhost:" + wireMockPort + "/jsp/merchant/xml/paymentService.jsp"));
+            this.configOverrides.add(config("worldpay.threeDsFlexDdcUrls.test", String.format("http://localhost:%s/shopper/3ds/ddc.html", wireMockPort)));
+            this.configOverrides.add(config("worldpay.threeDsFlexDdcUrls.live", String.format("http://localhost:%s/shopper/3ds/ddc.html", wireMockPort)));
+            this.configOverrides.add(config("stripe.url", "http://localhost:" + wireMockPort));
+        }
+        this.configOverrides.add(config("ledgerBaseURL", "http://localhost:" + wireMockPort));
+        this.configOverrides.add(config("cardidBaseURL", "http://localhost:" + wireMockPort));
     }
-
-    abstract protected AppRule<ConnectorConfiguration> newApplication(
-            final String configPath,
-            final ConfigOverride... configOverrides);
 
     @Override
     public Statement apply(Statement base, Description description) {
-        return rules.apply(new Statement() {
+        return new Statement() {
             @Override
             public void evaluate() throws Throwable {
                 logger.info("Clearing database.");
-                appRule.getApplication().run("db", "drop-all", "--confirm-delete-everything", configFilePath);
-
-                try (Connection connection = getConnection(postgres.getConnectionUrl(), postgres.getUsername(), postgres.getPassword())) {
-                    Liquibase migrator = new Liquibase("it-migrations.xml", new ClassLoaderResourceAccessor(), new JdbcConnection(connection));
-                    migrator.update("");
-                }  catch (LiquibaseException | SQLException e) {
-                    throw new PostgresTestDockerException(e);
+                ConnectorConfiguration configuration = ConnectorTestApplication.loadConfiguration(configPath, configOverrides);
+                TestDatabase.recreate(configuration);
+                DatabaseConfig database = configuration.getDatabaseConfig();
+                databaseTestHelper = new DatabaseTestHelper(Jdbi.create(database.getUrl(), database.getUser(), database.getPassword()));
+                try (ConnectorTestApplication started = ConnectorTestApplication.start(configPath, configOverrides)) {
+                    application = started;
+                    base.evaluate();
+                } finally {
+                    application = null;
                 }
-                restoreDropwizardsLogging();
-
-                DataSourceFactory dataSourceFactory = appRule.getConfiguration().getDataSourceFactory();
-                databaseTestHelper = new DatabaseTestHelper(Jdbi.create(dataSourceFactory.getUrl(), dataSourceFactory.getUser(), dataSourceFactory.getPassword()));
-
-                base.evaluate();
             }
-        }, description);
+        };
     }
 
     public ConnectorConfiguration getConf() {
-        return appRule.getConfiguration();
-    }
-
-    public Environment getEnvironment() {
-        return appRule.getEnvironment();
+        return application.getConfiguration();
     }
 
     public int getLocalPort() {
-        return appRule.getLocalPort();
+        return application.getLocalPort();
     }
 
     public int getAdminPort() {
-        return appRule.getAdminPort();
+        return application.getAdminPort();
     }
 
     public int getWireMockPort() {
         return wireMockPort;
     }
 
-    public Injector getGuiceInjector() {
-        return appRule.getInjector();
-    }
-
-    public <T> T getInstanceFromGuiceContainer(Class<T> type) {
-        return appRule.getInstanceFromGuiceContainer(type);
+    public <T> T getBean(Class<T> type) {
+        return application.getBean(type);
     }
 
     public DatabaseTestHelper getDatabaseTestHelper() {
         return databaseTestHelper;
     }
 
-    private ConfigOverride[] overrideDatabaseConfig(ConfigOverride[] configOverrides, PostgresDockerRule postgresDockerRule) {
-        List<ConfigOverride> newConfigOverride = newArrayList(configOverrides);
-        newConfigOverride.add(config("database.url", postgresDockerRule.getConnectionUrl()));
-        newConfigOverride.add(config("database.user", postgresDockerRule.getUsername()));
-        newConfigOverride.add(config("database.password", postgresDockerRule.getPassword()));
-        return newConfigOverride.toArray(new ConfigOverride[0]);
-    }
-    
-    private ConfigOverride[] overrideSqsConfig(ConfigOverride[] configOverrides) {
-        List<ConfigOverride> newConfigOverride = newArrayList(configOverrides);
-        newConfigOverride.add(config("sqsConfig.endpoint", "http://localhost:" + wireMockPort));
-        newConfigOverride.add(config("sqsConfig.captureQueueUrl", "http://localhost:" + wireMockPort + "/capture-queue"));
-        return newConfigOverride.toArray(new ConfigOverride[0]);
-    }
-
-    private ConfigOverride[] overrideUrlsConfig(ConfigOverride[] configOverrides, boolean stubPaymentGateways) {
-        List<ConfigOverride> newConfigOverride = newArrayList(configOverrides);
-        if (stubPaymentGateways) {
-            newConfigOverride.add(config("worldpay.urls.test", "http://localhost:" + wireMockPort + "/jsp/merchant/xml/paymentService.jsp"));
-            newConfigOverride.add(config("worldpay.threeDsFlexDdcUrls.test", String.format("http://localhost:%s/shopper/3ds/ddc.html", wireMockPort)));
-            newConfigOverride.add(config("worldpay.threeDsFlexDdcUrls.live", String.format("http://localhost:%s/shopper/3ds/ddc.html", wireMockPort)));
-            newConfigOverride.add(config("stripe.url", "http://localhost:" + wireMockPort));
+    static int findFreePort() {
+        try (ServerSocket socket = new ServerSocket(0)) {
+            return socket.getLocalPort();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-        newConfigOverride.add(config("ledgerBaseURL", "http://localhost:" + wireMockPort));
-        newConfigOverride.add(config("cardidBaseURL", "http://localhost:" + wireMockPort));
-        return newConfigOverride.toArray(new ConfigOverride[0]);
-    }
-
-    private void restoreDropwizardsLogging() {
-        appRule.getConfiguration().getLoggingFactory().configure(appRule.getEnvironment().metrics(),
-                appRule.getApplication().getName());
     }
 }

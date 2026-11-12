@@ -5,7 +5,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import uk.gov.pay.connector.extension.AppWithPostgresAndSqsExtension;
 
 import static io.restassured.RestAssured.given;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 public class SandboxNotificationResourceIT {
     @RegisterExtension
@@ -21,7 +21,7 @@ public class SandboxNotificationResourceIT {
         given().port(app.getLocalPort())
                 .header("X-Forwarded-For", SANDBOX_IP_ADDRESS)
                 .body("sandbox-notification")
-                .contentType(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON_VALUE)
                 .post(NOTIFICATION_PATH)
                 .then()
                 .statusCode(200);
@@ -33,7 +33,7 @@ public class SandboxNotificationResourceIT {
                 .header("X-Forwarded-For", UNEXPECTED_IP_ADDRESS)
                 .header("Authorization", "let-me-in")
                 .body("sandbox-notification")
-                .contentType(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON_VALUE)
                 .post(NOTIFICATION_PATH)
                 .then()
                 .statusCode(200);
@@ -44,7 +44,7 @@ public class SandboxNotificationResourceIT {
         given().port(app.getLocalPort())
                 .header("X-Forwarded-For", UNEXPECTED_IP_ADDRESS)
                 .body("sandbox-notification")
-                .contentType(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON_VALUE)
                 .post(NOTIFICATION_PATH)
                 .then()
                 .statusCode(403);

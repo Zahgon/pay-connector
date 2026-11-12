@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.token.exception;
 
-import jakarta.ws.rs.WebApplicationException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 
 public class TokenNotFoundException extends WebApplicationException {
 

@@ -1,6 +1,6 @@
 # pay-connector
 
-The GOV.UK Pay Connector in Java (Dropwizard)
+The GOV.UK Pay Connector in Java (Spring Boot)
 
 ## API Specification
 
@@ -9,17 +9,16 @@ examples.
 
 [View the API specification for connector in Swagger Editor](https://editor.swagger.io/?url=https://raw.githubusercontent.com/govuk-pay/pay-connector/master/openapi/connector_spec.yaml).
 
-Note: All Jersey resources must be listed in [
-`src/main/resources/openapi-config.yaml`](src/main/resources/openapi-config.yaml). The OpenAPI Specification is
-regenerated during the `compile` phase of the Maven build. Run `mvn clean compile` to invoke the phase locally. See
-the [Pay team manual](https://manual.payments.service.gov.uk/manual/how-to/re-generate-open-api-specification.html) (
+Note: the resources keep their OpenAPI annotations, and [`src/main/resources/openapi-config.yaml`](src/main/resources/openapi-config.yaml)
+lists them. The specification in `openapi/` is maintained alongside them; see the
+[Pay team manual](https://manual.payments.service.gov.uk/manual/how-to/re-generate-open-api-specification.html) (
 nonpublic).
 
 ## Environment Variables
 
 | Variable                                                        | Default                                    | Purpose                                                                                                                                                                                                                                                                                                                              |
 |-----------------------------------------------------------------|--------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `AUTH_READ_TIMEOUT_MILLISECONDS`                                | `1000`                                     | the timeout before the resource responds with an awaited auth response (202), so that frontend can choose to show a spinner and poll for auth response. Supports any duration parsable by dropwizard [Duration](https://github.com/dropwizard/dropwizard/blob/master/dropwizard-util/src/main/java/io/dropwizard/util/Duration.java) |
+| `AUTH_READ_TIMEOUT_MILLISECONDS`                                | `1000`                                     | the timeout before the resource responds with an awaited auth response (202), so that frontend can choose to show a spinner and poll for auth response. Supports any duration of a whole number and a unit, such as `1000ms` or `2s` |
 | `SYNCHRONOUS_AUTH_TIMEOUT_IN_MILLISECONDS`                      | `10000`                                    | the timeout before requests made to the synchronous authorisation API for MOTO payments timeout and the payment is failed                                                                                                                                                                                                            |
 | `SECURE_WORLDPAY_NOTIFICATION_ENABLED`                          | false                                      | whether to filter incoming notifications by domain; they will be rejected with a 403 unless they match the required domain                                                                                                                                                                                                           |
 | `SECURE_WORLDPAY_NOTIFICATION_DOMAIN`                           | `.worldpay.com`                            | incoming requests will have a reverse DNS lookup done on their domain. They must resolve to a domain with this suffix (see `IpDomainMatcher.ipMatchesDomain()`)                                                                                                                                                                      |
@@ -126,7 +125,7 @@ are required and overridden in integration tests only, and do not require values
 The background capture mechanism will capture all payments in the `CAPTURE_APPROVED` state that have been published to
 the SQS queue (`AWS_SQS_CAPTURE_QUEUE_URL`).
 
-A background thread managed by Dropwizard runs on all connector nodes. It polls the SQS capture queue to retrieve the
+A background thread managed by the Spring application context runs on all connector nodes. It polls the SQS capture queue to retrieve the
 list of charges that are waiting to be captured.
 
 If a capture attempt fails it will be retried again after a specified delay (
@@ -197,10 +196,10 @@ mvn verify
 
 ## Command line tasks
 
-There are a number of
-[commands](https://www.dropwizard.io/en/latest/manual/core.html#commands)
-which can run from the command line. Invoke the all-in-one jar to see a list
-of the commands:
+There are a number of commands which can run from the command line (`server`, `db migrate`, `waitOnDependencies`
+and `render-state-transition-graph`); a trailing configuration file argument is accepted and ignored, as the
+settings come from `config/config.yaml` on the class path and the environment variables it names. Invoke the
+all-in-one jar to see a list of the commands:
 
 ```
 $ java -jar target/pay-connector-0.1-SNAPSHOT-allinone.jar

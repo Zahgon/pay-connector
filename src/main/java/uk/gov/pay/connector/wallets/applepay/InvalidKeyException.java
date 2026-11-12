@@ -1,9 +1,10 @@
 package uk.gov.pay.connector.wallets.applepay;
 
-import jakarta.ws.rs.BadRequestException;
+import org.springframework.http.HttpStatus;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 
-public class InvalidKeyException extends BadRequestException {
+public class InvalidKeyException extends WebApplicationException {
     public InvalidKeyException(String message) {
-        super(message);
+        super(message, HttpStatus.BAD_REQUEST);
     }
 }

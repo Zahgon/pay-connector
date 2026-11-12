@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.gateway.adyen.handler;
 
 import com.jayway.jsonassert.JsonAssert;
-import io.dropwizard.jackson.Jackson;
+import uk.gov.pay.connector.util.ObjectMapperFactory;
 import io.github.netmikey.logunit.api.LogCapturer;
 import org.apache.hc.core5.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -106,7 +106,7 @@ class AdyenCancelHandlerTest {
                 mockGatewayClient,
                 mockAdyenGatewayConfig,
                 new AdyenRequestFactory(mockConfiguration),
-                new JsonObjectMapper(Jackson.newObjectMapper()));
+                new JsonObjectMapper(ObjectMapperFactory.newObjectMapper()));
     }
 
     @Test

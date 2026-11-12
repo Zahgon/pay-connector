@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.gateway.worldpay;
 
-import com.google.inject.name.Named;
+import jakarta.inject.Named;
 import uk.gov.pay.connector.gateway.CaptureHandler;
 import uk.gov.pay.connector.gateway.CaptureResponse;
 import uk.gov.pay.connector.gateway.GatewayClient;
@@ -14,6 +14,7 @@ import java.net.URI;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.Map;
+import org.springframework.stereotype.Component;
 
 import static uk.gov.pay.connector.gateway.CaptureResponse.ChargeState.PENDING;
 import static uk.gov.pay.connector.gateway.GatewayResponseUnmarshaller.unmarshallResponse;
@@ -21,6 +22,7 @@ import static uk.gov.pay.connector.gateway.PaymentGatewayName.WORLDPAY;
 import static uk.gov.pay.connector.gateway.util.AuthUtil.getWorldpayAuthHeader;
 import static uk.gov.pay.connector.gateway.worldpay.WorldpayOrderRequestBuilder.aWorldpayCaptureOrderRequestBuilder;
 
+@Component
 public class WorldpayCaptureHandler implements CaptureHandler {
 
     private final GatewayClient client;

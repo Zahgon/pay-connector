@@ -1,8 +1,7 @@
 package uk.gov.pay.connector.app.config;
 
-import io.dropwizard.core.Configuration;
 
-public class Authorisation3dsConfig extends Configuration {
+public class Authorisation3dsConfig {
 
     private int maximumNumberOfTimesToAllowUserToAttempt3ds;
 

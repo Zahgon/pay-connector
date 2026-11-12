@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.charge.service;
 
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.charge.dao.ChargeDao;
@@ -15,10 +15,11 @@ import uk.gov.pay.connector.paymentprocessor.service.QueryService;
 import uk.gov.pay.connector.util.MDCUtils;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
+import uk.gov.pay.connector.common.exception.WebApplicationException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.springframework.stereotype.Service;
 
 import static java.lang.String.format;
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.AUTHORISATION_CANCELLED;
@@ -36,6 +37,7 @@ import static uk.gov.pay.connector.gateway.PaymentGatewayName.WORLDPAY;
 import static uk.gov.service.payments.commons.model.AuthorisationMode.MOTO_API;
 import static uk.gov.service.payments.commons.model.AuthorisationMode.WEB;
 
+@Service
 public class AuthorisationErrorGatewayCleanupService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());

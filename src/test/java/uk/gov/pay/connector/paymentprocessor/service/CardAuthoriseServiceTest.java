@@ -1,8 +1,8 @@
 package uk.gov.pay.connector.paymentprocessor.service;
 
+import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Counter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.dropwizard.core.setup.Environment;
 import io.github.netmikey.logunit.api.LogCapturer;
 import io.prometheus.client.CollectorRegistry;
 import org.apache.commons.lang3.tuple.Pair;
@@ -167,8 +167,6 @@ class CardAuthoriseServiceTest extends CardServiceTest {
     @Mock
     private CardExecutorService mockExecutorService;
 
-    @Mock
-    private Environment mockEnvironment;
 
     @Mock
     private Counter mockCounter;
@@ -247,7 +245,6 @@ class CardAuthoriseServiceTest extends CardServiceTest {
 
     @BeforeEach
     void setUpCardAuthorisationService() {
-        when(mockEnvironment.metrics()).thenReturn(mockMetricRegistry);
         when(mockedPaymentProvider.generateAuthorisationRequestSummary(any(ChargeEntity.class), any(AuthCardDetails.class), anyBoolean()))
                 .thenReturn(mockAuthorisationRequestSummary);
         when(mockConfiguration.getAuthorisationConfig()).thenReturn(mockAuthorisationConfig);
@@ -268,7 +265,7 @@ class CardAuthoriseServiceTest extends CardServiceTest {
                         userNotificationService
                 );
 
-        AuthorisationService authorisationService = new AuthorisationService(mockExecutorService, mockEnvironment, mockConfiguration);
+        AuthorisationService authorisationService = new AuthorisationService(mockExecutorService, mockMetricRegistry, mockConfiguration);
         cardAuthorisationService = new CardAuthoriseService(
                 mockedCardTypeDao,
                 mockedProviders,
@@ -278,7 +275,7 @@ class CardAuthoriseServiceTest extends CardServiceTest {
                 new AuthorisationLogger(mockAuthorisationRequestSummaryStringifier, mockAuthorisationRequestSummaryStructuredLogging, mockAdyenAuthoriseRequestLogGenerator, mockWorldpayAuthoriseRequestLogGenerator),
                 chargeEligibleForCaptureService,
                 mockPaymentInstrumentEntityToAuthCardDetailsConverter,
-                mockEnvironment);
+                mockMetricRegistry);
     }
 
     void mockRecordAuthorisationResult() {
@@ -764,7 +761,7 @@ class CardAuthoriseServiceTest extends CardServiceTest {
         AuthCardDetails authCardDetails = AuthCardDetailsFixture.anAuthCardDetails().build();
 
         OperationAlreadyInProgressRuntimeException e = assertThrows(OperationAlreadyInProgressRuntimeException.class, () -> cardAuthorisationService.doAuthoriseWeb(chargeExternalId, authCardDetails));
-        ErrorResponse response = (ErrorResponse) e.getResponse().getEntity();
+        ErrorResponse response = (ErrorResponse) e.getResponse().getBody();
         assertThat(response.messages(), contains(format("Authorisation for charge already in progress, %s", charge.getExternalId())));
 
         verify(mockEventService, never()).emitAndRecordEvent(any(GatewayDoesNotRequire3dsAuthorisation.class));

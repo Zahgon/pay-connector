@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.gateway.worldpay;
 
-import com.google.inject.Inject;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.gateway.GatewayClient;
@@ -15,6 +15,7 @@ import jakarta.inject.Named;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
+import org.springframework.stereotype.Service;
 
 import static java.lang.String.format;
 import static net.logstash.logback.argument.StructuredArguments.kv;
@@ -27,6 +28,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.GATEWAY_ACCOUNT_TYPE;
 import static uk.gov.service.payments.logging.LoggingKeys.PROVIDER;
 import static uk.gov.service.payments.logging.LoggingKeys.REMOTE_HTTP_STATUS;
 
+@Service
 public class WorldpayCredentialsValidationService implements WorldpayGatewayResponseGenerator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WorldpayCredentialsValidationService.class);

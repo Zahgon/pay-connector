@@ -24,7 +24,7 @@ public class CardTypeDaoIT {
 
     @BeforeAll
     static void setup() {
-        cardTypeDao = app.getInstanceFromGuiceContainer(CardTypeDao.class);
+        cardTypeDao = app.getBean(CardTypeDao.class);
     }
 
     @Test

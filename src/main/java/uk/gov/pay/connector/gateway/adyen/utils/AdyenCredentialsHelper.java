@@ -4,7 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.gateway.model.request.GatewayRequest;
 import uk.gov.pay.connector.gatewayaccount.model.AdyenCredentials;
+import org.springframework.stereotype.Component;
 
+@Component
 public class AdyenCredentialsHelper {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(AdyenCredentialsHelper.class);

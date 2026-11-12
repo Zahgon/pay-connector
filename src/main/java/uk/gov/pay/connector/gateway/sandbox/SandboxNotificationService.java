@@ -1,12 +1,14 @@
 package uk.gov.pay.connector.gateway.sandbox;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.annotation.Nullable;
 import uk.gov.pay.connector.util.IpAddressMatcher;
 
 import java.util.Set;
+import org.springframework.stereotype.Service;
 
+@Service
 public class SandboxNotificationService {
     private final IpAddressMatcher ipAddressMatcher;
     private final Set<String> allowedSandboxIpAddresses;

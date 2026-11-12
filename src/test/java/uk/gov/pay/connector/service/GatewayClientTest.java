@@ -3,42 +3,44 @@ package uk.gov.pay.connector.service;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
+import com.github.tomakehurst.wiremock.WireMockServer;
 import com.google.common.collect.ImmutableList;
 import io.prometheus.client.CollectorRegistry;
-import jakarta.ws.rs.ProcessingException;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.client.Invocation.Builder;
-import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InOrder;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
 import uk.gov.pay.connector.gateway.GatewayClient;
 import uk.gov.pay.connector.gateway.GatewayException;
 import uk.gov.pay.connector.gateway.GatewayOrder;
 import uk.gov.pay.connector.gateway.model.OrderRequestType;
 
+import java.io.IOException;
 import java.net.HttpCookie;
-import java.net.SocketException;
+import java.net.ServerSocket;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.any;
+import static com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.WORLDPAY;
@@ -46,71 +48,68 @@ import static uk.gov.pay.connector.gateway.PaymentGatewayName.WORLDPAY;
 @ExtendWith(MockitoExtension.class)
 public class GatewayClientTest {
 
-    private static final URI WORLDPAY_API_ENDPOINT = URI.create("http://www.example.com/worldpay/order");
+    private static final String ORDER_PATH = "/worldpay/order";
+
+    private final WireMockServer gateway = new WireMockServer(wireMockConfig().dynamicPort());
+    private final CloseableHttpClient httpClient = HttpClients.createDefault();
+    private URI worldpayApiEndpoint;
     private GatewayClient gatewayClient;
 
-    private String orderPayload = "a-sample-payload";
+    private final String orderPayload = "a-sample-payload";
 
-    private MediaType mediaType = MediaType.APPLICATION_XML_TYPE;
+    private final MediaType mediaType = MediaType.APPLICATION_XML;
 
     private final CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
-    private String[] labelNames = new String[]{"gatewayName", "gatewayAccountType", "requestType"};
+    private final String[] labelNames = new String[]{"gatewayName", "gatewayAccountType", "requestType"};
 
-    @Mock
-    private Client mockClient;
-    @Mock
-    private Response mockResponse;
-    @Mock
-    private Builder mockBuilder;
     @Mock
     private MetricRegistry mockMetricRegistry;
     @Mock
     private Histogram mockResponseTimeHistogram;
     @Mock
     private Counter mockFailureCounter;
-    @Mock
-    private GatewayOrder mockGatewayOrder;
-    @Mock
-    private WebTarget mockWebTarget;
 
     @BeforeEach
     public void setup() {
-        gatewayClient = new GatewayClient(mockClient,
-                mockMetricRegistry);
+        gateway.start();
+        worldpayApiEndpoint = URI.create("http://localhost:" + gateway.port() + ORDER_PATH);
+        gatewayClient = new GatewayClient(httpClient, mockMetricRegistry);
+    }
 
-        when(mockClient.target(WORLDPAY_API_ENDPOINT)).thenReturn(mockWebTarget);
+    @AfterEach
+    public void tearDown() throws IOException {
+        gateway.stop();
+        httpClient.close();
     }
 
     @Test
     public void shouldReturnGatewayErrorWhenProviderFails() {
         setupPostRequestMocks();
-        when(mockResponse.getStatus()).thenReturn(500);
+        gatewayAnswers(500);
         when(mockMetricRegistry.counter("gateway-operations.worldpay.test.authorise.failures")).thenReturn(mockFailureCounter);
         double failureCounterBefore = getMetricSample("gateway_operations_failures_total", new String[]{"worldpay", "test", "authorise"});
         double histogramCountBefore = getMetricSample("gateway_operations_response_time_seconds_count", new String[]{"worldpay", "test", "authorise"});
 
         assertThrows(GatewayException.GatewayErrorException.class,
-                () -> gatewayClient.postRequestFor(WORLDPAY_API_ENDPOINT, WORLDPAY, "test", mockGatewayOrder, emptyMap()));
+                () -> gatewayClient.postRequestFor(worldpayApiEndpoint, WORLDPAY, "test", order(), emptyMap()));
 
         double failureCounterAfter = getMetricSample("gateway_operations_failures_total", new String[]{"worldpay", "test", "authorise"});
         double histogramCountAfter = getMetricSample("gateway_operations_response_time_seconds_count", new String[]{"worldpay", "test", "authorise"});
         assertEquals(failureCounterBefore + 1, failureCounterAfter);
         assertEquals(histogramCountBefore + 1, histogramCountAfter);
-        verify(mockResponse).close();
         verify(mockFailureCounter).inc();
     }
 
     @Test
-    public void shouldReturnGatewayErrorWhenProviderFailsWithAProcessingException() {
+    public void shouldReturnGatewayErrorWhenProviderFailsWithAnIOException() throws IOException {
         setupPostRequestMocks();
-        when(mockBuilder.post(Entity.entity(orderPayload, mediaType))).thenThrow(new ProcessingException(new SocketException("socket failed")));
+        URI unreachable = unreachableEndpoint();
         when(mockMetricRegistry.counter("gateway-operations.worldpay.test.authorise.failures")).thenReturn(mockFailureCounter);
         double failureCounterBefore = getMetricSample("gateway_operations_failures_total", new String[]{"worldpay", "test", "authorise"});
         double histogramCountBefore = getMetricSample("gateway_operations_response_time_seconds_count", new String[]{"worldpay", "test", "authorise"});
-        doAnswer(invocationOnMock -> null).when(mockFailureCounter).inc();
 
         assertThrows(GatewayException.GenericGatewayException.class,
-                () -> gatewayClient.postRequestFor(WORLDPAY_API_ENDPOINT, WORLDPAY, "test", mockGatewayOrder, emptyMap()));
+                () -> gatewayClient.postRequestFor(unreachable, WORLDPAY, "test", order(), emptyMap()));
 
         double failureCounterAfter = getMetricSample("gateway_operations_failures_total", new String[]{"worldpay", "test", "authorise"});
         double histogramCountAfter = getMetricSample("gateway_operations_response_time_seconds_count", new String[]{"worldpay", "test", "authorise"});
@@ -122,15 +121,16 @@ public class GatewayClientTest {
     @Test
     public void shouldIncludeCookieIfSessionIdentifierAvailableInOrder() throws Exception {
         setupPostRequestMocks();
-        when(mockResponse.getStatus()).thenReturn(200);
+        gatewayAnswers(200);
         double histogramCountBefore = getMetricSample("gateway_operations_response_time_seconds_count", new String[]{"worldpay", "test", "authorise"});
 
-        gatewayClient.postRequestFor(WORLDPAY_API_ENDPOINT, WORLDPAY, "test", mockGatewayOrder,
+        gatewayClient.postRequestFor(worldpayApiEndpoint, WORLDPAY, "test", order(),
                 ImmutableList.of(new HttpCookie("machine", "value")), emptyMap());
 
-        InOrder inOrder = Mockito.inOrder(mockBuilder);
-        inOrder.verify(mockBuilder).header("Cookie", "machine=value");
-        inOrder.verify(mockBuilder).post(Entity.entity(orderPayload, mediaType));
+        gateway.verify(postRequestedFor(urlPathEqualTo(ORDER_PATH))
+                .withHeader("Cookie", equalTo("machine=value"))
+                .withHeader("Content-Type", equalTo(mediaType.toString()))
+                .withRequestBody(equalTo(orderPayload)));
         verify(mockResponseTimeHistogram).update(anyLong());
 
         double histogramCountAfter = getMetricSample("gateway_operations_response_time_seconds_count", new String[]{"worldpay", "test", "authorise"});
@@ -140,33 +140,31 @@ public class GatewayClientTest {
     @Test
     public void getRequestShouldReturnGatewayErrorWhenProviderFails() {
         setupGetRequestMocks();
-        when(mockResponse.getStatus()).thenReturn(500);
-        doAnswer(invocationOnMock -> null).when(mockFailureCounter).inc();
+        gatewayAnswers(500);
         when(mockMetricRegistry.counter("gateway-operations.get.worldpay.test.query.failures")).thenReturn(mockFailureCounter);
         double failureCounterBefore = getMetricSample("gateway_operations_failures_total", new String[]{"worldpay", "test", "query"});
         double histogramCountBefore = getMetricSample("gateway_operations_response_time_seconds_count", new String[]{"worldpay", "test", "query"});
 
         assertThrows(GatewayException.GatewayErrorException.class,
-                () -> gatewayClient.getRequestFor(WORLDPAY_API_ENDPOINT, WORLDPAY, "test", OrderRequestType.QUERY, emptyList(), emptyMap(), emptyMap()));
+                () -> gatewayClient.getRequestFor(worldpayApiEndpoint, WORLDPAY, "test", OrderRequestType.QUERY, emptyList(), emptyMap(), emptyMap()));
 
         double failureCounterAfter = getMetricSample("gateway_operations_failures_total", new String[]{"worldpay", "test", "query"});
         double histogramCountAfter = getMetricSample("gateway_operations_response_time_seconds_count", new String[]{"worldpay", "test", "query"});
         assertEquals(failureCounterBefore + 1, failureCounterAfter);
         assertEquals(histogramCountBefore + 1, histogramCountAfter);
-        verify(mockResponse).close();
         verify(mockFailureCounter).inc();
     }
 
     @Test
-    public void getRequestShouldReturnGatewayErrorWhenProviderFailsWithAProcessingException() {
+    public void getRequestShouldReturnGatewayErrorWhenProviderFailsWithAnIOException() throws IOException {
         setupGetRequestMocks();
+        URI unreachable = unreachableEndpoint();
         when(mockMetricRegistry.counter("gateway-operations.get.worldpay.test.query.failures")).thenReturn(mockFailureCounter);
-        when(mockBuilder.get()).thenThrow(new ProcessingException(new SocketException("socket failed")));
         double failureCounterBefore = getMetricSample("gateway_operations_failures_total", new String[]{"worldpay", "test", "query"});
         double histogramCountBefore = getMetricSample("gateway_operations_response_time_seconds_count", new String[]{"worldpay", "test", "query"});
 
         assertThrows(GatewayException.GenericGatewayException.class,
-                () -> gatewayClient.getRequestFor(WORLDPAY_API_ENDPOINT, WORLDPAY, "test", OrderRequestType.QUERY, emptyList(), emptyMap(), emptyMap()));
+                () -> gatewayClient.getRequestFor(unreachable, WORLDPAY, "test", OrderRequestType.QUERY, emptyList(), emptyMap(), emptyMap()));
         verify(mockFailureCounter).inc();
 
         double failureCounterAfter = getMetricSample("gateway_operations_failures_total", new String[]{"worldpay", "test", "query"});
@@ -178,15 +176,13 @@ public class GatewayClientTest {
     @Test
     public void getRequestShouldIncludeCookieIfSessionIdentifierAvailableInOrder() throws Exception {
         setupGetRequestMocks();
-        when(mockResponse.getStatus()).thenReturn(200);
+        gatewayAnswers(200);
         double histogramCountBefore = getMetricSample("gateway_operations_response_time_seconds_count", new String[]{"worldpay", "test", "query"});
 
-        gatewayClient.getRequestFor(WORLDPAY_API_ENDPOINT, WORLDPAY, "test", OrderRequestType.QUERY,
+        gatewayClient.getRequestFor(worldpayApiEndpoint, WORLDPAY, "test", OrderRequestType.QUERY,
                 ImmutableList.of(new HttpCookie("machine", "value")), emptyMap(), emptyMap());
 
-        InOrder inOrder = Mockito.inOrder(mockBuilder);
-        inOrder.verify(mockBuilder).header("Cookie", "machine=value");
-        inOrder.verify(mockBuilder).get();
+        gateway.verify(getRequestedFor(urlPathEqualTo(ORDER_PATH)).withHeader("Cookie", equalTo("machine=value")));
         verify(mockResponseTimeHistogram).update(anyLong());
 
         double histogramCountAfter = getMetricSample("gateway_operations_response_time_seconds_count", new String[]{"worldpay", "test", "query"});
@@ -196,71 +192,68 @@ public class GatewayClientTest {
     @Test
     void getRequestShouldIncludeQueryParamsIfAvailable() throws Exception {
         setupGetRequestMocks();
-        when(mockWebTarget.queryParam(anyString(), anyString())).thenReturn(mockWebTarget);
-        when(mockResponse.getStatus()).thenReturn(200);
+        gatewayAnswers(200);
 
         Map<String, String> queryParams = Map.of(
                 "foo", "bar",
                 "foo1", "bar1"
         );
-        gatewayClient.getRequestFor(WORLDPAY_API_ENDPOINT, WORLDPAY, "test", OrderRequestType.QUERY,
+        gatewayClient.getRequestFor(worldpayApiEndpoint, WORLDPAY, "test", OrderRequestType.QUERY,
                 ImmutableList.of(new HttpCookie("machine", "value")), emptyMap(), queryParams);
 
-        verify(mockWebTarget, times(1)).queryParam("foo", "bar");
-        verify(mockWebTarget, times(1)).queryParam("foo1", "bar1");
+        gateway.verify(getRequestedFor(urlPathEqualTo(ORDER_PATH))
+                .withQueryParam("foo", equalTo("bar"))
+                .withQueryParam("foo1", equalTo("bar1")));
     }
 
     @Test
     void deleteRequestShouldIncludeQueryParamsIfAvailable() throws Exception {
         setupDeleteRequestMocks();
-        when(mockWebTarget.queryParam(anyString(), anyString())).thenReturn(mockWebTarget);
-        when(mockResponse.getStatus()).thenReturn(200);
+        gatewayAnswers(200);
 
         Map<String, String> queryParams = Map.of(
                 "foo", "bar",
                 "foo1", "bar1"
         );
 
-        gatewayClient.deleteRequestFor(WORLDPAY_API_ENDPOINT, WORLDPAY, "test", OrderRequestType.QUERY,
+        gatewayClient.deleteRequestFor(worldpayApiEndpoint, WORLDPAY, "test", OrderRequestType.QUERY,
                 List.of(new HttpCookie("machine", "value")), emptyMap(), queryParams);
 
-        InOrder inOrder = Mockito.inOrder(mockBuilder);
-        inOrder.verify(mockBuilder).header("Cookie", "machine=value");
-        inOrder.verify(mockBuilder).delete();
-        verify(mockWebTarget, times(1)).queryParam("foo", "bar");
-        verify(mockWebTarget, times(1)).queryParam("foo1", "bar1");
+        gateway.verify(deleteRequestedFor(urlPathEqualTo(ORDER_PATH))
+                .withHeader("Cookie", equalTo("machine=value"))
+                .withQueryParam("foo", equalTo("bar"))
+                .withQueryParam("foo1", equalTo("bar1")));
         verify(mockResponseTimeHistogram).update(anyLong());
     }
 
     @Test
     void deleteRequestShouldReturnGatewayErrorWhenProviderFails() {
         setupDeleteRequestMocks();
-        when(mockResponse.getStatus()).thenReturn(500);
+        gatewayAnswers(500);
         when(mockMetricRegistry.counter("gateway-operations.delete.worldpay.test.query.failures")).thenReturn(mockFailureCounter);
         double failureCounterBefore = getMetricSample("gateway_operations_failures_total", new String[]{"worldpay", "test", "query"});
         double histogramCountBefore = getMetricSample("gateway_operations_response_time_seconds_count", new String[]{"worldpay", "test", "query"});
 
         assertThrows(GatewayException.GatewayErrorException.class,
-                () -> gatewayClient.deleteRequestFor(WORLDPAY_API_ENDPOINT, WORLDPAY, "test", OrderRequestType.QUERY, emptyList(), emptyMap(), emptyMap()));
+                () -> gatewayClient.deleteRequestFor(worldpayApiEndpoint, WORLDPAY, "test", OrderRequestType.QUERY, emptyList(), emptyMap(), emptyMap()));
 
         double failureCounterAfter = getMetricSample("gateway_operations_failures_total", new String[]{"worldpay", "test", "query"});
         double histogramCountAfter = getMetricSample("gateway_operations_response_time_seconds_count", new String[]{"worldpay", "test", "query"});
         assertEquals(failureCounterBefore + 1, failureCounterAfter);
         assertEquals(histogramCountBefore + 1, histogramCountAfter);
-        verify(mockResponse).close();
         verify(mockFailureCounter).inc();
     }
 
     @Test
-    void deleteRequestShouldReturnGatewayErrorWhenProviderFailsWithAProcessingException() {
+    void deleteRequestShouldReturnGatewayErrorWhenProviderFailsWithAnIOException() throws IOException {
         setupDeleteRequestMocks();
+        URI unreachable = unreachableEndpoint();
         when(mockMetricRegistry.counter("gateway-operations.delete.worldpay.test.query.failures")).thenReturn(mockFailureCounter);
-        when(mockBuilder.delete()).thenThrow(new ProcessingException(new SocketException("socket failed")));
         double failureCounterBefore = getMetricSample("gateway_operations_failures_total", new String[]{"worldpay", "test", "query"});
         double histogramCountBefore = getMetricSample("gateway_operations_response_time_seconds_count", new String[]{"worldpay", "test", "query"});
 
         assertThrows(GatewayException.GenericGatewayException.class,
-                () -> gatewayClient.deleteRequestFor(WORLDPAY_API_ENDPOINT, WORLDPAY, "test", OrderRequestType.QUERY, emptyList(), emptyMap(), emptyMap()));
+                () -> gatewayClient.deleteRequestFor(unreachable, WORLDPAY, "test", OrderRequestType.QUERY, emptyList(), emptyMap(), emptyMap()));
         verify(mockFailureCounter).inc();
 
         double failureCounterAfter = getMetricSample("gateway_operations_failures_total", new String[]{"worldpay", "test", "query"});
@@ -269,29 +262,35 @@ public class GatewayClientTest {
         assertEquals(histogramCountBefore + 1, histogramCountAfter);
     }
 
+    private GatewayOrder order() {
+        return new GatewayOrder(OrderRequestType.AUTHORISE, orderPayload, mediaType);
+    }
+
+    private void gatewayAnswers(int status) {
+        gateway.stubFor(any(urlPathEqualTo(ORDER_PATH)).willReturn(aResponse().withStatus(status).withBody("<reply/>")));
+    }
+
+    /**
+     * An address on this host where nothing listens: connecting to it fails.
+     */
+    private static URI unreachableEndpoint() throws IOException {
+        int port;
+        try (ServerSocket socket = new ServerSocket(0)) {
+            port = socket.getLocalPort();
+        }
+        return URI.create("http://localhost:" + port + ORDER_PATH);
+    }
+
     private void setupPostRequestMocks() {
         when(mockMetricRegistry.histogram("gateway-operations.worldpay.test.authorise.response_time")).thenReturn(mockResponseTimeHistogram);
-
-        when(mockWebTarget.request()).thenReturn(mockBuilder).thenReturn(mockBuilder);
-        when(mockBuilder.post(Entity.entity(orderPayload, mediaType))).thenReturn(mockResponse);
-
-        when(mockGatewayOrder.orderRequestType()).thenReturn(OrderRequestType.AUTHORISE);
-        when(mockGatewayOrder.payload()).thenReturn(orderPayload);
-        when(mockGatewayOrder.mediaType()).thenReturn(mediaType);
     }
 
     private void setupGetRequestMocks() {
         when(mockMetricRegistry.histogram("gateway-operations.get.worldpay.test.query.response_time")).thenReturn(mockResponseTimeHistogram);
-
-        when(mockWebTarget.request()).thenReturn(mockBuilder).thenReturn(mockBuilder);
-        when(mockBuilder.get()).thenReturn(mockResponse);
     }
 
     private void setupDeleteRequestMocks() {
         when(mockMetricRegistry.histogram("gateway-operations.delete.worldpay.test.query.response_time")).thenReturn(mockResponseTimeHistogram);
-
-        when(mockWebTarget.request()).thenReturn(mockBuilder).thenReturn(mockBuilder);
-        when(mockBuilder.delete()).thenReturn(mockResponse);
     }
 
     private double getMetricSample(String name, String[] labelValues) {

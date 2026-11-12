@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.queue.tasks.handlers.adyen;
 
 import com.adyen.model.notification.NotificationRequestItem;
-import com.google.inject.Inject;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -11,6 +11,7 @@ import uk.gov.pay.connector.gateway.processor.ChargeNotificationProcessor;
 import uk.gov.pay.connector.gatewayaccount.service.GatewayAccountService;
 
 import java.util.List;
+import org.springframework.stereotype.Component;
 
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.CAPTURED;
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.CAPTURE_ERROR;
@@ -21,6 +22,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.GATEWAY_TRANSACTION_ID
 import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.PROVIDER;
 
+@Component
 public class AdyenCaptureNotificationHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AdyenCaptureNotificationHandler.class);

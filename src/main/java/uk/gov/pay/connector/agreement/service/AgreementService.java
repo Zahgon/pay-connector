@@ -1,6 +1,6 @@
 package uk.gov.pay.connector.agreement.service;
 
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.apache.hc.core5.http.HttpStatus;
 import uk.gov.pay.connector.agreement.dao.AgreementDao;
 import uk.gov.pay.connector.agreement.exception.AgreementNotFoundException;
@@ -27,10 +27,12 @@ import jakarta.inject.Inject;
 import java.time.Instant;
 import java.time.InstantSource;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 import static uk.gov.pay.connector.agreement.model.AgreementEntity.AgreementEntityBuilder.anAgreementEntity;
 import static uk.gov.service.payments.commons.model.ErrorIdentifier.AGREEMENT_NOT_ACTIVE;
 
+@Service
 public class AgreementService {
 
     private final GatewayAccountService gatewayAccountService;

@@ -41,6 +41,7 @@ import java.time.InstantSource;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
 import static java.lang.String.format;
 import static net.logstash.logback.argument.StructuredArguments.kv;
@@ -64,6 +65,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.GATEWAY_DISPUTE_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.LEDGER_EVENT_TYPE;
 import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 
+@Component
 public class StripeWebhookTaskHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(StripeWebhookTaskHandler.class);

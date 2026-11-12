@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.gateway.worldpay;
 
 import com.google.common.collect.ImmutableList;
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +20,7 @@ import uk.gov.pay.connector.util.IpDomainMatcher;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -29,6 +30,7 @@ import static uk.gov.service.payments.logging.LoggingKeys.PAYMENT_EXTERNAL_ID;
 import static uk.gov.service.payments.logging.LoggingKeys.PROVIDER;
 import static uk.gov.service.payments.logging.LoggingKeys.REFUND_EXTERNAL_ID;
 
+@Service
 public class WorldpayNotificationService {
 
     private static final String PAYMENT_GATEWAY_NAME = PaymentGatewayName.WORLDPAY.getName();

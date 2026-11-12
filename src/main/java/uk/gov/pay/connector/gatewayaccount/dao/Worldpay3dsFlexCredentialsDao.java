@@ -1,13 +1,15 @@
 package uk.gov.pay.connector.gatewayaccount.dao;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import uk.gov.pay.connector.common.dao.JpaDao;
 import uk.gov.pay.connector.gatewayaccount.model.Worldpay3dsFlexCredentialsEntity;
 
 import jakarta.persistence.EntityManager;
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public class Worldpay3dsFlexCredentialsDao extends JpaDao<Worldpay3dsFlexCredentialsEntity> {
 
     @Inject

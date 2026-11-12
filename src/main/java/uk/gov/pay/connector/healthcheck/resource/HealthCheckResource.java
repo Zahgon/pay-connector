@@ -2,8 +2,8 @@ package uk.gov.pay.connector.healthcheck.resource;
 
 import com.codahale.metrics.health.HealthCheck;
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import io.dropwizard.core.setup.Environment;
+import jakarta.inject.Inject;
+import com.codahale.metrics.health.HealthCheckRegistry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,33 +11,32 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Response;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.SortedMap;
 import java.util.stream.Collectors;
 
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.apache.commons.lang3.StringUtils.defaultString;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import uk.gov.pay.connector.web.MediaTypes;
+import org.springframework.http.ResponseEntity;
 
-@Path("/")
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
+@RestController
 public class HealthCheckResource {
 
-    private final Environment environment;
+    private final HealthCheckRegistry healthCheckRegistry;
     private final Logger logger = LoggerFactory.getLogger(HealthCheckResource.class);
 
     @Inject
-    public HealthCheckResource(Environment environment) {
-        this.environment = environment;
+    public HealthCheckResource(HealthCheckRegistry healthCheckRegistry) {
+        this.healthCheckRegistry = healthCheckRegistry;
     }
 
-    @GET
-    @Path("healthcheck")
-    @Produces(APPLICATION_JSON)
+    @GetMapping("/healthcheck")
+    @MediaTypes(produces = APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Healthcheck endpoint for connector (checks postgresql, cardExecutorService, ping, sqsQueue, deadlocks)",
             tags = {"Other"},
@@ -67,8 +66,8 @@ public class HealthCheckResource {
                     @ApiResponse(responseCode = "503", description = "Service Unavailable")
             }
     )
-    public Response healthCheck() {
-        SortedMap<String, HealthCheck.Result> results = environment.healthChecks().runHealthChecks();
+    public ResponseEntity<?> healthCheck() {
+        SortedMap<String, HealthCheck.Result> results = healthCheckRegistry.runHealthChecks();
 
         Map<String, Map<String, Object>> response = results.entrySet()
                 .stream()
@@ -80,10 +79,10 @@ public class HealthCheckResource {
                 );
 
         if (allHealthy(results.values())) {
-            return Response.ok(response).build();
+            return ResponseEntity.ok(response);
         }
         logger.error("Healthcheck Failure: {}", response);
-        return Response.status(503).entity(response).build();
+        return ResponseEntity.status(503).body(response);
     }
 
     private boolean allHealthy(Collection<HealthCheck.Result> results) {

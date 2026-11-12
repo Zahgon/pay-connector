@@ -45,7 +45,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.springframework.stereotype.Component;
 
+@Component
 public class EventFactory {
     private final ChargeService chargeService;
     private final RefundDao refundDao;

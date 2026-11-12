@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.refund.dao;
 
-import com.google.inject.Provider;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Provider;
+import org.springframework.transaction.annotation.Transactional;
 import uk.gov.pay.connector.charge.model.domain.ParityCheckStatus;
 import uk.gov.pay.connector.common.dao.JpaDao;
 import uk.gov.pay.connector.common.model.domain.UTCDateTimeConverter;
@@ -18,10 +18,12 @@ import java.sql.Date;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
 import static java.time.ZoneOffset.UTC;
 
 @Transactional
+@Repository
 public class RefundDao extends JpaDao<RefundEntity> {
 
     @Inject

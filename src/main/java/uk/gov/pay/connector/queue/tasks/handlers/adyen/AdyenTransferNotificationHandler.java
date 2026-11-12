@@ -1,7 +1,7 @@
 package uk.gov.pay.connector.queue.tasks.handlers.adyen;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Inject;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -19,7 +19,9 @@ import uk.gov.pay.connector.payout.PayoutEmitterService;
 import uk.gov.pay.connector.queue.tasks.handlers.adyen.fee.AdyenTransferNotificationHandlerForFees;
 
 import java.util.List;
+import org.springframework.stereotype.Component;
 
+@Component
 public class AdyenTransferNotificationHandler {
 
     private static final String TRANSFER_CATEGORY_BANK_TRANSFER = "bankTransfer";

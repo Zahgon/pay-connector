@@ -1,8 +1,8 @@
 package uk.gov.pay.connector.gateway.adyen.request;
 
 import com.jayway.jsonassert.JsonAssert;
-import io.dropwizard.jackson.Jackson;
-import jakarta.ws.rs.core.MediaType;
+import uk.gov.pay.connector.util.ObjectMapperFactory;
+import org.springframework.http.MediaType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.gov.pay.connector.gateway.adyen.request.json.CancelRequestPayload;
@@ -31,7 +31,7 @@ class AdyenCancelRequestTest {
     @BeforeEach
     void createCancelRequest() {
         var cancelPayload = new CancelRequestPayload(REFERENCE, MERCHANT_ACCOUNT);
-        var jsonObjectMapper = new JsonObjectMapper(Jackson.newObjectMapper());
+        var jsonObjectMapper = new JsonObjectMapper(ObjectMapperFactory.newObjectMapper());
         request = new AdyenCancelRequest(TEST_URI, HEADERS, cancelPayload, GATEWAY_ACCOUNT_TYPE, jsonObjectMapper);
     }
 
@@ -62,6 +62,6 @@ class AdyenCancelRequestTest {
 
     @Test
     void should_return_gateway_order_with_JSON_media_type() {
-        assertThat(request.getGatewayOrder().mediaType(), is(MediaType.APPLICATION_JSON_TYPE));
+        assertThat(request.getGatewayOrder().mediaType(), is(MediaType.APPLICATION_JSON));
     }
 }

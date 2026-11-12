@@ -1,19 +1,21 @@
 package uk.gov.pay.connector.queue.tasks.handlers.adyen;
 
 import com.adyen.model.notification.NotificationRequestItem;
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import jakarta.inject.Inject;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.pay.connector.charge.model.domain.Charge;
 import uk.gov.pay.connector.charge.service.ChargeService;
 import uk.gov.pay.connector.gateway.adyen.webhook.AdyenWebhookDeserialiser;
+import org.springframework.stereotype.Component;
 
 import static com.adyen.model.notification.NotificationRequestItem.EVENT_CODE_CANCELLATION;
 import static com.adyen.model.notification.NotificationRequestItem.EVENT_CODE_CAPTURE;
 import static com.adyen.model.notification.NotificationRequestItem.EVENT_CODE_REFUND;
 import static uk.gov.pay.connector.gateway.PaymentGatewayName.ADYEN;
 
+@Component
 public class AdyenWebhookTaskHandler {
     private static final String GATEWAY_TRANSACTION_ID = "gateway_transaction_id";
 

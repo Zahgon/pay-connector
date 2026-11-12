@@ -12,7 +12,7 @@ import uk.gov.service.payments.commons.model.ErrorIdentifier;
 import java.util.Map;
 
 import static io.restassured.http.ContentType.JSON;
-import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
@@ -76,7 +76,7 @@ public class WorldpayAuthoriseGooglePayIT {
                 .body(validPayload)
                 .post(ITestBaseExtension.authoriseChargeUrlForGooglePay(chargeId))
                 .then()
-                .statusCode(BAD_REQUEST.getStatusCode())
+                .statusCode(BAD_REQUEST.value())
                 .contentType(JSON)
                 .body("message", contains("This transaction was declined."))
                 .body("error_identifier", is(ErrorIdentifier.AUTHORISATION_REJECTED.toString()));

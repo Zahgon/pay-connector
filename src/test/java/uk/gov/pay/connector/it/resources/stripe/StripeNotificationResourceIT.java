@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
-import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
-import static jakarta.ws.rs.core.MediaType.TEXT_XML;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.TEXT_XML_VALUE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.AUTHORISATION_3DS_REQUIRED;
@@ -125,7 +125,7 @@ public class StripeNotificationResourceIT {
         given()
                 .port(app.getLocalPort())
                 .body("")
-                .contentType(TEXT_XML)
+                .contentType(TEXT_XML_VALUE)
                 .post(NOTIFICATION_PATH)
                 .then()
                 .statusCode(415);
@@ -184,7 +184,7 @@ public class StripeNotificationResourceIT {
                 .body(payload)
                 .header("Stripe-Signature", header)
                 .header("X-Forwarded-For", STRIPE_IP_ADDRESS)
-                .contentType(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON_VALUE)
                 .post(NOTIFICATION_PATH);
     }
 
@@ -194,7 +194,7 @@ public class StripeNotificationResourceIT {
                 .body(payload)
                 .header("Stripe-Signature", stripeSignature)
                 .header("X-Forwarded-For", forwardedIpAddresses)
-                .contentType(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON_VALUE)
                 .post(NOTIFICATION_PATH);
     }
 

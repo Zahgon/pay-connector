@@ -20,6 +20,7 @@ import uk.gov.pay.connector.gateway.model.response.Gateway3DSAuthorisationRespon
 
 import java.util.Locale;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static uk.gov.pay.connector.charge.model.domain.ChargeStatus.AUTHORISATION_3DS_REQUIRED;
@@ -28,6 +29,7 @@ import static uk.gov.pay.connector.paymentprocessor.model.OperationType.AUTHORIS
 import static uk.gov.pay.connector.paymentprocessor.service.Card3dsResponseAuthService.TypeOf3dsRequest.NONE_OF_THE_ABOVE;
 import static uk.gov.pay.connector.paymentprocessor.service.Card3dsResponseAuthService.TypeOf3dsRequest.WORLDPAY_3DS_CLASSIC;
 import static uk.gov.pay.connector.paymentprocessor.service.Card3dsResponseAuthService.TypeOf3dsRequest.WORLDPAY_3DS_FLEX;
+@Service
 public class Card3dsResponseAuthService {
 
     enum TypeOf3dsRequest {

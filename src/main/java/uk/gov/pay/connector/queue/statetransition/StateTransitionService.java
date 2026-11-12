@@ -1,8 +1,7 @@
 package uk.gov.pay.connector.queue.statetransition;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.inject.persist.Transactional;
-import io.dropwizard.core.setup.Environment;
+import org.springframework.transaction.annotation.Transactional;
 import io.prometheus.client.Counter;
 import jakarta.inject.Inject;
 import org.apache.commons.lang3.ArrayUtils;
@@ -20,10 +19,12 @@ import uk.gov.pay.connector.refund.service.RefundStateEventMap;
 
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import org.springframework.stereotype.Service;
 
 import static java.lang.String.format;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
+@Service
 public class StateTransitionService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -41,10 +42,10 @@ public class StateTransitionService {
     @Inject
     public StateTransitionService(StateTransitionQueue stateTransitionQueue,
                                   EventService eventService,
-                                  Environment environment) {
+                                  MetricRegistry metricRegistry) {
         this.stateTransitionQueue = stateTransitionQueue;
         this.eventService = eventService;
-        this.metricRegistry = environment.metrics();
+        this.metricRegistry = metricRegistry;
     }
 
     @Transactional
